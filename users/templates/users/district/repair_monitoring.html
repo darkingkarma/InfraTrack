@@ -21,26 +21,6 @@ Repair Monitoring
         color:#0A2E5C;
     }
 
-    .search-section{
-        display:flex;
-        gap:15px;
-        margin-bottom:25px;
-    }
-
-    .search-section input{
-        flex:1;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
-    .search-section select{
-        width:220px;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
     .table-container{
         background:white;
         border-radius:10px;
@@ -74,19 +54,12 @@ Repair Monitoring
         padding:40px;
     }
 
-    .progress-bar-fill{
-        width:var(--progress);
-        height:100%;
-        background:#0A2E5C;
-        border-radius:20px;
-    }
-
     .action-cell{
         display:flex;
         gap:8px;
     }
 
-    .view-btn, .close-btn{
+    .view-btn{
         border:none;
         cursor:pointer;
         padding:8px 14px;
@@ -95,24 +68,12 @@ Repair Monitoring
         font-weight:bold;
         text-decoration:none;
         display:inline-block;
-    }
-
-    .view-btn{
         background:#e8f0fe;
         color:#0A2E5C;
     }
 
     .view-btn:hover{
         background:#cfe0fb;
-    }
-
-    .close-btn{
-        background:#fdeaea;
-        color:#c0392b;
-    }
-
-    .close-btn:hover{
-        background:#f8d0d0;
     }
 
     .progress-bar-container{
@@ -136,6 +97,11 @@ Repair Monitoring
         font-weight:bold;
     }
 
+    .status-issued{
+        background:#e8f0fe;
+        color:#0A2E5C;
+    }
+
     .status-ongoing{
         background:#fff4e0;
         color:#a15c00;
@@ -149,16 +115,9 @@ Repair Monitoring
 {% endblock %}
 
 {% block content %}
-<div class="search-section">
 
-    <input type="text" placeholder="Search repairs...">
-
-    <select>
-        <option>All Status</option>
-        <option>Ongoing</option>
-        <option>Completed</option>
-    </select>
-
+<div class="page-header">
+    <h2>Repair Monitoring</h2>
 </div>
 
 <div class="table-container">
@@ -169,7 +128,7 @@ Repair Monitoring
             <tr>
                 <th>No.</th>
                 <th>Report Title</th>
-                <th>Infrastructure</th>
+                <th>Assigned Field Engineer</th>
                 <th>Progress</th>
                 <th>Status</th>
                 <th>Last Update</th>
@@ -179,26 +138,36 @@ Repair Monitoring
 
         <tbody>
 
-            {% for repair in repair_updates %}
+            {% for wo in work_orders %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ repair.report_title }}</td>
-                <td>{{ repair.infrastructure }}</td>
+                <td>{{ wo.report.title }}</td>
+                <td>{{ wo.assigned_field_engineer.user.get_full_name }}</td>
                 <td>
                     <div class="progress-bar-container">
-                        <div class="progress-bar-fill"></div>
+                        <div class="progress-bar-fill" data-progress="{{ wo.progress_percent }}"></div>
                     </div>
                 </td>
                 <td>
-                    <span class="status-badge {% if repair.status == 'Completed' %}status-completed{% else %}status-ongoing{% endif %}">
-                        {{ repair.status }}
+                    <span class="status-badge
+                        {% if wo.status == 'Completed' %}status-completed
+                        {% elif wo.status == 'In Progress' %}status-ongoing
+                        {% else %}status-issued{% endif %}">
+                        {{ wo.status }}
                     </span>
                 </td>
-                <td>{{ repair.last_update }}</td>
+                <td>
+                    {% with wo.repair_updates.last as latest %}
+                        {% if latest %}
+                            {{ latest.update_date|date:"M d, Y g:i A" }}
+                        {% else %}
+                            No updates yet
+                        {% endif %}
+                    {% endwith %}
+                </td>
                 <td>
                     <div class="action-cell">
-                        <a href="#" class="view-btn">View</a>
-                        <a href="#" class="close-btn">Close</a>
+                        <a href="{% url 'view_work_order' wo.pk %}" class="view-btn">View</a>
                     </div>
                 </td>
             </tr>
@@ -215,5 +184,11 @@ Repair Monitoring
     </table>
 
 </div>
+
+<script>
+    document.querySelectorAll('.progress-bar-fill').forEach(function(bar) {
+        bar.style.width = bar.dataset.progress + '%';
+    });
+</script>
 
 {% endblock %}

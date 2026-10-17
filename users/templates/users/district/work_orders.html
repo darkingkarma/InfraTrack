@@ -5,7 +5,7 @@ Work Orders
 {% endblock %}
 
 {% block page_title %}
-Work Orders
+Reports Ready for Work Order
 {% endblock %}
 
 {% block style %}
@@ -19,26 +19,6 @@ Work Orders
 
     .page-header h2{
         color:#0A2E5C;
-    }
-
-    .search-section{
-        display:flex;
-        gap:15px;
-        margin-bottom:25px;
-    }
-
-    .search-section input{
-        flex:1;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
-    .search-section select{
-        width:220px;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
     }
 
     .table-container{
@@ -74,12 +54,7 @@ Work Orders
         padding:40px;
     }
 
-    .action-cell{
-        display:flex;
-        gap:8px;
-    }
-
-    .view-btn, .approve-btn{
+    .create-btn{
         border:none;
         cursor:pointer;
         padding:8px 14px;
@@ -88,56 +63,31 @@ Work Orders
         font-weight:bold;
         text-decoration:none;
         display:inline-block;
+        background:#0A2E5C;
+        color:white;
     }
 
-    .view-btn{
-        background:#e8f0fe;
-        color:#0A2E5C;
+    .create-btn:hover{
+        background:#154A8A;
     }
 
-    .view-btn:hover{
-        background:#cfe0fb;
-    }
-
-    .approve-btn{
-        background:#e6f7ec;
-        color:#1e7e34;
-    }
-
-    .approve-btn:hover{
-        background:#d0f0da;
-    }
-
-    .status-badge{
+    .severity-badge{
         padding:5px 12px;
         border-radius:20px;
         font-size:12px;
         font-weight:bold;
     }
 
-    .status-pending{
-        background:#fff4e0;
-        color:#a15c00;
-    }
-
-    .status-approved{
-        background:#e6f7ec;
-        color:#1e7e34;
-    }
+    .severity-low{ background:#e6f7ec; color:#1e7e34; }
+    .severity-medium{ background:#fff4e0; color:#a15c00; }
+    .severity-high{ background:#fde8e8; color:#c0392b; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="search-section">
 
-    <input type="text" placeholder="Search work orders...">
-
-    <select>
-        <option>All Status</option>
-        <option>Pending</option>
-        <option>Approved</option>
-    </select>
-
+<div class="page-header">
+    <h2>Reports Ready for Work Order</h2>
 </div>
 
 <div class="table-container">
@@ -146,39 +96,39 @@ Work Orders
 
         <thead>
             <tr>
-                <th>No.</th>
+                <th>#</th>
                 <th>Report Title</th>
-                <th>Infrastructure</th>
-                <th>Assigned To</th>
-                <th>Status</th>
+                <th>Infrastructure Type</th>
+                <th>Severity</th>
+                <th>Inspected On</th>
                 <th>Actions</th>
             </tr>
         </thead>
 
         <tbody>
 
-            {% for order in work_orders %}
+            {% for report in reports %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ order.report_title }}</td>
-                <td>{{ order.infrastructure }}</td>
-                <td>{{ order.assigned_to }}</td>
+                <td>{{ report.title }}</td>
+                <td>{{ report.get_infrastructure_type_display }}</td>
                 <td>
-                    <span class="status-badge {% if order.status == 'Approved' %}status-approved{% else %}status-pending{% endif %}">
-                        {{ order.status }}
+                    <span class="severity-badge
+                        {% if report.severity_level == 'Low' %}severity-low
+                        {% elif report.severity_level == 'Medium' %}severity-medium
+                        {% else %}severity-high{% endif %}">
+                        {{ report.severity_level }}
                     </span>
                 </td>
+                <td>{{ report.inspection_date|date:"M d, Y g:i A" }}</td>
                 <td>
-                    <div class="action-cell">
-                        <a href="#" class="view-btn">View</a>
-                        <a href="#" class="approve-btn">Approve</a>
-                    </div>
+                    <a href="{% url 'create_work_order' report.pk %}" class="create-btn">Create Work Order</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
                 <td colspan="6" class="empty">
-                    No work orders found.
+                    No reports awaiting a work order.
                 </td>
             </tr>
             {% endfor %}

@@ -1,0 +1,109 @@
+{% extends "users/master.html" %}
+
+{% block title %}
+Notifications
+{% endblock %}
+
+{% block page_title %}
+Notifications
+{% endblock %}
+
+{% block style %}
+<style>
+    .page-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:25px;
+    }
+
+    .page-header h2{
+        color:#0A2E5C;
+    }
+
+    .mark-btn{
+        border:none;
+        cursor:pointer;
+        padding:10px 18px;
+        border-radius:8px;
+        font-weight:bold;
+        background:#0A2E5C;
+        color:white;
+    }
+
+    .notif-list{
+        background:white;
+        border-radius:10px;
+        overflow:hidden;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+        max-width:800px;
+    }
+
+    .notif-item{
+        display:block;
+        padding:16px 20px;
+        border-bottom:1px solid #eee;
+        text-decoration:none;
+        color:#333;
+    }
+
+    .notif-item:hover{
+        background:#f5f8ff;
+    }
+
+    .notif-item.unread{
+        background:#eef4ff;
+        border-left:4px solid #2563eb;
+    }
+
+    .notif-title{
+        font-weight:bold;
+        color:#0A2E5C;
+    }
+
+    .notif-message{
+        margin-top:4px;
+        font-size:14px;
+        color:#555;
+    }
+
+    .notif-date{
+        margin-top:6px;
+        font-size:12px;
+        color:#999;
+    }
+
+    .empty{
+        text-align:center;
+        color:gray;
+        padding:40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Notifications</h2>
+
+    {% if unread_notifications_count %}
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="mark-btn">Mark all as read</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="notif-list">
+    {% for n in notifications %}
+    <a href="{% url 'open_notification' n.pk %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+        <div class="notif-title">{{ n.title }}</div>
+        <div class="notif-message">{{ n.message }}</div>
+        <div class="notif-date">{{ n.created_at|date:"M d, Y g:i A" }}</div>
+    </a>
+    {% empty %}
+    <div class="empty">No notifications yet.</div>
+    {% endfor %}
+</div>
+
+{% endblock %}

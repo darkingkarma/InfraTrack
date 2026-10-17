@@ -80,9 +80,9 @@ class LoginSerializer(serializers.Serializer):
                 "Invalid username/email or password."
             )
 
-        if user.role != "citizen":
+        if user.role not in ["citizen", "field_engineer"]:
             raise serializers.ValidationError(
-                "This login is for citizens only."
+                "This login is for citizens and field engineers only."
             )
 
         data["user"] = user

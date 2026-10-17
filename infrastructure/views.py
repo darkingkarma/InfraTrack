@@ -5,7 +5,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Infrastructure
 from django.contrib import messages
 
+@login_required
 def infrastructure_list(request):
+
+    if request.user.role != "district_engineer":
+        return HttpResponseForbidden(
+            "Only District Engineer can manage infrastructure."
+        )
 
     infrastructures = Infrastructure.objects.all()
 
@@ -159,6 +165,11 @@ def view_infrastructure(request, infrastructure_id):
 @login_required
 def delete_infrastructure(request, infrastructure_id):
 
+    if request.user.role != "district_engineer":
+        return HttpResponseForbidden(
+            "Only District Engineer can manage infrastructure."
+        )
+
     if request.method == "POST":
 
         infrastructure = get_object_or_404(
@@ -180,6 +191,11 @@ def delete_infrastructure(request, infrastructure_id):
 @login_required
 def map(request):
 
+    if request.user.role != "district_engineer":
+        return HttpResponseForbidden(
+            "Only District Engineer can view the map."
+        )
+
     infrastructure_data = list(
         Infrastructure.objects.values(
             "infrastructure_id",
@@ -198,3 +214,39 @@ def map(request):
             "infrastructure_data": infrastructure_data
         }
     )
+
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from .models import Infrastructure
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def mobile_infrastructure_list(request):
+    if request.user.role != "citizen":
+        return Response(
+            {"detail": "Only citizens can access this endpoint."},
+            status=403,
+        )
+
+    infrastructures = Infrastructure.objects.filter(
+        status="active"
+    ).order_by("infra_name")
+
+    data = [
+        {
+            "infrastructure_id": item.infrastructure_id,
+            "infra_name": item.infra_name,
+            "infra_type": item.infra_type,
+            "location_description": item.location_description,
+            "latitude": str(item.latitude),
+            "longitude": str(item.longitude),
+            "status": item.status,
+        }
+        for item in infrastructures
+    ]
+
+    return Response(data)

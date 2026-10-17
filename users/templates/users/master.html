@@ -46,10 +46,48 @@
             border:1px solid #0f5132;
         }
 
-        @media (max-width: 768px) {
+        /* ---- Responsive layout ----
+           (the sidebar include already reserves space for the mobile top bar) */
+        @media (max-width: 900px) {
             .main-wrapper {
                 margin-left: 0;
-                padding-top: 70px;
+                padding-top: 0;
+            }
+
+            /* undo the generic padding the sidebar script may add to the wrapper */
+            .main-wrapper.sb-mo {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .alert {
+                margin: 0 0 14px;
+                font-size: 14px;
+            }
+
+            /* keep the page header (title + user) on ONE row */
+            .navbar,
+            .navbar.sb-wrap {
+                flex-wrap: nowrap !important;
+                gap: 10px;
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+            }
+
+            .navbar-left {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .navbar-left h2 {
+                font-size: 18px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
     </style>
@@ -84,5 +122,35 @@
             {% endblock %}
         </div>
     </div>
+
+    <script>
+        /* The page title already shows in the top bar, so remove the repeated
+           heading inside each page. Headings with a subtitle (e.g. the dashboard
+           welcome message) are kept. */
+        (function () {
+            document.querySelectorAll('.content .page-header').forEach(function (header) {
+                var heading = header.querySelector('h1, h2');
+                if (!heading) return;
+                if (header.querySelector('p')) return;   // has a subtitle: keep it
+
+                heading.style.display = 'none';
+
+                var remaining = Array.prototype.filter.call(header.children, function (child) {
+                    return child !== heading && child.style.display !== 'none';
+                });
+
+                if (remaining.length === 0) {
+                    header.style.display = 'none';
+                    return;
+                }
+
+                var isBack = remaining.length === 1 && (
+                    remaining[0].classList.contains('back-btn') ||
+                    /^\s*\u2190/.test(remaining[0].textContent)
+                );
+                header.style.justifyContent = isBack ? 'flex-start' : 'flex-end';
+            });
+        })();
+    </script>
 </body>
 </html>

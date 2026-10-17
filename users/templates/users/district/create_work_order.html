@@ -1,0 +1,181 @@
+{% extends "users/master.html" %}
+
+{% block title %}
+Create Work Order
+{% endblock %}
+
+{% block page_title %}
+Create Work Order
+{% endblock %}
+
+{% block style %}
+<style>
+    .page-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:25px;
+    }
+
+    .page-header h2{
+        color:#0A2E5C;
+    }
+
+    .back-btn{
+        text-decoration:none;
+        background:#eee;
+        color:#333;
+        padding:10px 18px;
+        border-radius:8px;
+        font-weight:bold;
+    }
+
+    .back-btn:hover{
+        background:#ddd;
+    }
+
+    .form-card{
+        background:white;
+        border-radius:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+        padding:30px;
+        max-width:700px;
+        margin-bottom:20px;
+    }
+
+    .form-group{
+        margin-bottom:20px;
+    }
+
+    .form-group label{
+        display:block;
+        font-size:13px;
+        font-weight:bold;
+        color:#333;
+        margin-bottom:6px;
+    }
+
+    .form-group select, .form-group textarea{
+        width:100%;
+        padding:10px;
+        border:1px solid #ccc;
+        border-radius:6px;
+        font-size:14px;
+        font-family:inherit;
+    }
+
+    .form-group textarea{
+        resize:vertical;
+        min-height:100px;
+    }
+
+    .form-actions{
+        margin-top:25px;
+        display:flex;
+        gap:10px;
+    }
+
+    .save-btn{
+        border:none;
+        cursor:pointer;
+        padding:10px 22px;
+        border-radius:8px;
+        font-size:14px;
+        font-weight:bold;
+        background:#0A2E5C;
+        color:white;
+    }
+
+    .save-btn:hover{
+        background:#154A8A;
+    }
+
+    .cancel-btn{
+        text-decoration:none;
+        padding:10px 22px;
+        border-radius:8px;
+        font-size:14px;
+        font-weight:bold;
+        background:#eee;
+        color:#333;
+    }
+
+    .photo-row{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:8px;
+    }
+
+    .photo-row img{
+        width:120px;
+        height:120px;
+        object-fit:cover;
+        border-radius:6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Create Work Order</h2>
+    <a href="{% url 'work_orders' %}" class="back-btn">&larr; Back to List</a>
+</div>
+
+<div class="form-card">
+    <h3 style="color:#0A2E5C; margin-bottom:15px;">Inspection Summary</h3>
+
+    <p><strong>Title:</strong> {{ report.title }}</p>
+    <p><strong>Description:</strong> {{ report.description }}</p>
+    <p><strong>Infrastructure Type:</strong> {{ report.get_infrastructure_type_display }}</p>
+    <p><strong>Severity:</strong> {{ report.severity_level }}</p>
+    <p><strong>Location:</strong> {{ report.geographic_address|default:"Not provided" }}
+        ({{ report.latitude }}, {{ report.longitude }})</p>
+    <p><strong>Inspected by:</strong> {{ report.inspected_by }}</p>
+    <p><strong>Inspection Findings:</strong> {{ report.inspection_remarks }}</p>
+    <p><strong>Recommended Action:</strong> {{ report.recommended_action }}</p>
+
+    {% if report.inspection_photos.all %}
+    <div style="margin-top:15px;">
+        <strong>Inspection Photos:</strong>
+        <div class="photo-row">
+            {% for photo in report.inspection_photos.all %}
+            <img src="{{ photo.image.url }}">
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="form-card">
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Assign Field Engineer</label>
+            <select name="assigned_field_engineer" required>
+                <option value="">-- Select Field Engineer --</option>
+                {% for engineer in field_engineers %}
+                <option value="{{ engineer.pk }}">{{ engineer.user.get_full_name }} ({{ engineer.employee_id }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Work Order Details</label>
+            <textarea name="work_order_details" placeholder="Describe the repair work to be done, materials needed, timeline, etc." required></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="save-btn">Issue Work Order</button>
+            <a href="{% url 'work_orders' %}" class="cancel-btn">Cancel</a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

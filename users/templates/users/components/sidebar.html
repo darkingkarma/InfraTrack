@@ -1,147 +1,548 @@
-{% load static%}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+{% load static %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    /* ---- Global rules every page already relied on (unchanged) ---- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        min-height: 100vh;
+        background-color: #f1f5f9;
+    }
+
+    /* ---- Original colors ---- */
+    :root {
+        --sb-bg: #0f172a;
+        --sb-text: #cbd5e1;
+        --sb-hover: #1e293b;
+        --sb-active: #2563eb;
+        --sb-line: #1e293b;
+        --sb-muted: #64748b;
+        --sb-width: 200px;
+    }
+
+    /* ---- Sidebar (static: sizes scale with screen height, no scrolling) ---- */
+    .sidebar {
+        width: var(--sb-width);
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: var(--sb-bg);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        z-index: 20;
+        overflow: hidden;
+    }
+
+    .sb-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: clamp(12px, 2.4vh, 24px) 16px clamp(10px, 1.8vh, 18px);
+        border-bottom: 1px solid var(--sb-line);
+        flex-shrink: 0;
+    }
+
+    .sb-header img {
+        width: clamp(38px, 6vh, 48px);
+        flex-shrink: 0;
+    }
+
+    .dpwhname {
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.4;
+        font-weight: 600;
+    }
+
+    .sb-nav {
+        flex: 1;
+        min-height: 0;
+        padding: 2px 12px 6px;
+        /* Safety net for very small screens only: scrollable but no visible bar */
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
+
+    .sb-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .sb-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        color: var(--sb-muted);
+        text-transform: uppercase;
+        padding: clamp(6px, 1.2vh, 16px) 4px clamp(3px, 0.6vh, 7px);
+        margin-bottom: clamp(3px, 0.6vh, 6px);
+        border-bottom: 1px solid var(--sb-line);
+    }
+
+    .sb-nav a,
+    .sb-bottom a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--sb-text);
+        font-size: clamp(14px, 2.2vh, 16px);
+        line-height: 1.2;
+        padding: clamp(5px, 1vh, 12px) 12px;
+        margin-bottom: clamp(2px, 0.4vh, 5px);
+        border-radius: 8px;
+        transition: background-color 0.2s, color 0.2s;
+    }
+
+    .sb-nav a i,
+    .sb-bottom a i {
+        width: 20px;
+        text-align: center;
+        font-size: clamp(15px, 2.4vh, 18px);
+        flex-shrink: 0;
+    }
+
+    .sb-nav a:hover,
+    .sb-bottom a:hover {
+        background-color: var(--sb-hover);
+        color: white;
+    }
+
+    .sb-nav a.active {
+        background-color: var(--sb-active);
+        color: white;
+    }
+
+    .sb-badge {
+        margin-left: auto;
+        background: #ef4444;
+        color: white;
+        border-radius: 10px;
+        padding: 1px 8px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .sb-bottom {
+        flex-shrink: 0;
+        padding: 6px 12px clamp(8px, 1.6vh, 14px);
+        border-top: 1px solid var(--sb-line);
+    }
+
+    .sb-bottom a {
+        margin-bottom: 0;
+    }
+
+    /* Very short screens: drop the section labels so everything still fits */
+    @media (max-height: 620px) {
+        .sb-label { display: none; }
+    }
+
+    /* ---- Mobile top bar and overlay (hidden on desktop) ---- */
+    .sb-topbar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 52px;
+        background: var(--sb-bg);
+        border-bottom: 1px solid var(--sb-line);
+        color: white;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        z-index: 15;
+    }
+
+    .sb-toggle {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 22px;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+
+    .sb-toggle:active {
+        background: var(--sb-hover);
+    }
+
+    .sb-topbar span {
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .sb-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .6);
+        z-index: 19;
+    }
+
+    .sb-overlay.show {
+        display: block;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 900px) {
+        .sidebar {
+            width: 250px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
         }
+
+        .sidebar.active {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0,0,0,.35);
+        }
+
+        .sb-topbar {
+            display: flex;
+        }
+
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            min-height: 100vh;
-            background-color: #f1f5f9;
+            padding-top: 52px;
         }
-        .sidebar{
-            width: 200px;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            flex-shrink: 0;
-            background-color: #0f172a;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 24px 16px;
-            overflow-y: auto;
-            z-index: 20;
-        }
-        .logo{
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        .logo img{
-            width: 48px;
-            flex-shrink: 0;
-        }
-        .dpwhname{
-            text-align: left;
-            font-size: 14px;
-            line-height: 1.4;
-            font-weight: 600;
-        }
-        .nav{
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .nav a{
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            text-decoration: none;
-            color: #cbd5e1;
-            font-size: 16px;
-            padding: 12px 14px;
-            border-radius: 8px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .nav a i{
-            width: 20px;
-            text-align: center;
-            font-size: 18px;
-        }
-        .nav a:hover{
-            background-color: #1e293b;
-            color: white;
-        }
-        .nav a.active{
-            background-color: #2563eb;
-            color: white;
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            .sidebar.active {
-                transform: translateX(0);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="sidebar">
-        <div class="logo">
-            <img src="{% static 'users/images/logtrans.png' %}" alt="DPWH Logo">
-            <div class="dpwhname">
-                Iligan City<br>
-                District Office
-            </div>
-        </div>
 
-        <div class="nav">
+        body.sb-lock {
+            overflow: hidden;
+        }
 
-            {% if request.user.role == "district_engineer" %}
+        /* Elements tagged by the script below so page content
+           stops leaving a gap for the (now hidden) sidebar */
+        .sb-mo { margin-left: 0 !important; width: auto !important; max-width: 100% !important; }
+        .sb-po { padding-left: 0 !important; }
+        .sb-left { left: 0 !important; }
+        .sb-top { top: 52px !important; }
+    }
+</style>
 
-                <a href="{% url 'district_dashboard' %}" class="{% if request.resolver_match.url_name == 'district_dashboard' %}active{% endif %}">
-                    <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
-                </a>
-                <a href="{% url 'personnel' %}" class="{% if request.resolver_match.url_name == 'personnel' or request.resolver_match.url_name == 'view_personnel' or request.resolver_match.url_name == 'edit_personnel' %}active{% endif %}">
-                    <i class="fa-solid fa-users"></i><span>Personnel</span>
-                </a>
-                <a href="{% url 'infrastructure_list' %}" class="{% if request.resolver_match.url_name == 'infrastructure_list' %}active{% endif %}">
-                    <i class="fa-solid fa-clipboard-check"></i><span>Infrastructure</span>
-                </a>
-                <a href="{% url 'work_orders' %}" class="{% if request.resolver_match.url_name == 'work_orders' %}active{% endif %}">
-                    <i class="fa-solid fa-file-signature"></i><span>Work Orders</span>
-                </a>
-                <a href="{% url 'repair_monitoring' %}" class="{% if request.resolver_match.url_name == 'repair_monitoring' %}active{% endif %}">
-                    <i class="fa-solid fa-wrench"></i><span>Repair Monitoring</span>
-                </a>
-                <a href="{% url 'report_history' %}" class="{% if request.resolver_match.url_name == 'report_history' %}active{% endif %}">
-                    <i class="fa-solid fa-clock-rotate-left"></i><span>Report History</span>
-                </a>
-                <a href="{% url 'map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">
-                    <i class="fa-solid fa-map-location-dot"></i><span>Map</span>
-                </a>
+<!-- Mobile top bar -->
+<div class="sb-topbar" id="sbTopbar">
+    <button class="sb-toggle" id="sbToggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+    <span>Iligan City District Office</span>
+</div>
 
-            {% elif request.user.role == "fru" %}
+<div class="sb-overlay" id="sbOverlay"></div>
 
-                <a href="{% url 'fru_dashboard' %}" class="{% if request.resolver_match.url_name == 'fru_dashboard' %}active{% endif %}">
-                    <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
-                </a>
-                <a href="{% url 'pending_reports' %}" class="{% if request.resolver_match.url_name == 'pending_reports' or request.resolver_match.url_name == 'screen_report' %}active{% endif %}">
-                    <i class="fa-solid fa-inbox"></i><span>Pending Reports</span>
-                </a>
+<aside class="sidebar" id="sidebar">
 
-            {% endif %}
-
-            <a href="{% url 'logout' %}"
-                onclick="return confirm('Are you sure you want to logout?');">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Logout</span>
-            </a>
+    <div class="sb-header">
+        <img src="{% static 'users/images/logtrans.png' %}" alt="DPWH Logo">
+        <div class="dpwhname">
+            Iligan City<br>
+            District Office
         </div>
     </div>
-</body>
-</html>
+
+    <nav class="sb-nav">
+
+        {% if request.user.role == "district_engineer" %}
+
+            <div class="sb-label">Main Menu</div>
+            <a href="{% url 'district_dashboard' %}" class="{% if request.resolver_match.url_name == 'district_dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+            </a>
+            <a href="{% url 'map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">
+                <i class="fa-solid fa-map-location-dot"></i><span>Map</span>
+            </a>
+
+            <div class="sb-label">Management</div>
+            <a href="{% url 'personnel' %}" class="{% if request.resolver_match.url_name == 'personnel' or request.resolver_match.url_name == 'view_personnel' or request.resolver_match.url_name == 'edit_personnel' %}active{% endif %}">
+                <i class="fa-solid fa-users"></i><span>Personnel</span>
+            </a>
+            <a href="{% url 'infrastructure_list' %}" class="{% if request.resolver_match.url_name == 'infrastructure_list' %}active{% endif %}">
+                <i class="fa-solid fa-clipboard-check"></i><span>Infrastructure</span>
+            </a>
+
+            <div class="sb-label">Operations</div>
+            <a href="{% url 'validated_reports' %}" class="{% if request.resolver_match.url_name == 'validated_reports' %}active{% endif %}">
+                <i class="fa-solid fa-circle-check"></i><span>Validated Reports</span>
+            </a>
+            <a href="{% url 'work_orders' %}" class="{% if request.resolver_match.url_name == 'work_orders' or request.resolver_match.url_name == 'create_work_order' %}active{% endif %}">
+                <i class="fa-solid fa-file-signature"></i><span>Work Orders</span>
+            </a>
+            <a href="{% url 'repair_monitoring' %}" class="{% if request.resolver_match.url_name == 'repair_monitoring' %}active{% endif %}">
+                <i class="fa-solid fa-wrench"></i><span>Repair Monitoring</span>
+            </a>
+            <a href="{% url 'report_history' %}" class="{% if request.resolver_match.url_name == 'report_history' %}active{% endif %}">
+                <i class="fa-solid fa-clock-rotate-left"></i><span>Report History</span>
+            </a>
+
+        {% elif request.user.role == "fru" %}
+
+            <div class="sb-label">Main Menu</div>
+            <a href="{% url 'fru_dashboard' %}" class="{% if request.resolver_match.url_name == 'fru_dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+            </a>
+
+            <div class="sb-label">Reports</div>
+            <a href="{% url 'pending_reports' %}" class="{% if request.resolver_match.url_name == 'pending_reports' or request.resolver_match.url_name == 'screen_report' %}active{% endif %}">
+                <i class="fa-solid fa-inbox"></i><span>Pending Reports</span>
+            </a>
+
+        {% endif %}
+
+        <div class="sb-label">Communication</div>
+        {% if request.user.role == "district_engineer" or request.user.role == "fru" %}
+        <a href="{% url 'follow_ups' %}" class="{% if request.resolver_match.url_name == 'follow_ups' %}active{% endif %}">
+            <i class="fa-solid fa-comments"></i><span>Follow-ups</span>
+            {% if pending_follow_ups_count %}
+            <span class="sb-badge">{{ pending_follow_ups_count }}</span>
+            {% endif %}
+        </a>
+        {% endif %}
+        <a href="{% url 'notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+            <i class="fa-solid fa-bell"></i><span>Notifications</span>
+            {% if unread_notifications_count %}
+            <span class="sb-badge">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+
+    </nav>
+
+    <div class="sb-bottom">
+        <a href="{% url 'logout' %}" onclick="return confirm('Are you sure you want to logout?');">
+            <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+        </a>
+    </div>
+
+</aside>
+
+<script>
+(function () {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sbOverlay');
+    var topbar = document.getElementById('sbTopbar');
+    var btn = document.getElementById('sbToggle');
+
+    function setOpen(open) {
+        sidebar.classList.toggle('active', open);
+        overlay.classList.toggle('show', open);
+        document.body.classList.toggle('sb-lock', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    btn.addEventListener('click', function () {
+        setOpen(!sidebar.classList.contains('active'));
+    });
+    overlay.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') setOpen(false);
+    });
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 900) setOpen(false);
+    });
+
+    /* Find the page's own layout elements that reserve space for the sidebar
+       (margin-left, padding-left, left) so the mobile CSS can reset them. */
+    function tagOffsets() {
+        var w = sidebar.offsetWidth || 200;
+        var skip = [sidebar, overlay, topbar];
+        var list = [document.body];
+
+        function near(v) {
+            var n = parseFloat(v);
+            return n >= w - 1 && n <= w + 80;
+        }
+
+        function walk(node, depth) {
+            if (depth > 3) return;
+            Array.prototype.forEach.call(node.children, function (el) {
+                if (skip.indexOf(el) !== -1) return;
+                if (['SCRIPT', 'STYLE', 'LINK'].indexOf(el.tagName) !== -1) return;
+                list.push(el);
+                walk(el, depth + 1);
+            });
+        }
+        walk(document.body, 1);
+
+        list.forEach(function (el) {
+            var cs = getComputedStyle(el);
+            var top = el === document.body || el.parentElement === document.body;
+            if (near(cs.marginLeft)) el.classList.add('sb-mo');
+            if (top && near(cs.paddingLeft)) el.classList.add('sb-po');
+            if ((cs.position === 'fixed' || cs.position === 'absolute') && near(cs.left)) {
+                el.classList.add('sb-left');
+            }
+            if ((cs.position === 'fixed' || cs.position === 'sticky') && parseFloat(cs.top) === 0) {
+                el.classList.add('sb-top');
+            }
+        });
+    }
+
+    if (document.readyState === 'complete') {
+        tagOffsets();
+    } else {
+        window.addEventListener('load', tagOffsets);
+    }
+})();
+</script>
+
+<style>
+    @media (max-width: 900px) {
+        html { -webkit-text-size-adjust: 100%; }
+        body { overflow-x: hidden; }
+
+        /* ---- Generic fallbacks for any page not covered below ---- */
+        table {
+            display: block;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        th { white-space: nowrap; }
+
+        input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+        select,
+        textarea {
+            max-width: 100%;
+            font-size: 16px;
+        }
+
+        /* Classes added automatically by the script */
+        .sb-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important; }
+        .sb-wrap { flex-wrap: wrap !important; row-gap: 12px; }
+        .sb-fi   { min-width: min(100%, 150px) !important; }
+        .sb-clip { max-width: 100% !important; }
+        .sb-mo   { padding-left: 16px !important; padding-right: 16px !important; }
+
+        /* ---- Page headers ---- */
+        .page-header { flex-wrap: wrap; gap: 12px; }
+        .page-header h2 { font-size: 20px; }
+        .add-btn, .back-btn { padding: 9px 14px; font-size: 14px; }
+
+        /* ---- Search / filter bars ---- */
+        .search-section { flex-direction: column; gap: 10px; }
+        .search-section input,
+        .search-section select { width: 100%; }
+
+        /* ---- Tables: scroll inside the white card ---- */
+        .table-container { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+        .table-container table { display: table !important; min-width: 600px; }
+        .table-container th,
+        .table-container td { padding: 12px 10px; font-size: 14px; }
+        .action-cell { flex-wrap: wrap; }
+
+        /* ---- Detail / form cards ---- */
+        .form-card { padding: 18px; max-width: 100%; }
+        .form-card p { overflow-wrap: anywhere; }
+        .update-header { flex-wrap: wrap; gap: 4px; }
+        .photo-row img { width: 96px; height: 96px; }
+        .stars { font-size: 22px; }
+
+        /* ---- Dashboard ---- */
+        .pipeline.sb-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
+        .glance.sb-grid   { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
+        .columns.sb-grid  { grid-template-columns: 1fr !important; }
+        .step { padding: 14px 16px; }
+        .step-number { font-size: 26px; }
+        .panel { padding: 16px; }
+        .glance-item { padding: 14px 16px; }
+        .glance-value { font-size: 20px; }
+
+        .row { flex-wrap: wrap; }
+        .row-main { flex: 1 1 180px; }
+        .row-meta { overflow-wrap: anywhere; }
+        .row-btn { padding: 8px 14px; }
+    }
+
+    @media (max-width: 600px) {
+        h1 { font-size: 22px; }
+        h2 { font-size: 18px; }
+        .page-header h2 { font-size: 18px; }
+    }
+</style>
+
+<script>
+(function () {
+    var IGNORE = '.sidebar, .sb-topbar, .sb-overlay';
+    var SKIP_TAGS = ['SCRIPT', 'STYLE', 'LINK', 'META', 'TABLE', 'THEAD', 'TBODY', 'TFOOT',
+                     'TR', 'TD', 'TH', 'SVG', 'PATH', 'CANVAS', 'IMG', 'I', 'SPAN', 'INPUT'];
+
+    /* Make sure the page has a viewport tag */
+    if (!document.querySelector('meta[name="viewport"]')) {
+        var m = document.createElement('meta');
+        m.name = 'viewport';
+        m.content = 'width=device-width, initial-scale=1.0';
+        document.head.appendChild(m);
+    }
+
+    function tagLayout() {
+        var all = document.body.querySelectorAll('*');
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            if (SKIP_TAGS.indexOf(el.tagName.toUpperCase()) !== -1) continue;
+            if (el.closest(IGNORE)) continue;
+
+            var cs = getComputedStyle(el);
+
+            if (cs.display === 'grid' || cs.display === 'inline-grid') {
+                if (cs.gridTemplateColumns !== 'none' && cs.gridTemplateColumns.split(' ').length > 1) {
+                    el.classList.add('sb-grid');
+                }
+            } else if (cs.display === 'flex' && cs.flexDirection === 'row' && el.children.length > 1) {
+                var growing = 0;
+                Array.prototype.forEach.call(el.children, function (c) {
+                    if (parseFloat(getComputedStyle(c).flexGrow) > 0) growing++;
+                });
+
+                if (growing >= 2) {
+                    // a row of cards: let them wrap
+                    el.classList.add('sb-wrap');
+                    Array.prototype.forEach.call(el.children, function (c) {
+                        if (parseFloat(getComputedStyle(c).flexGrow) > 0) c.classList.add('sb-fi');
+                    });
+                } else if (cs.justifyContent === 'space-between') {
+                    // a header row (title + buttons): let it wrap
+                    el.classList.add('sb-wrap');
+                }
+            }
+        }
+    }
+
+    function clipOverflow() {
+        if (window.innerWidth > 900) return;
+        var root = document.documentElement;
+        var vw = root.clientWidth;
+        if (root.scrollWidth <= vw + 1) return;
+
+        document.body.querySelectorAll('*').forEach(function (el) {
+            if (el.closest(IGNORE + ', table')) return;
+            var r = el.getBoundingClientRect();
+            if (r.width > 0 && r.right > vw + 1) el.classList.add('sb-clip');
+        });
+    }
+
+    function run() {
+        tagLayout();
+        clipOverflow();
+    }
+
+    var timer;
+    window.addEventListener('resize', function () {
+        clearTimeout(timer);
+        timer = setTimeout(run, 150);
+    });
+
+    if (document.readyState === 'complete') {
+        run();
+    } else {
+        window.addEventListener('load', run);
+    }
+})();
+</script>

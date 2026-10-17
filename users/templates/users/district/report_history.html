@@ -41,6 +41,16 @@ Report History
         border-radius:6px;
     }
 
+    .search-section button{
+        border:none;
+        cursor:pointer;
+        padding:10px 20px;
+        border-radius:6px;
+        font-weight:bold;
+        background:#0A2E5C;
+        color:white;
+    }
+
     .table-container{
         background:white;
         border-radius:10px;
@@ -96,9 +106,10 @@ Report History
         border-radius:20px;
         font-size:12px;
         font-weight:bold;
+        white-space:nowrap;
     }
 
-    .status-closed{
+    .status-resolved{
         background:#e6f7ec;
         color:#1e7e34;
     }
@@ -107,21 +118,39 @@ Report History
         background:#fdeaea;
         color:#c0392b;
     }
+
+    .status-inprogress{
+        background:#fff4e0;
+        color:#a15c00;
+    }
+
+    .status-default{
+        background:#e8f0fe;
+        color:#0A2E5C;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="search-section">
 
-    <input type="text" placeholder="Search closed reports...">
+<div class="page-header">
+    <h2>Report History</h2>
+</div>
 
-    <select>
-        <option>All Status</option>
-        <option>Closed</option>
-        <option>Rejected</option>
+<form method="get" class="search-section">
+
+    <input type="text" name="q" placeholder="Search by report title..." value="{{ search_query }}">
+
+    <select name="status">
+        <option value="">All Status</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
     </select>
 
-</div>
+    <button type="submit">Search</button>
+
+</form>
 
 <div class="table-container">
 
@@ -131,34 +160,40 @@ Report History
             <tr>
                 <th>No.</th>
                 <th>Report Title</th>
+                <th>Citizen</th>
                 <th>Infrastructure</th>
                 <th>Status</th>
-                <th>Date Closed</th>
+                <th>Date Reported</th>
                 <th>Actions</th>
             </tr>
         </thead>
 
         <tbody>
 
-            {% for report in closed_reports %}
+            {% for report in reports %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ report.title }}</td>
-                <td>{{ report.infrastructure }}</td>
+                <td>{{ report.citizen.get_full_name }}</td>
+                <td>{{ report.get_infrastructure_type_display }}</td>
                 <td>
-                    <span class="status-badge {% if report.status == 'Rejected' %}status-rejected{% else %}status-closed{% endif %}">
+                    <span class="status-badge
+                        {% if report.status == 'Resolved' %}status-resolved
+                        {% elif report.status == 'Rejected' %}status-rejected
+                        {% elif report.status == 'In Progress' %}status-inprogress
+                        {% else %}status-default{% endif %}">
                         {{ report.status }}
                     </span>
                 </td>
-                <td>{{ report.date_closed }}</td>
+                <td>{{ report.reported_date|date:"M d, Y g:i A" }}</td>
                 <td>
-                    <a href="#" class="view-btn">View</a>
+                    <a href="{% url 'view_report_history_detail' report.pk %}" class="view-btn">View</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="empty">
-                    No closed reports found.
+                <td colspan="7" class="empty">
+                    No reports found.
                 </td>
             </tr>
             {% endfor %}

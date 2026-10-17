@@ -1,0 +1,158 @@
+{% extends "users/master.html" %}
+
+{% block title %}
+Work Order Details
+{% endblock %}
+
+{% block page_title %}
+Work Order Details
+{% endblock %}
+
+{% block style %}
+<style>
+    .page-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:25px;
+    }
+
+    .page-header h2{
+        color:#0A2E5C;
+    }
+
+    .back-btn{
+        text-decoration:none;
+        background:#eee;
+        color:#333;
+        padding:10px 18px;
+        border-radius:8px;
+        font-weight:bold;
+    }
+
+    .back-btn:hover{
+        background:#ddd;
+    }
+
+    .form-card{
+        background:white;
+        border-radius:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+        padding:30px;
+        max-width:800px;
+        margin-bottom:20px;
+    }
+
+    .photo-row{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:8px;
+    }
+
+    .photo-row img{
+        width:120px;
+        height:120px;
+        object-fit:cover;
+        border-radius:6px;
+    }
+
+    .update-card{
+        border-left:4px solid #0A2E5C;
+        background:#f8f9fa;
+        padding:15px 20px;
+        border-radius:6px;
+        margin-bottom:15px;
+    }
+
+    .update-header{
+        display:flex;
+        justify-content:space-between;
+        margin-bottom:8px;
+    }
+
+    .update-status{
+        font-weight:bold;
+        color:#0A2E5C;
+    }
+
+    .update-date{
+        color:#888;
+        font-size:13px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Work Order Details</h2>
+    <a href="{% url 'repair_monitoring' %}" class="back-btn">&larr; Back to List</a>
+</div>
+
+<div class="form-card">
+    <h3 style="color:#0A2E5C; margin-bottom:15px;">Work Order Summary</h3>
+
+    <p><strong>Report:</strong> {{ work_order.report.title }}</p>
+    <p><strong>Details:</strong> {{ work_order.work_order_details }}</p>
+    <p><strong>Assigned Field Engineer:</strong> {{ work_order.assigned_field_engineer.user.get_full_name }}</p>
+    <p><strong>Issued By:</strong> {{ work_order.issued_by.user.get_full_name }}</p>
+    <p><strong>Status:</strong> {{ work_order.status }}</p>
+    <p><strong>Date Issued:</strong> {{ work_order.date_issued|date:"M d, Y g:i A" }}</p>
+    {% if work_order.date_completed %}
+    <p><strong>Date Completed:</strong> {{ work_order.date_completed|date:"M d, Y g:i A" }}</p>
+    {% endif %}
+
+    {% if work_order.status != 'Completed' %}
+        {% if work_order.update_requested %}
+        <div style="margin-top:15px; padding:12px 16px; background:#fff4e0; border-radius:8px; color:#a15c00;">
+            <strong>Update requested</strong> on {{ work_order.update_requested_date|date:"M d, Y g:i A" }}
+            {% if work_order.update_request_message %}
+                — "{{ work_order.update_request_message }}"
+            {% endif %}
+            <br><span style="font-size:12px;">Waiting for the field engineer to respond.</span>
+        </div>
+        {% else %}
+        <form method="post" action="{% url 'request_work_order_update' work_order.pk %}" style="margin-top:15px;">
+            {% csrf_token %}
+            <textarea name="update_request_message" placeholder="Optional message to the field engineer..."
+                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; min-height:60px; font-family:inherit;"></textarea>
+            <button type="submit" style="margin-top:8px; border:none; cursor:pointer; padding:8px 16px;
+                border-radius:6px; font-size:13px; font-weight:bold; background:#0A2E5C; color:white;">
+                Request Update
+            </button>
+        </form>
+        {% endif %}
+    {% endif %}
+</div>
+
+<div class="form-card">
+    <h3 style="color:#0A2E5C; margin-bottom:15px;">Progress Updates</h3>
+
+    {% for update in work_order.repair_updates.all %}
+    <div class="update-card">
+        <div class="update-header">
+            <span class="update-status">{{ update.status_update }}</span>
+            <span class="update-date">{{ update.update_date|date:"M d, Y g:i A" }}</span>
+        </div>
+        <p><strong>Remarks:</strong> {{ update.progress_remarks }}</p>
+        {% if update.delay_reason %}
+        <p><strong>Delay Reason:</strong> {{ update.delay_reason }}</p>
+        {% endif %}
+        {% if update.completion_details %}
+        <p><strong>Completion Details:</strong> {{ update.completion_details }}</p>
+        {% endif %}
+        {% if update.photos.all %}
+        <div class="photo-row">
+            {% for photo in update.photos.all %}
+            <img src="{{ photo.image.url }}">
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p style="color:gray;">No progress updates submitted yet.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

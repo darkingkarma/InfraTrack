@@ -98,9 +98,18 @@ Pending Screening Reports
             {% for report in reports %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ report.title }}</td>
-                <td>{{ report.citizen_name }}</td>
-                <td>{{ report.date_submitted }}</td>
+                <td>
+                    {{ report.title }}
+                    {% for req in report.info_requests.all %}
+                        {% if req.response_message %}
+                            <span style="background:#e8f0fe; color:#0A2E5C; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:bold; margin-left:6px;">
+                                Resubmitted
+                            </span>
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{{ report.citizen.get_full_name }}</td>
+                <td>{{ report.reported_date|date:"M d, Y g:i A" }}</td>
                 <td>
                     <a href="{% url 'screen_report' report.pk %}" class="screen-btn">Screen</a>
                 </td>

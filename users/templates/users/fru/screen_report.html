@@ -68,6 +68,44 @@ Screen Report
         min-height:100px;
     }
 
+    .section-label{
+        color:#0A2E5C;
+        font-size:15px;
+        font-weight:bold;
+        margin:5px 0 14px;
+    }
+
+    .checks-grid{
+        display:grid;
+        grid-template-columns:1fr 1fr 1fr;
+        gap:14px;
+    }
+
+    @media (max-width:700px){
+        .checks-grid{ grid-template-columns:1fr; }
+    }
+
+    .hint{
+        font-size:12px;
+        color:#a15c00;
+        margin-top:-8px;
+        margin-bottom:16px;
+        display:none;
+    }
+
+    .prev-item{
+        border-left:4px solid #0A2E5C;
+        background:#f8f9fa;
+        padding:12px 16px;
+        border-radius:6px;
+        margin-bottom:12px;
+        font-size:14px;
+    }
+
+    .prev-item small{
+        color:#888;
+    }
+
     .form-actions{
         margin-top:25px;
         display:flex;
@@ -104,9 +142,72 @@ Screen Report
 {% block content %}
 
 <div class="page-header">
-    <h2>Screen Report #{{ report_id }}</h2>
+    <h2>Screen Report #{{ report.report_id }}</h2>
     <a href="{% url 'pending_reports' %}" class="back-btn">&larr; Back to List</a>
 </div>
+
+<div class="form-card" style="margin-bottom:20px;">
+    <h3 style="color:#0A2E5C; margin-bottom:15px;">Report Details</h3>
+
+    <p><strong>Title:</strong> {{ report.title }}</p>
+    <p><strong>Description:</strong> {{ report.description }}</p>
+    <p><strong>Infrastructure Type:</strong> {{ report.get_infrastructure_type_display }}</p>
+    <p><strong>Submitted by:</strong> {{ report.citizen.get_full_name }}</p>
+    <p><strong>Location:</strong> {{ report.geographic_address|default:"Not provided" }}
+        ({{ report.latitude }}, {{ report.longitude }})</p>
+    <p><strong>Date Submitted:</strong> {{ report.reported_date|date:"M d, Y g:i A" }}</p>
+
+    {% if report.photos.all %}
+    <div style="margin-top:15px;">
+        <strong>Photos:</strong>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+            {% for photo in report.photos.all %}
+            {% if photo.file_path %}
+            <img src="{{ photo.file_path.url }}" alt="Report photo"
+                style="width:120px; height:120px; object-fit:cover; border-radius:6px;">
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if report.info_requests.all %}
+<div class="form-card" style="margin-bottom:20px;">
+    <h3 style="color:#0A2E5C; margin-bottom:15px;">Information Requests</h3>
+    {% for req in report.info_requests.all %}
+    <div style="border-left:4px solid #0A2E5C; background:#f8f9fa; padding:12px 16px; border-radius:6px; margin-bottom:12px;">
+        <p><strong>Requested by {{ req.requested_by.user.get_full_name }}</strong>
+            ({{ req.requested_date|date:"M d, Y g:i A" }}): {{ req.request_message }}</p>
+        {% if req.response_message %}
+        <p style="margin-top:6px;"><strong>Citizen replied</strong>
+            ({{ req.response_date|date:"M d, Y g:i A" }}): {{ req.response_message }}</p>
+        {% else %}
+        <p style="margin-top:6px; color:gray;">No reply yet.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if report.screenings.all %}
+<div class="form-card" style="margin-bottom:20px;">
+    <h3 style="color:#0A2E5C; margin-bottom:15px;">Previous Screenings</h3>
+    {% for s in report.screenings.all %}
+    <div class="prev-item">
+        <strong>{{ s.screening_result }}</strong>
+        by {{ s.screened_by.user.get_full_name|default:"FRU" }}<br>
+        <small>
+            {{ s.completeness_status }} &middot; {{ s.duplicate_status }} &middot; {{ s.jurisdiction_status }}
+            &middot; {{ s.screening_date|date:"M d, Y g:i A" }}
+        </small>
+        {% if s.remarks %}
+        <p style="margin-top:6px;">{{ s.remarks }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="form-card">
 
@@ -114,13 +215,44 @@ Screen Report
 
         {% csrf_token %}
 
+        <div class="section-label">Screening Checks</div>
+
+        <div class="checks-grid">
+            <div class="form-group">
+                <label>Completeness</label>
+                <select name="completeness_status" id="completeness_status">
+                    <option value="Complete">Complete</option>
+                    <option value="Incomplete">Incomplete</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Duplicate</label>
+                <select name="duplicate_status" id="duplicate_status">
+                    <option value="Not Duplicate">Not Duplicate</option>
+                    <option value="Duplicate">Duplicate</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Jurisdiction</label>
+                <select name="jurisdiction_status" id="jurisdiction_status">
+                    <option value="Within Jurisdiction">Within Jurisdiction</option>
+                    <option value="Outside Jurisdiction">Outside Jurisdiction</option>
+                </select>
+            </div>
+        </div>
+
         <div class="form-group">
             <label>Screening Result</label>
-            <select name="screening_result" required>
+            <select name="screening_result" id="screening_result" required>
                 <option value="Validated">Validated</option>
                 <option value="Rejected">Rejected</option>
                 <option value="Needs More Info">Needs More Information</option>
             </select>
+        </div>
+        <div class="hint" id="result_hint">
+            This report failed a check, so it can't be validated. Choose Needs More Information or Rejected.
         </div>
 
         <div class="form-group">
@@ -136,5 +268,35 @@ Screen Report
     </form>
 
 </div>
+
+<script>
+    (function () {
+        var completeness = document.getElementById("completeness_status");
+        var duplicate = document.getElementById("duplicate_status");
+        var jurisdiction = document.getElementById("jurisdiction_status");
+        var result = document.getElementById("screening_result");
+        var hint = document.getElementById("result_hint");
+        var validatedOption = result.querySelector('option[value="Validated"]');
+
+        function update() {
+            var failed =
+                completeness.value !== "Complete" ||
+                duplicate.value !== "Not Duplicate" ||
+                jurisdiction.value !== "Within Jurisdiction";
+
+            validatedOption.disabled = failed;
+            hint.style.display = failed ? "block" : "none";
+
+            if (failed && result.value === "Validated") {
+                result.value = "Needs More Info";
+            }
+        }
+
+        completeness.addEventListener("change", update);
+        duplicate.addEventListener("change", update);
+        jurisdiction.addEventListener("change", update);
+        update();
+    })();
+</script>
 
 {% endblock %}

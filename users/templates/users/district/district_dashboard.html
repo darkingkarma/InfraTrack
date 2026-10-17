@@ -5,222 +5,405 @@ Dashboard
 {% endblock %}
 
 {% block page_title %}
-Dashboard
+District Dashboard
 {% endblock %}
 
 {% block style %}
 <style>
-    .welcome-banner{
-        margin-bottom:25px;
+    .page-header{
+        margin-bottom:22px;
     }
 
-    .welcome-banner h2{
+    .page-header h2{
         color:#0A2E5C;
-        margin-bottom:5px;
     }
 
-    .welcome-banner p{
-        color:gray;
+    .page-header p{
+        color:#777;
+        margin-top:4px;
         font-size:14px;
     }
 
-    .stats-grid{
+    /* Workflow pipeline */
+    .pipeline{
         display:grid;
-        grid-template-columns:repeat(4, 1fr);
-        gap:20px;
-        margin-bottom:30px;
+        grid-template-columns:repeat(5, 1fr);
+        gap:16px;
+        margin-bottom:25px;
     }
 
-    .stat-card{
+    .step{
+        position:relative;
+        display:block;
         background:white;
         border-radius:10px;
+        padding:18px 20px;
+        text-decoration:none;
+        color:inherit;
         box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:20px;
-        display:flex;
-        align-items:center;
-        gap:15px;
     }
 
-    .stat-icon{
-        width:50px;
-        height:50px;
-        border-radius:10px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:20px;
-        color:white;
-        flex-shrink:0;
+    .step:hover{
+        box-shadow:0 4px 14px rgba(0,0,0,.14);
     }
 
-    .icon-reports{
-        background:#0A2E5C;
+    .step:not(:last-child)::after{
+        content:"\203A";
+        position:absolute;
+        right:-14px;
+        top:50%;
+        transform:translateY(-50%);
+        font-size:26px;
+        color:#94a3b8;
+        z-index:1;
     }
 
-    .icon-orders{
-        background:#a15c00;
+    .step-label{
+        font-size:12px;
+        font-weight:bold;
+        color:#777;
+        text-transform:uppercase;
+        letter-spacing:.5px;
     }
 
-    .icon-repairs{
-        background:#1e7e34;
-    }
-
-    .icon-personnel{
-        background:#5b3fa0;
-    }
-
-    .stat-info h3{
-        font-size:24px;
+    .step-number{
+        font-size:30px;
+        font-weight:bold;
         color:#0A2E5C;
-        margin-bottom:2px;
+        margin-top:6px;
     }
 
-    .stat-info p{
-        font-size:13px;
-        color:gray;
+    .step-note{
+        font-size:12px;
+        color:#999;
+        margin-top:2px;
+        min-height:16px;
     }
 
-    .panels-grid{
+    /* Two columns */
+    .columns{
         display:grid;
-        grid-template-columns:2fr 1fr;
+        grid-template-columns:3fr 2fr;
         gap:20px;
+        margin-bottom:25px;
     }
 
     .panel{
         background:white;
         border-radius:10px;
+        padding:22px;
         box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:20px;
     }
 
-    .panel h4{
+    .panel h3{
         color:#0A2E5C;
-        margin-bottom:15px;
+        font-size:16px;
+        margin-bottom:6px;
     }
 
-    .activity-item{
+    .group-title{
         display:flex;
         justify-content:space-between;
-        padding:12px 0;
-        border-bottom:1px solid #eee;
-        font-size:14px;
+        align-items:center;
+        margin:18px 0 6px;
+        font-size:13px;
+        font-weight:bold;
+        color:#555;
+        text-transform:uppercase;
+        letter-spacing:.4px;
     }
 
-    .activity-item:last-child{
-        border-bottom:none;
-    }
-
-    .activity-item span:first-child{
-        color:#333;
-    }
-
-    .activity-item span:last-child{
-        color:gray;
+    .count-pill{
+        background:#fde8e8;
+        color:#c0392b;
+        border-radius:12px;
+        padding:2px 10px;
         font-size:12px;
     }
 
-    .empty-panel{
-        text-align:center;
-        color:gray;
-        padding:30px 0;
-        font-size:14px;
+    .row{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        padding:11px 0;
+        border-bottom:1px solid #eee;
     }
 
-    .quick-link{
-        display:block;
-        padding:12px;
-        border-radius:8px;
-        background:#f5f7fa;
-        color:#0A2E5C;
-        text-decoration:none;
+    .row:last-child{
+        border-bottom:none;
+    }
+
+    .row-main{
+        min-width:0;
+    }
+
+    .row-title{
         font-weight:bold;
+        color:#333;
         font-size:14px;
-        margin-bottom:10px;
-        transition:.2s;
     }
 
-    .quick-link:hover{
+    .row-meta{
+        font-size:12px;
+        color:#888;
+        margin-top:2px;
+    }
+
+    .row-btn{
+        flex-shrink:0;
+        padding:7px 14px;
+        border-radius:6px;
+        font-size:13px;
+        font-weight:bold;
+        text-decoration:none;
+        background:#0A2E5C;
+        color:white;
+    }
+
+    .row-btn:hover{
+        background:#154A8A;
+    }
+
+    .row-btn.light{
         background:#e8f0fe;
+        color:#0A2E5C;
     }
 
-    .quick-link:last-child{
-        margin-bottom:0;
+    .row-btn.light:hover{
+        background:#cfe0fb;
+    }
+
+    .all-clear{
+        text-align:center;
+        color:#16a34a;
+        padding:35px 10px;
+        font-weight:bold;
+    }
+
+    .all-clear span{
+        display:block;
+        font-weight:normal;
+        color:#888;
+        font-size:13px;
+        margin-top:4px;
+    }
+
+    .status-badge{
+        flex-shrink:0;
+        padding:4px 12px;
+        border-radius:20px;
+        font-size:12px;
+        font-weight:bold;
+        background:#e8f0fe;
+        color:#0A2E5C;
+        white-space:nowrap;
+    }
+
+    .empty{
+        color:gray;
+        text-align:center;
+        padding:25px 0;
+    }
+
+    /* At a glance */
+    .glance{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+        gap:16px;
+    }
+
+    .glance-item{
+        background:white;
+        border-radius:10px;
+        padding:16px 20px;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .glance-label{
+        font-size:12px;
+        color:#777;
+    }
+
+    .glance-value{
+        font-size:22px;
+        font-weight:bold;
+        color:#0A2E5C;
+        margin-top:4px;
+    }
+
+    .glance-item progress{
+        width:100%;
+        height:8px;
+        margin-top:8px;
+        accent-color:#22c55e;
+    }
+
+    @media (max-width: 1000px){
+        .pipeline{
+            grid-template-columns:repeat(2, 1fr);
+        }
+
+        .step:not(:last-child)::after{
+            display:none;
+        }
+
+        .columns{
+            grid-template-columns:1fr;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="welcome-banner">
-    <h2>Welcome back, {{ request.user.first_name|default:request.user.username }}</h2>
-    <p>Here's an overview of infrastructure reports and repair activity in Iligan City.</p>
+<div class="page-header">
+    <h2>Welcome, {{ request.user.first_name|default:request.user.username }}</h2>
+    <p>Where every report stands right now.</p>
 </div>
 
-<div class="stats-grid">
+<div class="pipeline">
 
-    <div class="stat-card">
-        <div class="stat-info">
-            <h3>{{ validated_reports_count|default:"0" }}</h3>
-            <p>Validated Reports</p>
-        </div>
-    </div>
+    <a href="{% url 'report_history' %}?status=Pending+Screening" class="step">
+        <div class="step-label">Screening</div>
+        <div class="step-number">{{ screening }}</div>
+        <div class="step-note">{% if needs_info %}{{ needs_info }} waiting on citizen{% else %}With FRU{% endif %}</div>
+    </a>
 
-    <div class="stat-card">
-        <div class="stat-info">
-            <h3>{{ work_orders_count|default:"0" }}</h3>
-            <p>Active Work Orders</p>
-        </div>
-    </div>
+    <a href="{% url 'report_history' %}?status=Validated" class="step">
+        <div class="step-label">Inspection</div>
+        <div class="step-number">{{ awaiting_inspection }}</div>
+        <div class="step-note">Awaiting field visit</div>
+    </a>
 
-    <div class="stat-card">
-        <div class="stat-info">
-            <h3>{{ ongoing_repairs_count|default:"0" }}</h3>
-            <p>Ongoing Repairs</p>
-        </div>
-    </div>
+    <a href="{% url 'work_orders' %}" class="step">
+        <div class="step-label">Work Order</div>
+        <div class="step-number">{{ ready_count }}</div>
+        <div class="step-note">Ready to issue</div>
+    </a>
 
-    <div class="stat-card">
-        <div class="stat-info">
-            <h3>{{ personnel_count|default:"0" }}</h3>
-            <p>Active Personnel</p>
-        </div>
-    </div>
+    <a href="{% url 'repair_monitoring' %}" class="step">
+        <div class="step-label">Repair</div>
+        <div class="step-number">{{ ongoing }}</div>
+        <div class="step-note">Ongoing</div>
+    </a>
+
+    <a href="{% url 'report_history' %}?status=Resolved" class="step">
+        <div class="step-label">Resolved</div>
+        <div class="step-number">{{ resolved }}</div>
+        <div class="step-note">{{ resolution_rate }}% of valid reports</div>
+    </a>
 
 </div>
 
-<div class="panels-grid">
+<div class="columns">
 
     <div class="panel">
-        <h4>Recent Activity</h4>
+        <h3>Needs your action</h3>
 
-        {% for activity in recent_activity %}
-        <div class="activity-item">
-            <span>{{ activity.description }}</span>
-            <span>{{ activity.timestamp }}</span>
+        {% if not ready_count and not update_request_count and not high_open_count %}
+        <div class="all-clear">
+            All caught up
+            <span>Nothing is waiting on you right now.</span>
         </div>
-        {% empty %}
-        <div class="empty-panel">
-            No recent activity to show.
+        {% endif %}
+
+        {% if ready_count %}
+        <div class="group-title">
+            <span>Ready for a work order</span>
+            <span class="count-pill">{{ ready_count }}</span>
+        </div>
+        {% for report in ready_for_work_order %}
+        <div class="row">
+            <div class="row-main">
+                <div class="row-title">{{ report.title }}</div>
+                <div class="row-meta">{{ report.get_infrastructure_type_display }} &bull; {{ report.severity_level }} severity &bull; inspected {{ report.inspection_date|timesince }} ago</div>
+            </div>
+            <a href="{% url 'create_work_order' report.pk %}" class="row-btn">Create Work Order</a>
         </div>
         {% endfor %}
+        {% endif %}
 
+        {% if update_request_count %}
+        <div class="group-title">
+            <span>Waiting on a field engineer</span>
+            <span class="count-pill">{{ update_request_count }}</span>
+        </div>
+        {% for wo in update_requests %}
+        <div class="row">
+            <div class="row-main">
+                <div class="row-title">{{ wo.report.title }}</div>
+                <div class="row-meta">Asked {{ wo.update_requested_date|timesince }} ago &bull; {{ wo.assigned_field_engineer.user.get_full_name }}</div>
+            </div>
+            <a href="{% url 'view_work_order' wo.pk %}" class="row-btn light">View</a>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if high_open_count %}
+        <div class="group-title">
+            <span>High severity, still open</span>
+            <span class="count-pill">{{ high_open_count }}</span>
+        </div>
+        {% for report in high_open %}
+        <div class="row">
+            <div class="row-main">
+                <div class="row-title">{{ report.title }}</div>
+                <div class="row-meta">{{ report.get_infrastructure_type_display }} &bull; {{ report.status }} &bull; reported {{ report.reported_date|timesince }} ago</div>
+            </div>
+            <a href="{% url 'view_report_history_detail' report.pk %}" class="row-btn light">View</a>
+        </div>
+        {% endfor %}
+        {% endif %}
     </div>
 
     <div class="panel">
-        <h4>Quick Links</h4>
+        <h3>Recent activity</h3>
 
-        <a href="{% url 'validated_reports' %}" class="quick-link">
-            <i class="fa-solid fa-clipboard-check"></i> View Validated Reports
-        </a>
+        {% for report in recent_activity %}
+        <div class="row">
+            <div class="row-main">
+                <div class="row-title">
+                    <a href="{% url 'view_report_history_detail' report.pk %}" style="color:inherit; text-decoration:none;">{{ report.title }}</a>
+                </div>
+                <div class="row-meta">Updated {{ report.updated_date|timesince }} ago</div>
+            </div>
+            <span class="status-badge">{{ report.status }}</span>
+        </div>
+        {% empty %}
+        <div class="empty">No reports yet.</div>
+        {% endfor %}
+    </div>
 
-        <a href="{% url 'work_orders' %}" class="quick-link">
-            <i class="fa-solid fa-file-signature"></i> Manage Work Orders
-        </a>
+</div>
 
-        <a href="{% url 'personnel' %}" class="quick-link">
-            <i class="fa-solid fa-users"></i> Manage Personnel
-        </a>
+<div class="glance">
 
+    <div class="glance-item">
+        <div class="glance-label">Total reports</div>
+        <div class="glance-value">{{ total }}</div>
+    </div>
+
+    <div class="glance-item">
+        <div class="glance-label">Resolution rate</div>
+        <div class="glance-value">{{ resolution_rate }}%</div>
+        <progress value="{{ resolution_rate }}" max="100"></progress>
+    </div>
+
+    <div class="glance-item">
+        <div class="glance-label">Active work orders</div>
+        <div class="glance-value">{{ active_work_orders }}</div>
+    </div>
+
+    <div class="glance-item">
+        <div class="glance-label">Infrastructure records</div>
+        <div class="glance-value">{{ infrastructure_total }}</div>
+        <div class="glance-label">{{ infrastructure_maintenance }} under maintenance</div>
+    </div>
+
+    <div class="glance-item">
+        <div class="glance-label">Personnel</div>
+        <div class="glance-value">{{ personnel_total }}</div>
     </div>
 
 </div>
