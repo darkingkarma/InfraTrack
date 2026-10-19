@@ -7,6 +7,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import transaction
+from .models import InspectionAssignment
+
 
 from .models import (
     IssueReport,
@@ -103,25 +106,278 @@ class MyIssueReportListView(generics.ListAPIView):
         if self.request.user.role != 'citizen':
             return IssueReport.objects.none()
 
-        return IssueReport.objects.filter(
-            citizen=self.request.user
-        ).order_by('-reported_date')
+        return (
+            IssueReport.objects
+            .filter(citizen=self.request.user)
+            .select_related('infrastructure')
+            .prefetch_related(
+                'photos',
+                'screenings',
+                'inspection_photos',
+                'inspection_validations',
+                'info_requests',
+                'follow_ups',
+                'work_order__repair_updates__photos',
+            )
+            .order_by('-reported_date')
+        )
+
 
 
 class ValidatedIssueReportListView(generics.ListAPIView):
-    """Field Engineer: list reports awaiting inspection."""
+    """Field Engineer: list assigned reports with assignment details."""
 
     serializer_class = IssueReportSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.role != 'field_engineer':
+        user = self.request.user
+
+        if user.role != 'field_engineer':
+            return IssueReport.objects.none()
+
+        if not hasattr(user, 'personnel'):
+            return IssueReport.objects.none()
+
+        assigned_report_ids = InspectionAssignment.objects.filter(
+            assigned_field_engineer=user.personnel,
+            is_active=True,
+        ).values_list('report_id', flat=True)
+
+        return IssueReport.objects.filter(
+            report_id__in=assigned_report_ids,
+            status='Validated',
+        ).order_by('-reported_date')
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+
+        if user.role != 'field_engineer':
+            raise PermissionDenied(
+                'Only field engineers can view assigned inspection reports.'
+            )
+
+        if not hasattr(user, 'personnel'):
+            raise PermissionDenied(
+                'Your account has no personnel record.'
+            )
+
+        reports = self.get_queryset()
+        data = self.get_serializer(reports, many=True).data
+
+        active_assignments = InspectionAssignment.objects.filter(
+            assigned_field_engineer=user.personnel,
+            is_active=True,
+            report_id__in=reports.values_list('report_id', flat=True),
+        ).select_related(
+            'assigned_by__user',
+        )
+
+        assignment_by_report = {
+            assignment.report_id: assignment
+            for assignment in active_assignments
+        }
+
+        for report_data in data:
+            report_id = report_data['report_id']
+            assignment = assignment_by_report.get(report_id)
+
+            report_data['inspection_assignment'] = None
+
+            if assignment:
+                assigned_by_name = None
+
+                if assignment.assigned_by:
+                    assigned_by_name = (
+                        assignment.assigned_by.user.get_full_name()
+                    )
+
+                report_data['inspection_assignment'] = {
+                    'id': assignment.id,
+                    'assigned_date': assignment.assigned_date,
+                    'remarks': assignment.remarks,
+                    'assigned_by_name': assigned_by_name,
+                }
+
+        return Response(data)
+
+
+
+
+class InspectionAssignmentListView(generics.ListAPIView):
+    """District Engineer: list validated reports and their assignments."""
+
+    serializer_class = IssueReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != 'district_engineer':
             return IssueReport.objects.none()
 
         return IssueReport.objects.filter(
             status='Validated'
         ).order_by('-reported_date')
 
+    def list(self, request, *args, **kwargs):
+        if request.user.role != 'district_engineer':
+            raise PermissionDenied(
+                'Only district engineers can manage inspection assignments.'
+            )
+
+        reports = self.get_queryset()
+        data = self.get_serializer(reports, many=True).data
+
+        active_assignments = InspectionAssignment.objects.filter(
+            report_id__in=reports.values_list('report_id', flat=True),
+            is_active=True,
+        ).select_related(
+            'assigned_field_engineer__user',
+            'assigned_by__user',
+        )
+
+        assignment_by_report = {
+            assignment.report_id: assignment
+            for assignment in active_assignments
+        }
+
+        result = []
+
+        for report_data in data:
+            report_id = report_data['report_id']
+            assignment = assignment_by_report.get(report_id)
+
+            report_data['inspection_assignment'] = None
+
+            if assignment:
+                engineer = assignment.assigned_field_engineer
+
+                report_data['inspection_assignment'] = {
+                    'id': assignment.id,
+                    'assigned_field_engineer_id': (
+                        engineer.id if engineer else None
+                    ),
+                    'assigned_field_engineer_name': (
+                        engineer.user.get_full_name()
+                        if engineer else None
+                    ),
+                    'assigned_by_id': (
+                        assignment.assigned_by_id
+                    ),
+                    'assigned_date': assignment.assigned_date,
+                    'remarks': assignment.remarks,
+                }
+
+            result.append(report_data)
+
+        return Response(result)
+
+class AssignInspectionView(APIView):
+    """District Engineer: assign or reassign a report for inspection."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        user = request.user
+
+        if user.role != 'district_engineer':
+            raise PermissionDenied(
+                'Only district engineers can assign inspection reports.'
+            )
+
+        if not hasattr(user, 'personnel'):
+            raise PermissionDenied(
+                'Your account has no personnel record.'
+            )
+
+        engineer_id = request.data.get('assigned_field_engineer_id')
+        remarks = request.data.get('remarks', '').strip()
+
+        if not engineer_id:
+            return Response(
+                {'error': 'Please select a Field Engineer.'},
+                status=400,
+            )
+
+        from users.models import Personnel
+
+        try:
+            engineer = Personnel.objects.select_related('user').get(
+                pk=engineer_id,
+                position='field_engineer',
+            )
+        except (Personnel.DoesNotExist, ValueError, TypeError):
+            return Response(
+                {'error': 'The selected Field Engineer was not found.'},
+                status=400,
+            )
+
+        with transaction.atomic():
+            report = get_object_or_404(
+                IssueReport.objects.select_for_update(),
+                report_id=pk,
+            )
+
+            if report.status != 'Validated':
+                return Response(
+                    {
+                        'error':
+                        'Only validated reports can be assigned for inspection.'
+                    },
+                    status=400,
+                )
+
+            active_assignments = InspectionAssignment.objects.filter(
+                report=report,
+                is_active=True,
+            )
+
+            current_assignment = active_assignments.first()
+
+            if (
+                current_assignment
+                and current_assignment.assigned_field_engineer_id
+                == engineer.id
+            ):
+                return Response(
+                    {
+                        'message':
+                        'This Field Engineer is already assigned to this report.'
+                    },
+                    status=200,
+                )
+
+            active_assignments.update(is_active=False)
+
+            assignment = InspectionAssignment.objects.create(
+                report=report,
+                assigned_field_engineer=engineer,
+                assigned_by=user.personnel,
+                remarks=remarks,
+                is_active=True,
+            )
+
+        notify_users(
+            [engineer.user],
+            'inspection_assigned',
+            'New inspection assigned',
+            f'You have been assigned to inspect "{report.title}".',
+            report,
+        )
+
+        return Response(
+            {
+                'message': 'Field Engineer assigned successfully.',
+                'report_id': report.report_id,
+                'assignment_id': assignment.id,
+                'assigned_field_engineer_id': engineer.id,
+                'assigned_field_engineer_name': (
+                    engineer.user.get_full_name()
+                ),
+                'assigned_date': assignment.assigned_date,
+                'remarks': assignment.remarks,
+            },
+            status=201,
+        )
 
 # =========================================================
 # FRU SCREENING
@@ -339,6 +595,18 @@ class SubmitInspectionView(generics.UpdateAPIView):
             )
 
         report = self.get_object()
+
+        if not InspectionAssignment.objects.filter(
+            report=report,
+            assigned_field_engineer=request.user.personnel,
+            is_active=True,
+        ).exists():
+            return Response(
+                {
+                    'error': 'This report is not currently assigned to you for inspection.'
+                },
+                status=403,
+            )
 
         if report.status != 'Validated':
             return Response(

@@ -1,3 +1,4 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -10,106 +11,176 @@ Repair Monitoring
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    .page-header h2 {
+        color: #0A2E5C;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    .page-header p {
+        color: #777;
+        margin: 4px 0 20px;
     }
 
-    .table-container{
-        background:white;
-        border-radius:10px;
-        overflow:hidden;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
+    .search-section {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
     }
 
-    table{
-        width:100%;
-        border-collapse:collapse;
+    .search-section input {
+        flex: 1;
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font: inherit;
     }
 
-    thead{
-        background:#0A2E5C;
-        color:white;
+    .search-section select {
+        width: 220px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+        font: inherit;
     }
 
-    th{
-        padding:15px;
-        text-align:left;
+    .search-section button,
+    .search-reset {
+        border: none;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
     }
 
-    td{
-        padding:15px;
-        border-bottom:1px solid #eee;
+    .search-section button {
+        background: #0A2E5C;
+        color: white;
     }
 
-    .empty{
-        text-align:center;
-        color:gray;
-        padding:40px;
+    .search-section button:hover {
+        background: #16477f;
     }
 
-    .action-cell{
-        display:flex;
-        gap:8px;
+    .search-reset {
+        background: #e8f0fe;
+        color: #0A2E5C;
     }
 
-    .view-btn{
-        border:none;
-        cursor:pointer;
-        padding:8px 14px;
-        border-radius:6px;
-        font-size:13px;
-        font-weight:bold;
-        text-decoration:none;
-        display:inline-block;
-        background:#e8f0fe;
-        color:#0A2E5C;
+    .search-reset:hover {
+        background: #cfe0fb;
     }
 
-    .view-btn:hover{
-        background:#cfe0fb;
+    .table-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        padding: 20px;
+        overflow-x: auto;
     }
 
-    .progress-bar-container{
-        width:100%;
-        background:#eee;
-        border-radius:20px;
-        height:10px;
-        overflow:hidden;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 750px;
     }
 
-    .progress-bar-fill{
-        height:100%;
-        background:#0A2E5C;
-        border-radius:20px;
+    th, td {
+        text-align: left;
+        padding: 13px 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        vertical-align: top;
     }
 
-    .status-badge{
-        padding:5px 12px;
-        border-radius:20px;
-        font-size:12px;
-        font-weight:bold;
+    th {
+        color: #0A2E5C;
+        white-space: nowrap;
     }
 
-    .status-issued{
-        background:#e8f0fe;
-        color:#0A2E5C;
+    tbody tr:hover {
+        background: #f8fafc;
     }
 
-    .status-ongoing{
-        background:#fff4e0;
-        color:#a15c00;
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
     }
 
-    .status-completed{
-        background:#e6f7ec;
-        color:#1e7e34;
+    .status-issued {
+        background: #e8f0fe;
+        color: #0A2E5C;
+    }
+
+    .status-ongoing {
+        background: #fff4e0;
+        color: #a15c00;
+    }
+
+    .status-completed {
+        background: #e6f7ec;
+        color: #1e7e34;
+    }
+
+    .no-update {
+        color: #888;
+        font-size: 13px;
+    }
+
+    .view-btn {
+        background: #e8f0fe;
+        color: #0A2E5C;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .view-btn:hover {
+        background: #cfe0fb;
+    }
+
+    .empty {
+        color: gray;
+        padding: 30px 10px;
+        text-align: center;
+    }
+
+    @media (max-width: 700px) {
+        .search-section {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-section input {
+            flex-basis: 100%;
+        }
+
+        .search-section select {
+            flex: 1;
+            width: auto;
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .search-section button,
+        .search-reset {
+            flex: 1;
+        }
     }
 </style>
 {% endblock %}
@@ -118,18 +189,55 @@ Repair Monitoring
 
 <div class="page-header">
     <h2>Repair Monitoring</h2>
+    <p>Monitor work orders and track repair progress submitted by Field Engineers.</p>
 </div>
 
-<div class="table-container">
+<!-- Search and Status Filter -->
+<form method="get" class="search-section">
+    <input
+        type="text"
+        name="q"
+        placeholder="Search by report title, work order ID, or engineer..."
+        value="{{ search_query }}"
+        aria-label="Search work orders"
+    >
 
+    <select name="status" aria-label="Filter by work order status">
+        <option value="" {% if not status_filter %}selected{% endif %}>
+            All Statuses
+        </option>
+
+        <option value="Issued" {% if status_filter == "Issued" %}selected{% endif %}>
+            Issued
+        </option>
+
+        <option value="In Progress" {% if status_filter == "In Progress" %}selected{% endif %}>
+            In Progress
+        </option>
+
+        <option value="Completed" {% if status_filter == "Completed" %}selected{% endif %}>
+            Completed
+        </option>
+    </select>
+
+    <button type="submit">Search</button>
+
+    {% if search_query or status_filter %}
+        <a href="{% url 'repair_monitoring' %}" class="search-reset">
+            Reset
+        </a>
+    {% endif %}
+</form>
+
+<!-- Work Orders Table -->
+<div class="table-card">
+    {% if work_orders %}
     <table>
-
         <thead>
             <tr>
                 <th>No.</th>
                 <th>Report Title</th>
                 <th>Assigned Field Engineer</th>
-                <th>Progress</th>
                 <th>Status</th>
                 <th>Last Update</th>
                 <th>Actions</th>
@@ -137,58 +245,67 @@ Repair Monitoring
         </thead>
 
         <tbody>
-
             {% for wo in work_orders %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ wo.report.title }}</td>
-                <td>{{ wo.assigned_field_engineer.user.get_full_name }}</td>
+
                 <td>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" data-progress="{{ wo.progress_percent }}"></div>
-                    </div>
+                    <strong>{{ wo.report.title }}</strong>
+                    <br>
+                    <small>Work Order #{{ wo.pk }}</small>
                 </td>
+
+                <td>
+                    {% if wo.assigned_field_engineer %}
+                        {{ wo.assigned_field_engineer.user.get_full_name|default:wo.assigned_field_engineer.user.username }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+                </td>
+
                 <td>
                     <span class="status-badge
-                        {% if wo.status == 'Completed' %}status-completed
-                        {% elif wo.status == 'In Progress' %}status-ongoing
-                        {% else %}status-issued{% endif %}">
+                        {% if wo.status == 'Completed' %}
+                            status-completed
+                        {% elif wo.status == 'In Progress' %}
+                            status-ongoing
+                        {% else %}
+                            status-issued
+                        {% endif %}">
                         {{ wo.status }}
                     </span>
                 </td>
+
                 <td>
-                    {% with wo.repair_updates.last as latest %}
+                    {% with latest=wo.latest_repair_update %}
                         {% if latest %}
                             {{ latest.update_date|date:"M d, Y g:i A" }}
                         {% else %}
-                            No updates yet
+                            <span class="no-update">No updates yet</span>
                         {% endif %}
                     {% endwith %}
                 </td>
+
                 <td>
-                    <div class="action-cell">
-                        <a href="{% url 'view_work_order' wo.pk %}" class="view-btn">View</a>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="empty">
-                    No repair updates found.
+                    <a href="{% url 'view_work_order' wo.pk %}"
+                       class="view-btn">
+                        View Details
+                    </a>
                 </td>
             </tr>
             {% endfor %}
-
         </tbody>
-
     </table>
 
+    {% else %}
+        <p class="empty">
+            {% if search_query or status_filter %}
+                No work orders match your search or selected status.
+            {% else %}
+                No work orders found.
+            {% endif %}
+        </p>
+    {% endif %}
 </div>
-
-<script>
-    document.querySelectorAll('.progress-bar-fill').forEach(function(bar) {
-        bar.style.width = bar.dataset.progress + '%';
-    });
-</script>
 
 {% endblock %}

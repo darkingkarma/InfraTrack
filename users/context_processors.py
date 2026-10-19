@@ -1,12 +1,24 @@
-def notifications(request):
-    if request.user.is_authenticated:
-        from reports.models import Notification
+def notifications_context(request):
+    if not request.user.is_authenticated:
         return {
-            "unread_notifications_count": Notification.objects.filter(
-                recipient=request.user, is_read=False
-            ).count()
+            "unread_notifications_count": 0,
+            "recent_notifications": [],
         }
-    return {}
+
+    from reports.models import Notification
+
+    user_notifications = Notification.objects.filter(
+        recipient=request.user
+    )
+
+    return {
+        "unread_notifications_count": user_notifications.filter(
+            is_read=False
+        ).count(),
+        "recent_notifications": user_notifications.select_related(
+            "report"
+        ).order_by("-created_at")[:5],
+    }
 
 def follow_ups(request):
     """Pending follow-up count for the web sidebar (staff only)."""

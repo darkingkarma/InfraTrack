@@ -1,3 +1,4 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -10,75 +11,214 @@ Work Order Details
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    .page-header h2 {
+        color: #0A2E5C;
+        margin: 0;
     }
 
-    .back-btn{
-        text-decoration:none;
-        background:#eee;
-        color:#333;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
+    .back-btn {
+        text-decoration: none;
+        background: #eee;
+        color: #333;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: bold;
     }
 
-    .back-btn:hover{
-        background:#ddd;
+    .back-btn:hover {
+        background: #ddd;
     }
 
-    .form-card{
-        background:white;
-        border-radius:10px;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:30px;
-        max-width:800px;
-        margin-bottom:20px;
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        align-items: start;
     }
 
-    .photo-row{
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        margin-top:8px;
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        padding: 25px;
+        margin-bottom: 20px;
+        min-width: 0;
     }
 
-    .photo-row img{
-        width:120px;
-        height:120px;
-        object-fit:cover;
-        border-radius:6px;
+    .form-card h3 {
+        color: #0A2E5C;
+        margin: 0 0 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
     }
 
-    .update-card{
-        border-left:4px solid #0A2E5C;
-        background:#f8f9fa;
-        padding:15px 20px;
-        border-radius:6px;
-        margin-bottom:15px;
+    .detail-item {
+        margin-bottom: 16px;
+        overflow-wrap: anywhere;
     }
 
-    .update-header{
-        display:flex;
-        justify-content:space-between;
-        margin-bottom:8px;
+    .detail-label {
+        display: block;
+        color: #777;
+        font-size: 13px;
+        margin-bottom: 5px;
     }
 
-    .update-status{
-        font-weight:bold;
-        color:#0A2E5C;
+    .detail-value {
+        color: #263238;
+        font-weight: 600;
     }
 
-    .update-date{
-        color:#888;
-        font-size:13px;
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .status-issued {
+        background: #e5efff;
+        color: #174ea6;
+    }
+
+    .status-progress {
+        background: #fff0ce;
+        color: #946200;
+    }
+
+    .status-completed {
+        background: #dff5e5;
+        color: #176b35;
+    }
+
+    .inspection-result {
+        background: #f7f9fc;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    .inspection-result p {
+        margin: 8px 0;
+        overflow-wrap: anywhere;
+    }
+
+    .update-card {
+        border-left: 4px solid #0A2E5C;
+        background: #f8f9fa;
+        padding: 18px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+
+    .update-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .update-status {
+        font-weight: bold;
+        color: #0A2E5C;
+    }
+
+    .update-date {
+        color: #777;
+        font-size: 12px;
+    }
+
+    .photo-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .photo-row img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+    .request-box {
+        margin-top: 20px;
+        padding: 16px;
+        background: #f7f9fc;
+        border-radius: 8px;
+    }
+
+    .request-box textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        min-height: 75px;
+        font-family: inherit;
+        resize: vertical;
+    }
+
+    .primary-btn {
+        margin-top: 10px;
+        border: none;
+        cursor: pointer;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        background: #0A2E5C;
+        color: white;
+    }
+
+    .primary-btn:hover {
+        background: #164579;
+    }
+
+    .notice {
+        margin-top: 15px;
+        padding: 14px;
+        border-radius: 8px;
+        overflow-wrap: anywhere;
+    }
+
+    .notice-warning {
+        background: #fff4e0;
+        color: #8a5200;
+    }
+
+    .notice-success {
+        background: #e5f6e9;
+        color: #176b35;
+    }
+
+    .empty-text {
+        color: #888;
+        font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-card {
+            padding: 18px;
+        }
     }
 </style>
 {% endblock %}
@@ -87,71 +227,336 @@ Work Order Details
 
 <div class="page-header">
     <h2>Work Order Details</h2>
-    <a href="{% url 'repair_monitoring' %}" class="back-btn">&larr; Back to List</a>
+    <a href="{% url 'repair_monitoring' %}" class="back-btn">
+        &larr; Back to Monitoring
+    </a>
 </div>
 
+<!-- WORK ORDER SUMMARY -->
 <div class="form-card">
-    <h3 style="color:#0A2E5C; margin-bottom:15px;">Work Order Summary</h3>
+    <h3>Work Order Summary</h3>
 
-    <p><strong>Report:</strong> {{ work_order.report.title }}</p>
-    <p><strong>Details:</strong> {{ work_order.work_order_details }}</p>
-    <p><strong>Assigned Field Engineer:</strong> {{ work_order.assigned_field_engineer.user.get_full_name }}</p>
-    <p><strong>Issued By:</strong> {{ work_order.issued_by.user.get_full_name }}</p>
-    <p><strong>Status:</strong> {{ work_order.status }}</p>
-    <p><strong>Date Issued:</strong> {{ work_order.date_issued|date:"M d, Y g:i A" }}</p>
-    {% if work_order.date_completed %}
-    <p><strong>Date Completed:</strong> {{ work_order.date_completed|date:"M d, Y g:i A" }}</p>
+    <div class="details-grid">
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">Work Order ID</span>
+                <div class="detail-value">WO #{{ work_order.pk }}</div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Report Title</span>
+                <div class="detail-value">{{ work_order.report.title }}</div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Assigned Field Engineer</span>
+                <div class="detail-value">
+                    {% if work_order.assigned_field_engineer %}
+                        {{ work_order.assigned_field_engineer.user.get_full_name|default:work_order.assigned_field_engineer.user.username }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Issued By</span>
+                <div class="detail-value">
+                    {% if work_order.issued_by %}
+                        {{ work_order.issued_by.user.get_full_name|default:work_order.issued_by.user.username }}
+                    {% else %}
+                        Not available
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">Current Status</span>
+                <div class="detail-value">
+                    {% if work_order.status == 'Completed' %}
+                        <span class="status-badge status-completed">
+                            Completed
+                        </span>
+                    {% elif work_order.status == 'In Progress' %}
+                        <span class="status-badge status-progress">
+                            In Progress
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-issued">
+                            {{ work_order.status }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Date Issued</span>
+                <div class="detail-value">
+                    {{ work_order.date_issued|date:"M d, Y g:i A" }}
+                </div>
+            </div>
+
+            {% if work_order.date_completed %}
+            <div class="detail-item">
+                <span class="detail-label">Date Completed</span>
+                <div class="detail-value">
+                    {{ work_order.date_completed|date:"M d, Y g:i A" }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if work_order.approved_by %}
+            <div class="detail-item">
+                <span class="detail-label">Approved By</span>
+                <div class="detail-value">
+                    {{ work_order.approved_by.user.get_full_name|default:work_order.approved_by.user.username }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="detail-item">
+        <span class="detail-label">Work Order Instructions</span>
+        <div class="detail-value">{{ work_order.work_order_details|linebreaksbr }}</div>
+    </div>
+
+    {% if work_order.status == 'Completed' %}
+        <div class="notice notice-success">
+            <strong>Repair Completed</strong>
+            <p style="margin-bottom:0;">
+                This work order has been marked as completed.
+            </p>
+        </div>
     {% endif %}
 
     {% if work_order.status != 'Completed' %}
         {% if work_order.update_requested %}
-        <div style="margin-top:15px; padding:12px 16px; background:#fff4e0; border-radius:8px; color:#a15c00;">
-            <strong>Update requested</strong> on {{ work_order.update_requested_date|date:"M d, Y g:i A" }}
-            {% if work_order.update_request_message %}
-                — "{{ work_order.update_request_message }}"
-            {% endif %}
-            <br><span style="font-size:12px;">Waiting for the field engineer to respond.</span>
-        </div>
+            <div class="notice notice-warning">
+                <strong>Update Requested</strong>
+                <p>
+                    Requested on
+                    {{ work_order.update_requested_date|date:"M d, Y g:i A" }}
+                </p>
+
+                {% if work_order.update_request_message %}
+                    <p>
+                        <strong>Message:</strong>
+                        {{ work_order.update_request_message }}
+                    </p>
+                {% endif %}
+
+                <small>Waiting for the Field Engineer to respond.</small>
+            </div>
         {% else %}
-        <form method="post" action="{% url 'request_work_order_update' work_order.pk %}" style="margin-top:15px;">
-            {% csrf_token %}
-            <textarea name="update_request_message" placeholder="Optional message to the field engineer..."
-                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; min-height:60px; font-family:inherit;"></textarea>
-            <button type="submit" style="margin-top:8px; border:none; cursor:pointer; padding:8px 16px;
-                border-radius:6px; font-size:13px; font-weight:bold; background:#0A2E5C; color:white;">
-                Request Update
-            </button>
-        </form>
+            <div class="request-box">
+                <strong style="color:#0A2E5C;">Request a Repair Update</strong>
+                <p style="color:#777; font-size:13px;">
+                    Ask the assigned Field Engineer for the latest repair status.
+                </p>
+
+                <form method="post"
+                      action="{% url 'request_work_order_update' work_order.pk %}">
+                    {% csrf_token %}
+
+                    <textarea name="update_request_message"
+                              placeholder="Optional message to the Field Engineer..."></textarea>
+
+                    <button type="submit" class="primary-btn">
+                        Request Update
+                    </button>
+                </form>
+            </div>
         {% endif %}
     {% endif %}
 </div>
 
+<!-- ORIGINAL REPORT -->
 <div class="form-card">
-    <h3 style="color:#0A2E5C; margin-bottom:15px;">Progress Updates</h3>
+    <h3>Original Report Details</h3>
 
-    {% for update in work_order.repair_updates.all %}
-    <div class="update-card">
-        <div class="update-header">
-            <span class="update-status">{{ update.status_update }}</span>
-            <span class="update-date">{{ update.update_date|date:"M d, Y g:i A" }}</span>
+    <div class="details-grid">
+        <div class="detail-item">
+            <span class="detail-label">Infrastructure Type</span>
+            <div class="detail-value">
+                {{ work_order.report.infrastructure_type }}
+            </div>
         </div>
-        <p><strong>Remarks:</strong> {{ update.progress_remarks }}</p>
-        {% if update.delay_reason %}
-        <p><strong>Delay Reason:</strong> {{ update.delay_reason }}</p>
-        {% endif %}
-        {% if update.completion_details %}
-        <p><strong>Completion Details:</strong> {{ update.completion_details }}</p>
-        {% endif %}
-        {% if update.photos.all %}
-        <div class="photo-row">
-            {% for photo in update.photos.all %}
-            <img src="{{ photo.image.url }}">
-            {% endfor %}
+
+        <div class="detail-item">
+            <span class="detail-label">Reported Date</span>
+            <div class="detail-value">
+                {{ work_order.report.reported_date|date:"M d, Y g:i A" }}
+            </div>
         </div>
-        {% endif %}
+
+        <div class="detail-item">
+            <span class="detail-label">Infrastructure</span>
+            <div class="detail-value">
+                {% if work_order.report.infrastructure %}
+                    {{ work_order.report.infrastructure }}
+                {% elif work_order.report.infrastructure_not_listed %}
+                    {{ work_order.report.infrastructure_not_listed }}
+                {% else %}
+                    Not specified
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail-item">
+            <span class="detail-label">Reported By</span>
+            <div class="detail-value">
+                {{ work_order.report.citizen.get_full_name|default:work_order.report.citizen.username }}
+            </div>
+        </div>
     </div>
+
+    <div class="detail-item">
+        <span class="detail-label">Issue Description</span>
+        <div>{{ work_order.report.description|linebreaksbr }}</div>
+    </div>
+
+    <div class="detail-item">
+        <span class="detail-label">Location</span>
+        <div>
+            {% if work_order.report.geographic_address %}
+                {{ work_order.report.geographic_address }}
+            {% else %}
+                Location description not available
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="detail-item">
+        <span class="detail-label">Coordinates</span>
+        <div>
+            {% if work_order.report.latitude != None and work_order.report.longitude != None %}
+                {{ work_order.report.latitude }},
+                {{ work_order.report.longitude }}
+            {% else %}
+                Coordinates not available
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- FIELD INSPECTION -->
+<div class="form-card">
+    <h3>Field Inspection Results</h3>
+
+    {% if inspection %}
+        <div class="inspection-result">
+            <p>
+                <strong>Validation Result:</strong>
+                {{ inspection.validation_result }}
+            </p>
+
+            <p>
+                <strong>Severity:</strong>
+                {{ inspection.severity_rating|default:"Not specified" }}
+            </p>
+
+            <p>
+                <strong>Inspected By:</strong>
+                {% if inspection.inspected_by %}
+                    {{ inspection.inspected_by.user.get_full_name|default:inspection.inspected_by.user.username }}
+                {% else %}
+                    Not available
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Inspection Date:</strong>
+                {{ inspection.inspection_date|date:"M d, Y g:i A" }}
+            </p>
+        </div>
+
+        <div class="detail-item">
+            <span class="detail-label">Inspection Findings</span>
+            <div>
+                {{ inspection.findings|default:"No findings recorded."|linebreaksbr }}
+            </div>
+        </div>
+
+        <div class="detail-item">
+            <span class="detail-label">Recommended Repairs</span>
+            <div>
+                {{ inspection.recommended_repairs|default:"No repair recommendations recorded."|linebreaksbr }}
+            </div>
+        </div>
+
+        {% if inspection.comments %}
+        <div class="detail-item">
+            <span class="detail-label">Additional Comments</span>
+            <div>{{ inspection.comments|linebreaksbr }}</div>
+        </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-text">
+            No field inspection record is available for this report.
+        </p>
+    {% endif %}
+</div>
+
+<!-- REPAIR HISTORY -->
+<div class="form-card">
+    <h3>Repair Update History</h3>
+
+    {% for update in work_order.ordered_repair_updates %}
+        <div class="update-card">
+            <div class="update-header">
+                <span class="update-status">
+                    {{ update.status_update }}
+                </span>
+
+                <span class="update-date">
+                    {{ update.update_date|date:"M d, Y g:i A" }}
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Progress Remarks</span>
+                <div>
+                    {{ update.progress_remarks|default:"No remarks provided."|linebreaksbr }}
+                </div>
+            </div>
+
+            {% if update.delay_reason %}
+                <div class="detail-item">
+                    <span class="detail-label">Delay Reason</span>
+                    <div>{{ update.delay_reason|linebreaksbr }}</div>
+                </div>
+            {% endif %}
+
+            {% if update.completion_details %}
+                <div class="detail-item">
+                    <span class="detail-label">Completion Details</span>
+                    <div>{{ update.completion_details|linebreaksbr }}</div>
+                </div>
+            {% endif %}
+
+            {% if update.photos.all %}
+                <div>
+                    <span class="detail-label">Repair Photos</span>
+
+                    <div class="photo-row">
+                        {% for photo in update.photos.all %}
+                            <a href="{{ photo.image.url }}" target="_blank"
+                               rel="noopener noreferrer">
+                                <img src="{{ photo.image.url }}"
+                                     alt="Repair progress photo">
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     {% empty %}
-    <p style="color:gray;">No progress updates submitted yet.</p>
+        <p class="empty-text">
+            No repair updates have been submitted yet.
+        </p>
     {% endfor %}
 </div>
 

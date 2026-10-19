@@ -1,3 +1,4 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -10,108 +11,211 @@ Create Work Order
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    .page-header h2 {
+        color: #0A2E5C;
+        margin: 0;
     }
 
-    .back-btn{
-        text-decoration:none;
-        background:#eee;
-        color:#333;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
+    .back-btn {
+        text-decoration: none;
+        background: #eee;
+        color: #333;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: bold;
     }
 
-    .back-btn:hover{
-        background:#ddd;
+    .back-btn:hover {
+        background: #ddd;
     }
 
-    .form-card{
-        background:white;
-        border-radius:10px;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:30px;
-        max-width:700px;
-        margin-bottom:20px;
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        padding: 25px;
+        max-width: 800px;
+        margin-bottom: 20px;
     }
 
-    .form-group{
-        margin-bottom:20px;
+    .section-title {
+        color: #0A2E5C;
+        margin: 0 0 18px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
     }
 
-    .form-group label{
-        display:block;
-        font-size:13px;
-        font-weight:bold;
-        color:#333;
-        margin-bottom:6px;
+    .detail-row {
+        margin-bottom: 13px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
     }
 
-    .form-group select, .form-group textarea{
-        width:100%;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-        font-size:14px;
-        font-family:inherit;
+    .detail-row strong {
+        color: #333;
     }
 
-    .form-group textarea{
-        resize:vertical;
-        min-height:100px;
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+        background: #e8eef7;
+        color: #0A2E5C;
     }
 
-    .form-actions{
-        margin-top:25px;
-        display:flex;
-        gap:10px;
+    .photo-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
     }
 
-    .save-btn{
-        border:none;
-        cursor:pointer;
-        padding:10px 22px;
-        border-radius:8px;
-        font-size:14px;
-        font-weight:bold;
-        background:#0A2E5C;
-        color:white;
+    .photo-item {
+        width: 125px;
     }
 
-    .save-btn:hover{
-        background:#154A8A;
+    .photo-row img {
+        width: 125px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        display: block;
     }
 
-    .cancel-btn{
-        text-decoration:none;
-        padding:10px 22px;
-        border-radius:8px;
-        font-size:14px;
-        font-weight:bold;
-        background:#eee;
-        color:#333;
+    .photo-caption {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
     }
 
-    .photo-row{
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        margin-top:8px;
+    .form-group {
+        margin-bottom: 20px;
     }
 
-    .photo-row img{
-        width:120px;
-        height:120px;
-        object-fit:cover;
-        border-radius:6px;
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 6px;
+    }
+
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #0A2E5C;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-help {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .form-actions {
+        margin-top: 25px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .save-btn,
+    .cancel-btn {
+        border: none;
+        cursor: pointer;
+        padding: 11px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .save-btn {
+        background: #0A2E5C;
+        color: white;
+    }
+
+    .save-btn:hover:not(:disabled) {
+        background: #154A8A;
+    }
+
+    .save-btn:disabled {
+        background: #999;
+        cursor: not-allowed;
+        opacity: .65;
+    }
+
+    .cancel-btn {
+        background: #eee;
+        color: #333;
+    }
+
+    .cancel-btn:hover {
+        background: #ddd;
+    }
+
+    .empty {
+        color: #777;
+        font-size: 14px;
+    }
+
+    .warning {
+        background: #fff4e5;
+        color: #8a4b08;
+        padding: 12px 15px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 18px;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+        .form-card {
+            padding: 18px;
+        }
+
+        .page-header {
+            align-items: flex-start;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .save-btn,
+        .cancel-btn {
+            width: 100%;
+            box-sizing: border-box;
+        }
     }
 </style>
 {% endblock %}
@@ -120,62 +224,222 @@ Create Work Order
 
 <div class="page-header">
     <h2>Create Work Order</h2>
-    <a href="{% url 'work_orders' %}" class="back-btn">&larr; Back to List</a>
+
+    <a href="{% url 'work_orders' %}" class="back-btn">
+        &larr; Back to List
+    </a>
 </div>
 
+<!-- Inspection Summary -->
 <div class="form-card">
-    <h3 style="color:#0A2E5C; margin-bottom:15px;">Inspection Summary</h3>
+    <h3 class="section-title">Report Information</h3>
 
-    <p><strong>Title:</strong> {{ report.title }}</p>
-    <p><strong>Description:</strong> {{ report.description }}</p>
-    <p><strong>Infrastructure Type:</strong> {{ report.get_infrastructure_type_display }}</p>
-    <p><strong>Severity:</strong> {{ report.severity_level }}</p>
-    <p><strong>Location:</strong> {{ report.geographic_address|default:"Not provided" }}
-        ({{ report.latitude }}, {{ report.longitude }})</p>
-    <p><strong>Inspected by:</strong> {{ report.inspected_by }}</p>
-    <p><strong>Inspection Findings:</strong> {{ report.inspection_remarks }}</p>
-    <p><strong>Recommended Action:</strong> {{ report.recommended_action }}</p>
-
-    {% if report.inspection_photos.all %}
-    <div style="margin-top:15px;">
-        <strong>Inspection Photos:</strong>
-        <div class="photo-row">
-            {% for photo in report.inspection_photos.all %}
-            <img src="{{ photo.image.url }}">
-            {% endfor %}
-        </div>
+    <div class="detail-row">
+        <strong>Report ID:</strong> {{ report.report_id }}
     </div>
+
+    <div class="detail-row">
+        <strong>Report Title:</strong> {{ report.title }}
+    </div>
+
+    <div class="detail-row">
+        <strong>Description:</strong>
+        {{ report.description|default:"No description provided." }}
+    </div>
+
+    <div class="detail-row">
+        <strong>Infrastructure Type:</strong>
+        {{ report.get_infrastructure_type_display }}
+    </div>
+
+    <div class="detail-row">
+        <strong>Location:</strong>
+        {{ report.geographic_address|default:"Not provided" }}
+    </div>
+
+    <div class="detail-row">
+        <strong>Coordinates:</strong>
+        {% if report.latitude != None and report.longitude != None %}
+            {{ report.latitude }}, {{ report.longitude }}
+        {% else %}
+            Not available
+        {% endif %}
+    </div>
+
+    <div class="detail-row">
+        <strong>Report Status:</strong>
+        <span class="badge">
+            {{ report.get_status_display|default:report.status }}
+        </span>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
+    <h3 class="section-title">Field Inspection Results</h3>
+
+    {% if inspection %}
+        <div class="detail-row">
+            <strong>Inspection Result:</strong>
+            <span class="badge">
+                {{ inspection.get_validation_result_display|default:inspection.validation_result }}
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Severity:</strong>
+            <span class="badge">
+                {{ inspection.get_severity_rating_display|default:inspection.severity_rating }}
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Inspected By:</strong>
+            {% if inspection.inspected_by %}
+                {{ inspection.inspected_by.user.get_full_name|default:inspection.inspected_by.user.username }}
+            {% else %}
+                Not available
+            {% endif %}
+        </div>
+
+        <div class="detail-row">
+            <strong>Inspection Date:</strong>
+            {{ inspection.inspection_date|date:"M d, Y h:i A" }}
+        </div>
+
+        <div class="detail-row">
+            <strong>Findings:</strong><br>
+            {{ inspection.findings|default:"No findings provided."|linebreaksbr }}
+        </div>
+
+        <div class="detail-row">
+            <strong>Recommended Repairs:</strong><br>
+            {{ inspection.recommended_repairs|default:"No recommendations provided."|linebreaksbr }}
+        </div>
+
+        {% if inspection.comments %}
+            <div class="detail-row">
+                <strong>Additional Comments:</strong><br>
+                {{ inspection.comments|linebreaksbr }}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty">
+            No inspection record was found for this report.
+        </p>
     {% endif %}
+
+    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
+    <h3 class="section-title">Inspection Photos</h3>
+
+    <div class="photo-row">
+        {% for photo in report.inspection_photos.all %}
+            {% if photo.image %}
+                <div class="photo-item">
+                    <a href="{{ photo.image.url }}" target="_blank" rel="noopener">
+                        <img src="{{ photo.image.url }}" alt="Inspection photo">
+                    </a>
+
+                    <div class="photo-caption">
+                        {{ photo.uploaded_at|date:"M d, Y" }}
+                    </div>
+                </div>
+            {% endif %}
+        {% empty %}
+            <p class="empty">No inspection photos uploaded.</p>
+        {% endfor %}
+    </div>
 </div>
 
+<!-- Work Order Assignment -->
 <div class="form-card">
+    <h3 class="section-title">Work Order Assignment</h3>
+
+    {% if not inspection %}
+        <div class="warning">
+            A work order cannot be issued because no inspection record exists.
+            Make sure the Field Engineer has completed and saved the inspection.
+        </div>
+    {% elif inspection.validation_result != "Confirmed" %}
+        <div class="warning">
+            A work order cannot be issued because the inspection result is not Confirmed.
+        </div>
+    {% elif report.status != "Inspected" %}
+        <div class="warning">
+            This report is not currently marked as Inspected.
+            Check the report status before issuing a work order.
+        </div>
+    {% elif not field_engineers %}
+        <div class="warning">
+            No Field Engineers are available for assignment.
+        </div>
+    {% elif can_create_work_order == False %}
+        <div class="warning">
+            A work order already exists for this report or the report is not eligible for a new work order.
+        </div>
+    {% endif %}
 
     <form method="post">
-
         {% csrf_token %}
 
         <div class="form-group">
-            <label>Assign Field Engineer</label>
-            <select name="assigned_field_engineer" required>
+            <label for="assigned_field_engineer">
+                Assign Field Engineer
+            </label>
+
+            <select
+                id="assigned_field_engineer"
+                name="assigned_field_engineer"
+                required
+            >
                 <option value="">-- Select Field Engineer --</option>
+
                 {% for engineer in field_engineers %}
-                <option value="{{ engineer.pk }}">{{ engineer.user.get_full_name }} ({{ engineer.employee_id }})</option>
+                    <option value="{{ engineer.pk }}">
+                        {{ engineer.user.get_full_name|default:engineer.user.username }}
+                        ({{ engineer.employee_id }})
+                    </option>
+                {% empty %}
+                    <option value="" disabled>
+                        No Field Engineers available
+                    </option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="form-group">
-            <label>Work Order Details</label>
-            <textarea name="work_order_details" placeholder="Describe the repair work to be done, materials needed, timeline, etc." required></textarea>
+            <label for="work_order_details">
+                Work Order Details
+            </label>
+
+            <textarea
+                id="work_order_details"
+                name="work_order_details"
+                placeholder="Describe the required repair work, materials, and other instructions..."
+                required
+            ></textarea>
+
+            <p class="form-help">
+                Include the repair tasks and instructions the assigned Field Engineer needs to follow.
+            </p>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="save-btn">Issue Work Order</button>
-            <a href="{% url 'work_orders' %}" class="cancel-btn">Cancel</a>
+            <button
+                type="submit"
+                class="save-btn"
+                {% if not can_create_work_order or not field_engineers %}
+                    disabled
+                {% endif %}
+            >
+                Issue Work Order
+            </button>
+
+            <a href="{% url 'work_orders' %}" class="cancel-btn">
+                Cancel
+            </a>
         </div>
-
     </form>
-
 </div>
 
 {% endblock %}

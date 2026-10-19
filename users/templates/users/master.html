@@ -27,23 +27,109 @@
         .content {
             padding: 30px;
         }
-        .alert{
-            padding:12px;
-            margin-bottom:20px;
-            border-radius:6px;
-            font-weight:bold;
+
+        /* ---- Alerts ---- */
+        .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px 30px 0;
         }
 
-        .alert.error{
-            background:#f8d7da;
-            color:#842029;
-            border:1px solid #842029;
+        .alert {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border: 1px solid;
+            border-radius: 10px;
+            box-shadow: inset 4px 0 0 currentColor;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        .alert.success{
-            background:#d1e7dd;
-            color:#0f5132;
-            border:1px solid #0f5132;
+        .alert.hide {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        .alert-icon {
+            margin-top: 2px;
+            padding-left: 4px;
+        }
+
+        .alert-text {
+            flex: 1;
+        }
+
+        .alert-close {
+            background: none;
+            border: 0;
+            color: inherit;
+            opacity: 0.6;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        /* Colors and how long each type stays on screen */
+        .alert.success {
+            background: #ecfdf3;
+            color: #067647;
+            border-color: #abefc6;
+            --alert-duration: 4s;
+        }
+
+        .alert.info,
+        .alert.debug {
+            background: #eff8ff;
+            color: #175cd3;
+            border-color: #b2ddff;
+            --alert-duration: 5s;
+        }
+
+        .alert.warning {
+            background: #fffaeb;
+            color: #b54708;
+            border-color: #fedf89;
+            --alert-duration: 7s;
+        }
+
+        .alert.error {
+            background: #fef3f2;
+            color: #b42318;
+            border-color: #fecdca;
+            --alert-duration: 9s;
+        }
+
+        /* Countdown bar. When it finishes, the alert is dismissed.
+           Hovering over an alert pauses the countdown. */
+        .alert-progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 3px;
+            background: currentColor;
+            opacity: 0.35;
+            transform-origin: left;
+            animation: alertTimer var(--alert-duration, 5s) linear forwards;
+        }
+
+        .alert:hover .alert-progress {
+            animation-play-state: paused;
+        }
+
+        @keyframes alertTimer {
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
         }
 
         /* ---- Responsive layout ----
@@ -64,9 +150,8 @@
                 padding: 16px;
             }
 
-            .alert {
-                margin: 0 0 14px;
-                font-size: 14px;
+            .messages {
+                padding: 14px 16px 0;
             }
 
             /* keep the page header (title + user) on ONE row */
@@ -110,11 +195,18 @@
         </div>
 
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert {{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="messages" id="messages">
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }}" role="alert">
+                        <i class="alert-icon fa-solid {% if 'success' in message.tags %}fa-circle-check{% elif 'error' in message.tags %}fa-circle-exclamation{% elif 'warning' in message.tags %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                        <span class="alert-text">{{ message }}</span>
+                        <button type="button" class="alert-close" aria-label="Dismiss">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <span class="alert-progress"></span>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
 
         <div class="content">
@@ -124,6 +216,43 @@
     </div>
 
     <script>
+        /* Alerts: dismiss with the close button, or automatically when the
+           countdown bar finishes (success 4s, info 5s, warning 7s, error 9s).
+           Hovering an alert pauses its countdown. */
+        (function () {
+            var container = document.getElementById('messages');
+            if (!container) return;
+
+            function dismiss(alert) {
+                if (alert.classList.contains('hide')) return;
+                alert.classList.add('hide');
+
+                setTimeout(function () {
+                    alert.remove();
+                    if (!container.querySelector('.alert')) {
+                        container.remove();
+                    }
+                }, 300);
+            }
+
+            container.querySelectorAll('.alert').forEach(function (alert) {
+                var closeButton = alert.querySelector('.alert-close');
+                var progress = alert.querySelector('.alert-progress');
+
+                if (closeButton) {
+                    closeButton.addEventListener('click', function () {
+                        dismiss(alert);
+                    });
+                }
+
+                if (progress) {
+                    progress.addEventListener('animationend', function () {
+                        dismiss(alert);
+                    });
+                }
+            });
+        })();
+
         /* The page title already shows in the top bar, so remove the repeated
            heading inside each page. Headings with a subtitle (e.g. the dashboard
            welcome message) are kept. */

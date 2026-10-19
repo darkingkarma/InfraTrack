@@ -10,131 +10,558 @@ Screen Report
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    :root {
+        --navy: #0A2E5C;
+        --navy-hover: #154A8A;
+        --text: #1f2933;
+        --muted: #667085;
+        --line: #e4e7ec;
+        --soft: #f6f8fb;
+        --ok: #1e7a3c;
+        --ok-bg: #e7f5ec;
+        --bad: #c62828;
+        --bad-bg: #fdecec;
+        --warn: #8a5a00;
+        --warn-bg: #fff6e0;
+        --warn-line: #f0d58c;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    /* ---------- Page header ---------- */
+    .page-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
     }
 
-    .back-btn{
-        text-decoration:none;
-        background:#eee;
-        color:#333;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
+    .page-header h2 {
+        color: var(--navy);
+        margin: 0;
+        font-size: 24px;
     }
 
-    .back-btn:hover{
-        background:#ddd;
+    .back-btn {
+        text-decoration: none;
+        background: #fff;
+        color: var(--text);
+        border: 1px solid var(--line);
+        padding: 9px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
     }
 
-    .form-card{
-        background:white;
-        border-radius:10px;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:30px;
-        max-width:700px;
+    .back-btn:hover {
+        background: var(--soft);
     }
 
-    .form-group{
-        margin-bottom:20px;
+    /* ---------- Full-width layout ---------- */
+    .screen-layout {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
+        gap: 20px;
+        align-items: start;
     }
 
-    .form-group label{
-        display:block;
-        font-size:13px;
-        font-weight:bold;
-        color:#333;
-        margin-bottom:6px;
+    .col {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
 
-    .form-group select, .form-group textarea{
-        width:100%;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-        font-size:14px;
-        font-family:inherit;
+    .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 22px;
+        box-sizing: border-box;
+        width: 100%;
     }
 
-    .form-group textarea{
-        resize:vertical;
-        min-height:100px;
+    .panel h3 {
+        color: var(--navy);
+        font-size: 17px;
+        margin: 0 0 14px;
     }
 
-    .section-label{
-        color:#0A2E5C;
-        font-size:15px;
-        font-weight:bold;
-        margin:5px 0 14px;
+    .count-pill {
+        background: var(--warn-bg);
+        color: var(--warn);
+        border: 1px solid var(--warn-line);
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
     }
 
-    .checks-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr 1fr;
-        gap:14px;
+    /* ---------- Details list ---------- */
+    .details {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
     }
 
-    @media (max-width:700px){
-        .checks-grid{ grid-template-columns:1fr; }
+    .details dt,
+    .details dd {
+        margin: 0;
+        padding: 11px 0;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        line-height: 1.5;
     }
 
-    .hint{
-        font-size:12px;
-        color:#a15c00;
-        margin-top:-8px;
-        margin-bottom:16px;
-        display:none;
+    .details dt {
+        color: var(--muted);
+        font-weight: 600;
     }
 
-    .prev-item{
-        border-left:4px solid #0A2E5C;
-        background:#f8f9fa;
-        padding:12px 16px;
-        border-radius:6px;
-        margin-bottom:12px;
-        font-size:14px;
+    .details dd {
+        color: var(--text);
+        overflow-wrap: anywhere;
     }
 
-    .prev-item small{
-        color:#888;
+    .sub-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 22px 0 10px;
     }
 
-    .form-actions{
-        margin-top:25px;
-        display:flex;
-        gap:10px;
+    .empty-note {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0;
     }
 
-    .save-btn{
-        border:none;
-        cursor:pointer;
-        padding:10px 22px;
-        border-radius:8px;
-        font-size:14px;
-        font-weight:bold;
-        background:#0A2E5C;
-        color:white;
+    .report-map {
+        width: 100%;
+        height: 340px;
+        display: block;
+        border: 1px solid var(--line);
+        border-radius: 8px;
     }
 
-    .save-btn:hover{
-        background:#154A8A;
+    .photo-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
     }
 
-    .cancel-btn{
-        text-decoration:none;
-        padding:10px 22px;
-        border-radius:8px;
-        font-size:14px;
-        font-weight:bold;
-        background:#eee;
-        color:#333;
+    .photo-gallery a {
+        display: block;
+        line-height: 0;
+    }
+
+    .photo-gallery img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+    }
+
+    /* ---------- History items ---------- */
+    .prev-item {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--navy);
+        background: var(--soft);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 12px;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+
+    .prev-item:first-of-type {
+        margin-top: 0;
+    }
+
+    .prev-item p {
+        margin: 6px 0;
+        line-height: 1.5;
+    }
+
+    .prev-item small {
+        display: block;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-top: 4px;
+    }
+
+    .prev-item .waiting {
+        color: var(--muted);
+    }
+
+    /* ---------- Duplicates ---------- */
+    .duplicate-list {
+        max-height: 320px;
+        overflow-y: auto;
+        margin-bottom: 14px;
+        padding-right: 2px;
+    }
+
+    .duplicate-item {
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-line);
+        border-left: 4px solid #d99a00;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .duplicate-item:first-of-type {
+        margin-top: 0;
+    }
+
+    .duplicate-item p {
+        margin: 6px 0;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .duplicate-item .duplicate-item-title {
+        color: var(--navy);
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 0;
+    }
+
+    .duplicate-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        color: #66552c;
+        font-size: 12px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #f0e1b8;
+    }
+
+    .duplicate-link {
+        display: inline-block;
+        margin-top: 8px;
+        color: var(--navy);
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 13px;
+    }
+
+    .duplicate-link:hover {
+        text-decoration: underline;
+    }
+
+    .no-duplicates {
+        background: var(--ok-bg);
+        color: var(--ok);
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    /* ---------- Screening form (sticky on wide screens) ---------- */
+    .form-col {
+        position: sticky;
+        top: 16px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+    }
+
+    .form-step {
+        padding: 16px 0;
+        border-top: 1px solid var(--line);
+    }
+
+    .form-step:first-of-type {
+        border-top: none;
+        padding-top: 0;
+    }
+
+    .step-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .step-head .step-title {
+        margin: 0;
+    }
+
+    .step-title {
+        color: var(--navy);
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 10px;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+        min-width: 0;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+
+    .required-mark {
+        color: var(--bad);
+        display: none;
+    }
+
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #cfd4dc;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #fff;
+        color: var(--text);
+        box-sizing: border-box;
+    }
+
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: 2px solid var(--navy-hover);
+        outline-offset: 1px;
+        border-color: var(--navy-hover);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Completeness */
+    .overall-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .status-complete {
+        background: var(--ok-bg);
+        color: var(--ok);
+    }
+
+    .status-incomplete {
+        background: var(--bad-bg);
+        color: var(--bad);
+    }
+
+    .completeness-box {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 2px 14px;
+    }
+
+    .completeness-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+    }
+
+    .completeness-item:last-child {
+        border-bottom: none;
+    }
+
+    .check-icon {
+        font-weight: 700;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .check-passed {
+        color: var(--ok);
+    }
+
+    .check-failed {
+        color: var(--bad);
+    }
+
+    .check-status {
+        margin-left: auto;
+        padding-left: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Jurisdiction */
+    .jurisdiction-box {
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 14px;
+        overflow-wrap: anywhere;
+    }
+
+    .jurisdiction-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #e3ebf7;
+        color: var(--navy);
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .jurisdiction-message {
+        font-size: 13px;
+        color: #444;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .infrastructure-details {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-top: 10px;
+    }
+
+    .infrastructure-details p {
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 4px 0;
+    }
+
+    .hint {
+        font-size: 12px;
+        color: var(--warn);
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 14px;
+        display: none;
+    }
+
+    /* Actions */
+    .form-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .save-btn,
+    .cancel-btn {
+        flex: 1;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+        padding: 11px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .save-btn {
+        background: var(--navy);
+        color: #fff;
+    }
+
+    .save-btn:hover {
+        background: var(--navy-hover);
+    }
+
+    .cancel-btn {
+        background: #eef0f3;
+        color: var(--text);
+    }
+
+    .cancel-btn:hover {
+        background: #e1e4e8;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1100px) {
+        .screen-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .form-col {
+            position: static;
+            max-height: none;
+            overflow: visible;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .page-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .panel {
+            padding: 18px;
+        }
+
+        .details {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .details dt {
+            padding-bottom: 0;
+        }
+
+        .details dd {
+            border-top: none;
+            padding-top: 2px;
+        }
+
+        .report-map {
+            height: 260px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .panel {
+            padding: 14px;
+        }
+
+        .completeness-item {
+            align-items: flex-start;
+        }
+
+        .photo-gallery {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
     }
 </style>
 {% endblock %}
@@ -143,160 +570,393 @@ Screen Report
 
 <div class="page-header">
     <h2>Screen Report #{{ report.report_id }}</h2>
-    <a href="{% url 'pending_reports' %}" class="back-btn">&larr; Back to List</a>
+
+    <a href="{% url 'pending_reports' %}" class="back-btn">&larr; Back to list</a>
 </div>
 
-<div class="form-card" style="margin-bottom:20px;">
-    <h3 style="color:#0A2E5C; margin-bottom:15px;">Report Details</h3>
+<div class="screen-layout">
 
-    <p><strong>Title:</strong> {{ report.title }}</p>
-    <p><strong>Description:</strong> {{ report.description }}</p>
-    <p><strong>Infrastructure Type:</strong> {{ report.get_infrastructure_type_display }}</p>
-    <p><strong>Submitted by:</strong> {{ report.citizen.get_full_name }}</p>
-    <p><strong>Location:</strong> {{ report.geographic_address|default:"Not provided" }}
-        ({{ report.latitude }}, {{ report.longitude }})</p>
-    <p><strong>Date Submitted:</strong> {{ report.reported_date|date:"M d, Y g:i A" }}</p>
+    <!-- ============ LEFT: Report information ============ -->
+    <div class="col">
 
-    {% if report.photos.all %}
-    <div style="margin-top:15px;">
-        <strong>Photos:</strong>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
-            {% for photo in report.photos.all %}
-            {% if photo.file_path %}
-            <img src="{{ photo.file_path.url }}" alt="Report photo"
-                style="width:120px; height:120px; object-fit:cover; border-radius:6px;">
+        <!-- Report Details -->
+        <section class="panel">
+            <h3>Report details</h3>
+
+            <dl class="details">
+                <dt>Title</dt>
+                <dd>{{ report.title|default:"Not provided" }}</dd>
+
+                <dt>Description</dt>
+                <dd>{{ report.description|default:"Not provided" }}</dd>
+
+                <dt>Infrastructure type</dt>
+                <dd>{{ report.get_infrastructure_type_display|default:"Not provided" }}</dd>
+
+                <dt>Submitted by</dt>
+                <dd>{{ report.citizen.get_full_name|default:"Citizen" }}</dd>
+
+                <dt>Date submitted</dt>
+                <dd>{{ report.reported_date|date:"M d, Y g:i A" }}</dd>
+
+                <dt>Address</dt>
+                <dd>{{ report.geographic_address|default:"Not provided" }}</dd>
+
+                <dt>Coordinates</dt>
+                <dd>
+                    {{ report.latitude|default:"Not provided" }},
+                    {{ report.longitude|default:"Not provided" }}
+                </dd>
+
+                <dt>Location method</dt>
+                <dd>{{ report.location_method|default:"Not provided" }}</dd>
+            </dl>
+
+            <!-- Map -->
+            <div class="sub-title">Location</div>
+
+            {% if report.latitude != None and report.longitude != None %}
+                <iframe
+                    class="report-map"
+                    title="Citizen reported location"
+                    src="https://maps.google.com/maps?q={{ report.latitude }},{{ report.longitude }}&amp;z=16&amp;output=embed"
+                    loading="lazy"
+                    allowfullscreen>
+                </iframe>
+            {% else %}
+                <p class="empty-note">No location coordinates available.</p>
             {% endif %}
+
+            <!-- Photos -->
+            <div class="sub-title">Photos</div>
+
+            <div class="photo-gallery">
+                {% for photo in report.photos.all %}
+                    {% if photo.file_path %}
+                        <a href="{{ photo.file_path.url }}" target="_blank" rel="noopener noreferrer">
+                            <img
+                                src="{{ photo.file_path.url }}"
+                                alt="Report photo"
+                                loading="lazy"
+                            >
+                        </a>
+                    {% endif %}
+                {% empty %}
+                    <p class="empty-note">No photos uploaded.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Information Requests -->
+        {% if report.info_requests.all %}
+        <section class="panel">
+            <h3>Information requests</h3>
+
+            {% for req in report.info_requests.all %}
+            <div class="prev-item">
+                <p>
+                    <strong>
+                        Requested by
+                        {{ req.requested_by.user.get_full_name|default:"FRU" }}
+                    </strong>
+                    &middot;
+                    {{ req.requested_date|date:"M d, Y g:i A" }}
+                </p>
+
+                <p>{{ req.request_message }}</p>
+
+                {% if req.response_message %}
+                    <p style="margin-top:10px;">
+                        <strong>Citizen's reply</strong>
+                        &middot;
+                        {{ req.response_date|date:"M d, Y g:i A" }}
+                    </p>
+                    <p>{{ req.response_message }}</p>
+                {% else %}
+                    <p class="waiting">Waiting for the citizen's reply.</p>
+                {% endif %}
+            </div>
             {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-</div>
+        </section>
+        {% endif %}
 
-{% if report.info_requests.all %}
-<div class="form-card" style="margin-bottom:20px;">
-    <h3 style="color:#0A2E5C; margin-bottom:15px;">Information Requests</h3>
-    {% for req in report.info_requests.all %}
-    <div style="border-left:4px solid #0A2E5C; background:#f8f9fa; padding:12px 16px; border-radius:6px; margin-bottom:12px;">
-        <p><strong>Requested by {{ req.requested_by.user.get_full_name }}</strong>
-            ({{ req.requested_date|date:"M d, Y g:i A" }}): {{ req.request_message }}</p>
-        {% if req.response_message %}
-        <p style="margin-top:6px;"><strong>Citizen replied</strong>
-            ({{ req.response_date|date:"M d, Y g:i A" }}): {{ req.response_message }}</p>
-        {% else %}
-        <p style="margin-top:6px; color:gray;">No reply yet.</p>
+        <!-- Previous Screenings -->
+        {% if report.screenings.all %}
+        <section class="panel">
+            <h3>Previous screenings</h3>
+
+            {% for s in report.screenings.all %}
+            <div class="prev-item">
+                <strong>{{ s.screening_result }}</strong>
+
+                <p>
+                    Screened by
+                    {{ s.screened_by.user.get_full_name|default:"FRU" }}
+                </p>
+
+                <small>
+                    Completeness: {{ s.completeness_status }}
+                    &middot; Duplicate: {{ s.duplicate_status }}
+                    &middot; Jurisdiction: {{ s.jurisdiction_status }}
+                    <br>
+                    {{ s.screening_date|date:"M d, Y g:i A" }}
+                </small>
+
+                {% if s.remarks %}
+                    <p style="margin-top:8px;">
+                        <strong>Remarks:</strong> {{ s.remarks }}
+                    </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </section>
         {% endif %}
     </div>
-    {% endfor %}
-</div>
-{% endif %}
 
-{% if report.screenings.all %}
-<div class="form-card" style="margin-bottom:20px;">
-    <h3 style="color:#0A2E5C; margin-bottom:15px;">Previous Screenings</h3>
-    {% for s in report.screenings.all %}
-    <div class="prev-item">
-        <strong>{{ s.screening_result }}</strong>
-        by {{ s.screened_by.user.get_full_name|default:"FRU" }}<br>
-        <small>
-            {{ s.completeness_status }} &middot; {{ s.duplicate_status }} &middot; {{ s.jurisdiction_status }}
-            &middot; {{ s.screening_date|date:"M d, Y g:i A" }}
-        </small>
-        {% if s.remarks %}
-        <p style="margin-top:6px;">{{ s.remarks }}</p>
-        {% endif %}
+    <!-- ============ RIGHT: Screening flow (in order) ============ -->
+    <div class="col form-col">
+        <form method="post" class="panel">
+            {% csrf_token %}
+
+            <h3>Screening</h3>
+
+            <!-- STEP 1: Completeness (system-determined) -->
+            <div class="form-step">
+                <div class="step-title">1. Completeness</div>
+
+                {% if completeness_status == "Complete" %}
+                    <div class="overall-status status-complete">&#10003; Complete</div>
+                {% else %}
+                    <div class="overall-status status-incomplete">&#10007; Incomplete</div>
+                {% endif %}
+
+                <div class="completeness-box">
+                    {% for check in completeness_checks %}
+                    <div class="completeness-item">
+                        {% if check.passed %}
+                            <span class="check-icon check-passed">&#10003;</span>
+                        {% else %}
+                            <span class="check-icon check-failed">&#10007;</span>
+                        {% endif %}
+
+                        <span>{{ check.label }}</span>
+
+                        <span class="check-status {% if check.passed %}check-passed{% else %}check-failed{% endif %}">
+                            {% if check.passed %}Complete{% else %}Missing{% endif %}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="empty-note" style="padding:10px 0;">Unavailable.</p>
+                    {% endfor %}
+                </div>
+
+                <input
+                    type="hidden"
+                    id="completeness_status"
+                    name="completeness_status"
+                    value="{{ completeness_status }}"
+                >
+            </div>
+
+            <!-- STEP 2: Possible duplicates -> then decision -->
+            <div class="form-step">
+                <div class="step-head">
+                    <div class="step-title">2. Duplicate check</div>
+
+                    {% if possible_duplicates %}
+                        <span class="count-pill">{{ possible_duplicates|length }} found</span>
+                    {% endif %}
+                </div>
+
+                <div class="duplicate-list">
+                    {% if possible_duplicates %}
+                        {% for match in possible_duplicates %}
+                        <div class="duplicate-item">
+                            <p class="duplicate-item-title">
+                                Report #{{ match.report.report_id }}
+                            </p>
+
+                            <p>
+                                <strong>Title:</strong>
+                                {{ match.report.title|default:"Untitled report" }}
+                            </p>
+
+                            <p>
+                                <strong>Description:</strong>
+                                {{ match.report.description|default:"Not provided"|truncatewords:25 }}
+                            </p>
+
+                            <p>
+                                <strong>Type:</strong>
+                                {{ match.report.get_infrastructure_type_display|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>Location:</strong>
+                                {{ match.report.geographic_address|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>Status:</strong>
+                                {{ match.report.status }}
+                            </p>
+
+                            <div class="duplicate-meta">
+                                <span><strong>Distance:</strong> {{ match.distance }} metres</span>
+                                <span><strong>Text similarity:</strong> {{ match.similarity }}%</span>
+                            </div>
+
+                            {% if match.report.latitude != None and match.report.longitude != None %}
+                                <a
+                                    class="duplicate-link"
+                                    href="https://www.google.com/maps/search/?api=1&amp;query={{ match.report.latitude }},{{ match.report.longitude }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    View on Google Maps &rarr;
+                                </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-duplicates">No possible duplicates found.</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="duplicate_status">Your decision</label>
+                    <select name="duplicate_status" id="duplicate_status" required>
+                        <option value="Not Duplicate">Not Duplicate</option>
+                        <option value="Duplicate">Duplicate</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- STEP 3: Jurisdiction suggestion -> then decision -->
+            <div class="form-step">
+                <div class="step-title">3. Jurisdiction check</div>
+
+                <div class="jurisdiction-box">
+                    <span class="jurisdiction-status">
+                        {{ jurisdiction_suggestion.status }}
+                    </span>
+
+                    <p class="jurisdiction-message">
+                        {{ jurisdiction_suggestion.message }}
+                    </p>
+
+                    {% if jurisdiction_suggestion.infrastructure %}
+                    <div class="infrastructure-details">
+                        <p>
+                            <strong>Infrastructure:</strong>
+                            {{ jurisdiction_suggestion.infrastructure.infra_name }}
+                        </p>
+
+                        <p>
+                            <strong>Type:</strong>
+                            {{ jurisdiction_suggestion.infrastructure.get_infra_type_display }}
+                        </p>
+
+                        <p>
+                            <strong>Location:</strong>
+                            {{ jurisdiction_suggestion.infrastructure.location_description|default:"Not provided" }}
+                        </p>
+
+                        <p>
+                            <strong>Record status:</strong>
+                            {{ jurisdiction_suggestion.infrastructure.get_status_display }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="jurisdiction_status">Your decision</label>
+                    <select name="jurisdiction_status" id="jurisdiction_status" required>
+                        <option value="Within Jurisdiction">Within Jurisdiction</option>
+                        <option value="Outside Jurisdiction">Outside Jurisdiction</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- STEP 4: Result -->
+            <div class="form-step">
+                <div class="step-title">4. Result</div>
+
+                <div class="hint" id="result_hint">
+                    "Validated" is unavailable while a check needs attention.
+                </div>
+
+                <div class="form-group">
+                    <select name="screening_result" id="screening_result" aria-label="Screening result" required>
+                        <option value="Validated">Validated</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Needs More Info">Needs More Information</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="screening_remarks">
+                        Remarks <span class="required-mark" id="remarks_required">*</span>
+                    </label>
+
+                    <textarea
+                        name="screening_remarks"
+                        id="screening_remarks"
+                    ></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="save-btn">Submit screening</button>
+                    <a href="{% url 'pending_reports' %}" class="cancel-btn">Cancel</a>
+                </div>
+            </div>
+        </form>
     </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<div class="form-card">
-
-    <form method="post">
-
-        {% csrf_token %}
-
-        <div class="section-label">Screening Checks</div>
-
-        <div class="checks-grid">
-            <div class="form-group">
-                <label>Completeness</label>
-                <select name="completeness_status" id="completeness_status">
-                    <option value="Complete">Complete</option>
-                    <option value="Incomplete">Incomplete</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Duplicate</label>
-                <select name="duplicate_status" id="duplicate_status">
-                    <option value="Not Duplicate">Not Duplicate</option>
-                    <option value="Duplicate">Duplicate</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Jurisdiction</label>
-                <select name="jurisdiction_status" id="jurisdiction_status">
-                    <option value="Within Jurisdiction">Within Jurisdiction</option>
-                    <option value="Outside Jurisdiction">Outside Jurisdiction</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Screening Result</label>
-            <select name="screening_result" id="screening_result" required>
-                <option value="Validated">Validated</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Needs More Info">Needs More Information</option>
-            </select>
-        </div>
-        <div class="hint" id="result_hint">
-            This report failed a check, so it can't be validated. Choose Needs More Information or Rejected.
-        </div>
-
-        <div class="form-group">
-            <label>Screening Remarks</label>
-            <textarea name="screening_remarks" placeholder="Notes about this report's completeness, accuracy, or issues..." required></textarea>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="save-btn">Submit Screening</button>
-            <a href="{% url 'pending_reports' %}" class="cancel-btn">Cancel</a>
-        </div>
-
-    </form>
 
 </div>
 
 <script>
-    (function () {
-        var completeness = document.getElementById("completeness_status");
-        var duplicate = document.getElementById("duplicate_status");
-        var jurisdiction = document.getElementById("jurisdiction_status");
-        var result = document.getElementById("screening_result");
-        var hint = document.getElementById("result_hint");
-        var validatedOption = result.querySelector('option[value="Validated"]');
+(function () {
+    var completeness = document.getElementById("completeness_status");
+    var duplicate = document.getElementById("duplicate_status");
+    var jurisdiction = document.getElementById("jurisdiction_status");
+    var result = document.getElementById("screening_result");
+    var remarks = document.getElementById("screening_remarks");
+    var hint = document.getElementById("result_hint");
+    var requiredMark = document.getElementById("remarks_required");
 
-        function update() {
-            var failed =
-                completeness.value !== "Complete" ||
-                duplicate.value !== "Not Duplicate" ||
-                jurisdiction.value !== "Within Jurisdiction";
+    var validatedOption = result.querySelector(
+        'option[value="Validated"]'
+    );
 
-            validatedOption.disabled = failed;
-            hint.style.display = failed ? "block" : "none";
+    function update() {
+        var failed =
+            completeness.value !== "Complete" ||
+            duplicate.value !== "Not Duplicate" ||
+            jurisdiction.value !== "Within Jurisdiction";
 
-            if (failed && result.value === "Validated") {
-                result.value = "Needs More Info";
-            }
+        validatedOption.disabled = failed;
+        hint.style.display = failed ? "block" : "none";
+
+        if (failed && result.value === "Validated") {
+            result.value = "Needs More Info";
         }
 
-        completeness.addEventListener("change", update);
-        duplicate.addEventListener("change", update);
-        jurisdiction.addEventListener("change", update);
-        update();
-    })();
+        var needsRemarks =
+            result.value === "Needs More Info" ||
+            result.value === "Rejected";
+
+        remarks.required = needsRemarks;
+        requiredMark.style.display = needsRemarks ? "inline" : "none";
+    }
+
+    duplicate.addEventListener("change", update);
+    jurisdiction.addEventListener("change", update);
+    result.addEventListener("change", update);
+
+    update();
+})();
 </script>
 
 {% endblock %}

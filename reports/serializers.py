@@ -303,7 +303,11 @@ class IssueReportSerializer(serializers.ModelSerializer):
     info_requests = InfoRequestSerializer(many=True, read_only=True)
     feedback = FeedbackSerializer(read_only=True)
     follow_ups = FollowUpRequestSerializer(many=True, read_only=True)
-
+    infrastructure_name = serializers.CharField(
+        source="infrastructure.infra_name",
+        read_only=True,
+        allow_null=True,
+    )
     class Meta:
         model = IssueReport
         fields = [
@@ -329,6 +333,7 @@ class IssueReportSerializer(serializers.ModelSerializer):
             "info_requests",
             "feedback",
             "follow_ups",
+            "infrastructure_name"
         ]
         read_only_fields = [
             "report_id",

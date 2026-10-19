@@ -270,6 +270,10 @@
             </a>
 
             <div class="sb-label">Operations</div>
+            <a href="{% url 'assign_inspection' %}" class="sidebar-link {% if request.resolver_match.url_name == 'assign_inspection' %}active{% endif %}">
+                <i class="fas fa-user-check"></i>
+                <span>Assign Inspection</span>
+            </a>
             <a href="{% url 'validated_reports' %}" class="{% if request.resolver_match.url_name == 'validated_reports' %}active{% endif %}">
                 <i class="fa-solid fa-circle-check"></i><span>Validated Reports</span>
             </a>
@@ -286,13 +290,24 @@
         {% elif request.user.role == "fru" %}
 
             <div class="sb-label">Main Menu</div>
-            <a href="{% url 'fru_dashboard' %}" class="{% if request.resolver_match.url_name == 'fru_dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+            <a href="{% url 'fru_dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'fru_dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span>Dashboard</span>
             </a>
 
             <div class="sb-label">Reports</div>
-            <a href="{% url 'pending_reports' %}" class="{% if request.resolver_match.url_name == 'pending_reports' or request.resolver_match.url_name == 'screen_report' %}active{% endif %}">
-                <i class="fa-solid fa-inbox"></i><span>Pending Reports</span>
+
+            <a href="{% url 'pending_reports' %}"
+            class="{% if request.resolver_match.url_name == 'pending_reports' or request.resolver_match.url_name == 'screen_report' %}active{% endif %}">
+                <i class="fa-solid fa-inbox"></i>
+                <span>Pending Reports</span>
+            </a>
+
+            <a href="{% url 'screening_history' %}"
+            class="{% if request.resolver_match.url_name == 'screening_history' %}active{% endif %}">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Screening History</span>
             </a>
 
         {% endif %}
@@ -306,12 +321,7 @@
             {% endif %}
         </a>
         {% endif %}
-        <a href="{% url 'notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
-            <i class="fa-solid fa-bell"></i><span>Notifications</span>
-            {% if unread_notifications_count %}
-            <span class="sb-badge">{{ unread_notifications_count }}</span>
-            {% endif %}
-        </a>
+
 
     </nav>
 

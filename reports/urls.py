@@ -21,6 +21,8 @@ from .views import (
     SubmitFeedbackView,
     SubmitFollowUpView,
     MyInspectionListView,
+    InspectionAssignmentListView,
+    AssignInspectionView,
 )
 
 urlpatterns = [
@@ -31,30 +33,16 @@ urlpatterns = [
     path('validated/', ValidatedIssueReportListView.as_view(), name='validated-reports'),
 
     # FRU screening
-    path(
-        '<int:pk>/screen/',
-        SubmitScreeningView.as_view(),
-        name='submit-screening',
-    ),
+    path('<int:pk>/screen/',SubmitScreeningView.as_view(),name='submit-screening',),
 
     # Field Engineer inspection
-    path(
-        '<int:pk>/inspect/',
-        SubmitInspectionView.as_view(),
-        name='submit-inspection',
-    ),
-    path(
-        'my-inspections/',
-        MyInspectionListView.as_view(),
-        name='my-inspections',
-    ),
+    path('<int:pk>/inspect/',SubmitInspectionView.as_view(),name='submit-inspection',),
+    path('my-inspections/',MyInspectionListView.as_view(),name='my-inspections',),
+    path('inspection-assignments/',InspectionAssignmentListView.as_view(),name='inspection-assignment-list',),
+    path('inspection-assignments/<int:pk>/',AssignInspectionView.as_view(),name='assign-inspection',),
 
     # Citizen responses
-    path(
-        '<int:pk>/respond/',
-        RespondToInfoRequestView.as_view(),
-        name='respond-info-request',
-    ),
+    path('<int:pk>/respond/',RespondToInfoRequestView.as_view(),name='respond-info-request',),
 
     # District Engineer work-order management
     path('inspected/', InspectedReportListView.as_view(), name='inspected-reports'),
@@ -63,29 +51,13 @@ urlpatterns = [
 
     # Field Engineer repair updates
     path('work-orders/my-orders/', MyWorkOrderListView.as_view(), name='my-work-orders'),
-    path(
-        'work-orders/repair-update/',
-        SubmitRepairUpdateView.as_view(),
-        name='submit-repair-update',
-    ),
+    path('work-orders/repair-update/',SubmitRepairUpdateView.as_view(),name='submit-repair-update',),
 
     # Notifications
     path('notifications/', NotificationListView.as_view(), name='notifications-list'),
-    path(
-        'notifications/unread-count/',
-        UnreadNotificationCountView.as_view(),
-        name='notifications-unread-count',
-    ),
-    path(
-        'notifications/read-all/',
-        MarkAllNotificationsReadView.as_view(),
-        name='notifications-read-all',
-    ),
-    path(
-        'notifications/<int:pk>/read/',
-        MarkNotificationReadView.as_view(),
-        name='notification-read',
-    ),
+    path('notifications/unread-count/',UnreadNotificationCountView.as_view(),name='notifications-unread-count',),
+    path('notifications/read-all/',MarkAllNotificationsReadView.as_view(),name='notifications-read-all',),
+    path('notifications/<int:pk>/read/',MarkNotificationReadView.as_view(),name='notification-read',),
 
     # Citizen feedback and follow-ups
     path('feedback/', SubmitFeedbackView.as_view(), name='submit-feedback'),

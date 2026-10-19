@@ -1,0 +1,407 @@
+
+{% extends "users/master.html" %}
+
+{% block title %}
+FRU Screening History
+{% endblock %}
+
+{% block page_title %}
+FRU Screening History
+{% endblock %}
+
+{% block style %}
+<style>
+    .page-header h2 {
+        color: #0A2E5C;
+    }
+
+    .page-header p {
+        color: #777;
+        margin: 4px 0 20px;
+    }
+
+    .search-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    .search-section input {
+        flex: 1 1 240px;
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font: inherit;
+    }
+
+    .search-section select {
+        flex: 1 1 155px;
+        min-width: 140px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+        font: inherit;
+    }
+
+    .search-section button,
+    .search-reset {
+        border: none;
+        cursor: pointer;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .search-section button {
+        background: #0A2E5C;
+        color: white;
+    }
+
+    .search-section button:hover {
+        background: #16477f;
+    }
+
+    .search-reset {
+        background: #e8f0fe;
+        color: #0A2E5C;
+    }
+
+    .search-reset:hover {
+        background: #cfe0fb;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        padding: 20px;
+        overflow-x: auto;
+    }
+
+    .table-heading {
+        color: #0A2E5C;
+        margin-bottom: 8px;
+    }
+
+    .table-description {
+        color: #777;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1100px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 13px 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+        vertical-align: top;
+    }
+
+    th {
+        color: #0A2E5C;
+        white-space: nowrap;
+        background: #f3f6fa;
+    }
+
+    tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .status-validated {
+        background: #e6f7ec;
+        color: #1e7e34;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-info {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .check-pass {
+        color: #1e7e34;
+        font-weight: bold;
+    }
+
+    .check-fail {
+        color: #b42318;
+        font-weight: bold;
+    }
+
+    .remarks {
+        min-width: 160px;
+        max-width: 240px;
+        overflow-wrap: anywhere;
+    }
+
+    .view-btn {
+        background: #e8f0fe;
+        color: #0A2E5C;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .view-btn:hover {
+        background: #cfe0fb;
+    }
+
+    .empty {
+        color: gray;
+        padding: 30px 10px;
+        text-align: center;
+    }
+
+    .record-count {
+        color: #666;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    @media (max-width: 700px) {
+        .search-section input,
+        .search-section select {
+            flex-basis: 100%;
+            width: 100%;
+        }
+
+        .search-section button,
+        .search-reset {
+            flex: 1;
+        }
+
+        .table-card {
+            padding: 14px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Screening History</h2>
+    <p>
+        Review completed screening decisions and their details.
+    </p>
+</div>
+
+<form method="get" class="search-section">
+    <input
+        type="text"
+        name="q"
+        placeholder="Search report ID, title, citizen, or FRU personnel..."
+        value="{{ search_query }}"
+        aria-label="Search screening history"
+    >
+
+    <select name="result" aria-label="Filter by screening result">
+        <option value="">All Results</option>
+        <option value="Validated" {% if result_filter == "Validated" %}selected{% endif %}>
+            Validated
+        </option>
+        <option value="Needs More Info" {% if result_filter == "Needs More Info" %}selected{% endif %}>
+            Needs More Info
+        </option>
+        <option value="Rejected" {% if result_filter == "Rejected" %}selected{% endif %}>
+            Rejected
+        </option>
+    </select>
+
+    <select name="completeness" aria-label="Filter by completeness">
+        <option value="">All Completeness</option>
+        <option value="Complete" {% if completeness_filter == "Complete" %}selected{% endif %}>
+            Complete
+        </option>
+        <option value="Incomplete" {% if completeness_filter == "Incomplete" %}selected{% endif %}>
+            Incomplete
+        </option>
+    </select>
+
+    <select name="duplicate" aria-label="Filter by duplicate status">
+        <option value="">All Duplicate Statuses</option>
+        <option value="Not Duplicate" {% if duplicate_filter == "Not Duplicate" %}selected{% endif %}>
+            Not Duplicate
+        </option>
+        <option value="Duplicate" {% if duplicate_filter == "Duplicate" %}selected{% endif %}>
+            Duplicate
+        </option>
+    </select>
+
+    <select name="jurisdiction" aria-label="Filter by jurisdiction">
+        <option value="">All Jurisdictions</option>
+        <option value="Within Jurisdiction" {% if jurisdiction_filter == "Within Jurisdiction" %}selected{% endif %}>
+            Within Jurisdiction
+        </option>
+        <option value="Outside Jurisdiction" {% if jurisdiction_filter == "Outside Jurisdiction" %}selected{% endif %}>
+            Outside Jurisdiction
+        </option>
+    </select>
+
+    <select name="sort" aria-label="Sort screening history">
+        <option value="newest" {% if sort_order == "newest" %}selected{% endif %}>
+            Newest First
+        </option>
+        <option value="oldest" {% if sort_order == "oldest" %}selected{% endif %}>
+            Oldest First
+        </option>
+    </select>
+
+    <button type="submit">Search</button>
+
+    {% if search_query or result_filter or completeness_filter or duplicate_filter or jurisdiction_filter or sort_order == "oldest" %}
+        <a href="{% url 'screening_history' %}" class="search-reset">
+            Reset
+        </a>
+    {% endif %}
+</form>
+
+<div class="table-card">
+    <h3 class="table-heading">Previous Screening Records</h3>
+
+    <p class="table-description">
+        Each row represents a saved screening decision.
+        Open a report to review its full screening history.
+    </p>
+
+    <p class="record-count">
+        Matching records: {{ screenings|length }}
+    </p>
+
+    {% if screenings %}
+    <table>
+        <thead>
+            <tr>
+                <th>Report ID</th>
+                <th>Report Title</th>
+                <th>Citizen</th>
+                <th>Screening Result</th>
+                <th>Completeness</th>
+                <th>Duplicate</th>
+                <th>Jurisdiction</th>
+                <th>Screened By</th>
+                <th>Date Screened</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for screening in screenings %}
+            <tr>
+                <td>#{{ screening.report.report_id }}</td>
+
+                <td>
+                    <strong>{{ screening.report.title|default:"Untitled Report" }}</strong>
+                </td>
+
+                <td>
+                    {{ screening.report.citizen.get_full_name|default:screening.report.citizen.username }}
+                </td>
+
+                <td>
+                    {% if screening.screening_result == "Validated" %}
+                        <span class="status-badge status-validated">
+                            Validated
+                        </span>
+                    {% elif screening.screening_result == "Rejected" %}
+                        <span class="status-badge status-rejected">
+                            Rejected
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-info">
+                            Needs More Info
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if screening.completeness_status == "Complete" %}
+                        <span class="check-pass">Complete</span>
+                    {% else %}
+                        <span class="check-fail">Incomplete</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if screening.duplicate_status == "Duplicate" %}
+                        <span class="check-fail">Duplicate</span>
+                    {% else %}
+                        <span class="check-pass">Not Duplicate</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ screening.jurisdiction_status }}
+                </td>
+
+                <td>
+                    {% if screening.screened_by %}
+                        {{ screening.screened_by.user.get_full_name|default:screening.screened_by.user.username }}
+                    {% else %}
+                        FRU personnel
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ screening.screening_date|date:"M d, Y g:i A" }}
+                </td>
+
+                <td class="remarks">
+                    {{ screening.remarks|default:"No remarks" }}
+                </td>
+
+                <td>
+                    <a href="{% url 'screening_details' screening.pk %}" class="view-btn">
+                        View Details
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+        <p class="empty">
+            {% if search_query or result_filter or completeness_filter or duplicate_filter or jurisdiction_filter %}
+                No screening records match your search or selected filters.
+            {% else %}
+                No screening history is available yet.
+            {% endif %}
+        </p>
+    {% endif %}
+</div>
+
+{% endblock %}

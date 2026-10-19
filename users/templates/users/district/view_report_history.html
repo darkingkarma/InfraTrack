@@ -1,3 +1,4 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -10,100 +11,196 @@ Report Details
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    .page-header h2 {
+        color: #0A2E5C;
+        margin: 0;
     }
 
-    .back-btn{
-        text-decoration:none;
-        background:#eee;
-        color:#333;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
+    .page-header p {
+        color: #777;
+        margin: 6px 0 0;
+        font-size: 14px;
     }
 
-    .back-btn:hover{
-        background:#ddd;
+    .back-btn {
+        text-decoration: none;
+        background: #0A2E5C;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 7px;
+        font-weight: bold;
+        font-size: 14px;
     }
 
-    .form-card{
-        background:white;
-        border-radius:10px;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:30px;
-        max-width:800px;
-        margin-bottom:20px;
+    .back-btn:hover {
+        background: #123f78;
     }
 
-    .form-card h3{
-        color:#0A2E5C;
-        margin-bottom:15px;
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        align-items: start;
     }
 
-    .photo-row{
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        margin-top:8px;
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        padding: 24px;
+        margin-bottom: 20px;
+        min-width: 0;
     }
 
-    .photo-row img{
-        width:120px;
-        height:120px;
-        object-fit:cover;
-        border-radius:6px;
+    .form-card h3 {
+        color: #0A2E5C;
+        margin: 0 0 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+        font-size: 18px;
     }
 
-    .update-card{
-        border-left:4px solid #0A2E5C;
-        background:#f8f9fa;
-        padding:15px 20px;
-        border-radius:6px;
-        margin-bottom:15px;
+    .full-width {
+        grid-column: 1 / -1;
     }
 
-    .update-header{
-        display:flex;
-        justify-content:space-between;
-        margin-bottom:8px;
+    .detail-row {
+        margin-bottom: 13px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
     }
 
-    .update-status{
-        font-weight:bold;
-        color:#0A2E5C;
+    .detail-row strong {
+        color: #333;
     }
 
-    .update-date{
-        color:#888;
-        font-size:13px;
+    .status {
+        display: inline-block;
+        padding: 5px 11px;
+        border-radius: 14px;
+        background: #e8f0fb;
+        color: #0A2E5C;
+        font-size: 12px;
+        font-weight: bold;
     }
 
-    .stars{
-        font-size:26px;
-        color:#f9a825;
-        letter-spacing:3px;
-        margin:5px 0 10px;
+    .update-card {
+        border-left: 4px solid #0A2E5C;
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 14px;
+        overflow-wrap: anywhere;
     }
 
-    .stars .off{
-        color:#ddd;
+    .update-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
     }
 
-    .feedback-comment{
-        background:#fffbea;
-        border-left:4px solid #f9a825;
-        padding:12px 16px;
-        border-radius:6px;
-        font-style:italic;
-        color:#444;
+    .update-status {
+        font-weight: bold;
+        color: #0A2E5C;
+    }
+
+    .update-date {
+        color: #777;
+        font-size: 12px;
+    }
+
+    .empty {
+        color: #888;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .photo-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .photo-item {
+        display: inline-block;
+        text-decoration: none;
+        margin: 0 12px 12px 0;
+    }
+
+    .photo-row img {
+        width: 135px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 7px;
+        border: 1px solid #eee;
+        background: #f5f5f5;
+    }
+
+    .photo-caption {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .stars {
+        font-size: 25px;
+        color: #f9a825;
+        letter-spacing: 3px;
+        margin: 5px 0 10px;
+    }
+
+    .stars .off {
+        color: #ddd;
+    }
+
+    .feedback-comment {
+        background: #fffbea;
+        border-left: 4px solid #f9a825;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-style: italic;
+        color: #444;
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 800px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .full-width {
+            grid-column: auto;
+        }
+
+        .form-card {
+            padding: 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header {
+            align-items: flex-start;
+        }
+
+        .photo-row img {
+            width: 110px;
+            height: 100px;
+        }
     }
 </style>
 {% endblock %}
@@ -111,193 +208,432 @@ Report Details
 {% block content %}
 
 <div class="page-header">
-    <h2>Report Details</h2>
-    <a href="{% url 'report_history' %}" class="back-btn">&larr; Back to List</a>
-</div>
-
-<div class="form-card">
-    <h3>Original Report</h3>
-    <p><strong>Title:</strong> {{ report.title }}</p>
-    <p><strong>Description:</strong> {{ report.description }}</p>
-    <p><strong>Infrastructure Type:</strong> {{ report.get_infrastructure_type_display }}</p>
-    <p><strong>Severity:</strong> {{ report.severity_level }}</p>
-    <p><strong>Reported by:</strong> {{ report.citizen.get_full_name }}</p>
-    <p><strong>Location:</strong> {{ report.geographic_address|default:"Not provided" }}
-        ({{ report.latitude }}, {{ report.longitude }})</p>
-    <p><strong>Date Reported:</strong> {{ report.reported_date|date:"M d, Y g:i A" }}</p>
-    <p><strong>Current Status:</strong> {{ report.status }}</p>
-
-    {% if report.photos.all %}
-    <div style="margin-top:15px;">
-        <strong>Photos:</strong>
-        <div class="photo-row">
-            {% for photo in report.photos.all %}
-            <img src="{{ photo.image.url }}">
-            {% endfor %}
-        </div>
+    <div>
+        <h2>Report Details</h2>
+        <p>Review the report information and its workflow history.</p>
     </div>
-    {% endif %}
+
+    <a href="{% url 'report_history' %}" class="back-btn">
+        &larr; Back to List
+    </a>
 </div>
 
-{% if report.screenings.all %}
-<div class="form-card">
-    <h3>Screening Checks</h3>
-    {% for s in report.screenings.all %}
-    <div class="update-card">
-        <div class="update-header">
-            <span class="update-status">{{ s.screening_result }}</span>
-            <span class="update-date">{{ s.screening_date|date:"M d, Y g:i A" }}</span>
-        </div>
-        <p><strong>Completeness:</strong> {{ s.completeness_status }}</p>
-        <p><strong>Duplicate:</strong> {{ s.duplicate_status }}</p>
-        <p><strong>Jurisdiction:</strong> {{ s.jurisdiction_status }}</p>
-        <p><strong>Screened by:</strong> {{ s.screened_by.user.get_full_name|default:"-" }}</p>
-        {% if s.remarks %}
-        <p><strong>Remarks:</strong> {{ s.remarks }}</p>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+<div class="details-grid">
 
-{% if report.info_requests.all %}
-<div class="form-card">
-    <h3>Information Requests</h3>
-    {% for req in report.info_requests.all %}
-    <div class="update-card">
-        <div class="update-header">
-            <span class="update-status">
-                Requested by {{ req.requested_by.user.get_full_name|default:"FRU" }}
-            </span>
-            <span class="update-date">{{ req.requested_date|date:"M d, Y g:i A" }}</span>
-        </div>
-        <p><strong>Request:</strong> {{ req.request_message|default:"-" }}</p>
-        {% if req.response_message %}
-        <p><strong>Citizen's response:</strong> {{ req.response_message }}</p>
-        <p class="update-date">Answered {{ req.response_date|date:"M d, Y g:i A" }}</p>
-        {% else %}
-        <p style="color:#a15c00;"><em>Waiting for the citizen to respond.</em></p>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+    <!-- Original Report -->
+    <div class="form-card">
+        <h3>Original Report</h3>
 
-{% if report.screened_by %}
-<div class="form-card">
-    <h3>FRU Screening</h3>
-    <p><strong>Screened by:</strong> {{ report.screened_by.user.get_full_name }}</p>
-    <p><strong>Remarks:</strong> {{ report.screening_remarks }}</p>
-    <p><strong>Date:</strong> {{ report.screened_date|date:"M d, Y g:i A" }}</p>
-</div>
-{% endif %}
+        <p class="detail-row">
+            <strong>Report ID:</strong> #{{ report.report_id }}
+        </p>
 
-{% if report.inspected_by %}
-<div class="form-card">
-    <h3>Field Engineer Inspection</h3>
-    <p><strong>Inspected by:</strong> {{ report.inspected_by.user.get_full_name }}</p>
-    <p><strong>Findings:</strong> {{ report.inspection_remarks }}</p>
-    <p><strong>Recommended Action:</strong> {{ report.recommended_action }}</p>
-    <p><strong>Date:</strong> {{ report.inspection_date|date:"M d, Y g:i A" }}</p>
+        <p class="detail-row">
+            <strong>Title:</strong> {{ report.title }}
+        </p>
 
-    {% with v=report.inspection_validations.first %}
-    {% if v %}
-    <p><strong>Validation Result:</strong> {{ v.validation_result }}</p>
-    <p><strong>Severity Rating (inspector):</strong> {{ v.severity_rating }}</p>
-    {% if v.comments %}
-    <p><strong>Comments:</strong> {{ v.comments }}</p>
-    {% endif %}
-    {% endif %}
-    {% endwith %}
+        <p class="detail-row">
+            <strong>Description:</strong>
+            {{ report.description|default:"No description provided." }}
+        </p>
 
-    {% if report.inspection_photos.all %}
-    <div style="margin-top:15px;">
-        <strong>Inspection Photos:</strong>
-        <div class="photo-row">
-            {% for photo in report.inspection_photos.all %}
-            <img src="{{ photo.image.url }}">
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endif %}
+        <p class="detail-row">
+            <strong>Infrastructure Type:</strong>
+            {{ report.get_infrastructure_type_display }}
+        </p>
 
-{% if report.work_order %}
-<div class="form-card">
-    <h3>Work Order</h3>
-    <p><strong>Details:</strong> {{ report.work_order.work_order_details }}</p>
-    <p><strong>Assigned Field Engineer:</strong> {{ report.work_order.assigned_field_engineer.user.get_full_name }}</p>
-    <p><strong>Issued by:</strong> {{ report.work_order.issued_by.user.get_full_name }}</p>
-    <p><strong>Status:</strong> {{ report.work_order.status }}</p>
-    <p><strong>Date Issued:</strong> {{ report.work_order.date_issued|date:"M d, Y g:i A" }}</p>
-    {% if report.work_order.date_completed %}
-    <p><strong>Date Completed:</strong> {{ report.work_order.date_completed|date:"M d, Y g:i A" }}</p>
-    {% endif %}
-</div>
-
-<div class="form-card">
-    <h3>Repair Progress History</h3>
-    {% for update in report.work_order.repair_updates.all %}
-    <div class="update-card">
-        <div class="update-header">
-            <span class="update-status">{{ update.status_update }}</span>
-            <span class="update-date">{{ update.update_date|date:"M d, Y g:i A" }}</span>
-        </div>
-        <p><strong>Remarks:</strong> {{ update.progress_remarks }}</p>
-        {% if update.delay_reason %}
-        <p><strong>Delay Reason:</strong> {{ update.delay_reason }}</p>
-        {% endif %}
-        {% if update.completion_details %}
-        <p><strong>Completion Details:</strong> {{ update.completion_details }}</p>
-        {% endif %}
-        {% if update.photos.all %}
-        <div class="photo-row">
-            {% for photo in update.photos.all %}
-            <img src="{{ photo.image.url }}">
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    {% empty %}
-    <p style="color:gray;">No progress updates yet.</p>
-    {% endfor %}
-</div>
-{% endif %}
-
-{% if report.status == "Resolved" %}
-<div class="form-card">
-    <h3>Citizen Feedback</h3>
-
-    {% if report.feedback %}
-    <div class="stars">
-        {% for i in "12345" %}
-            {% if forloop.counter <= report.feedback.rating %}
-            <span>&#9733;</span>
+        <p class="detail-row">
+            <strong>Infrastructure:</strong>
+            {% if report.infrastructure %}
+                {{ report.infrastructure }}
+            {% elif report.infrastructure_not_listed %}
+                {{ report.infrastructure_not_listed }}
             {% else %}
-            <span class="off">&#9733;</span>
+                Not linked to a registered infrastructure
             {% endif %}
-        {% endfor %}
-        <span style="font-size:16px; color:#555; letter-spacing:0;">
-            {{ report.feedback.rating }} / 5
-        </span>
+        </p>
+
+        <p class="detail-row">
+            <strong>Reported By:</strong>
+            {{ report.citizen.get_full_name|default:report.citizen.username }}
+        </p>
+
+        <p class="detail-row">
+            <strong>Location:</strong>
+            {{ report.geographic_address|default:"Not provided" }}
+        </p>
+
+        <p class="detail-row">
+            <strong>Coordinates:</strong>
+            {% if report.latitude != None and report.longitude != None %}
+                {{ report.latitude }}, {{ report.longitude }}
+            {% else %}
+                Not available
+            {% endif %}
+        </p>
+
+        <p class="detail-row">
+            <strong>Location Method:</strong>
+            {{ report.get_location_method_display|default:report.location_method|default:"-" }}
+        </p>
+
+        <p class="detail-row">
+            <strong>Date Reported:</strong>
+            {{ report.reported_date|date:"M d, Y g:i A" }}
+        </p>
+
+        <p class="detail-row">
+            <strong>Last Updated:</strong>
+            {{ report.updated_date|date:"M d, Y g:i A" }}
+        </p>
+
+        <p class="detail-row">
+            <strong>Current Status:</strong>
+            <span class="status">{{ report.get_status_display|default:report.status }}</span>
+        </p>
     </div>
 
-    {% if report.feedback.comment %}
-    <p class="feedback-comment">"{{ report.feedback.comment }}"</p>
-    {% else %}
-    <p style="color:gray;">No comment left.</p>
+    <!-- Initial Photos -->
+    <div class="form-card">
+        <h3>Initial Report Photos</h3>
+
+        {% for photo in report.photos.all %}
+            {% if photo.file_path %}
+                <a class="photo-item" href="{{ photo.file_path.url }}" target="_blank" rel="noopener">
+                    <img src="{{ photo.file_path.url }}" alt="Initial report photo">
+                    <span class="photo-caption">Open photo</span>
+                </a>
+            {% endif %}
+        {% empty %}
+            <p class="empty">No initial report photos available.</p>
+        {% endfor %}
+    </div>
+
+    <!-- FRU Screening History -->
+    <div class="form-card full-width">
+        <h3>FRU Screening History</h3>
+
+        {% for s in report.history_screenings %}
+            <div class="update-card">
+                <div class="update-header">
+                    <span class="update-status">{{ s.screening_result }}</span>
+                    <span class="update-date">
+                        {{ s.screening_date|date:"M d, Y g:i A" }}
+                    </span>
+                </div>
+
+                <p class="detail-row">
+                    <strong>Completeness:</strong>
+                    {{ s.completeness_status|default:"-" }}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Duplicate Check:</strong>
+                    {{ s.duplicate_status|default:"-" }}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Jurisdiction:</strong>
+                    {{ s.jurisdiction_status|default:"-" }}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Screened By:</strong>
+                    {% if s.screened_by %}
+                        {{ s.screened_by.user.get_full_name|default:s.screened_by.user.username }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+
+                {% if s.remarks %}
+                    <p class="detail-row">
+                        <strong>Remarks:</strong> {{ s.remarks }}
+                    </p>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="empty">No screening records available.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Information Requests -->
+    <div class="form-card full-width">
+        <h3>Information Requests</h3>
+
+        {% for req in report.info_requests.all %}
+            <div class="update-card">
+                <div class="update-header">
+                    <span class="update-status">
+                        Requested by
+                        {% if req.requested_by %}
+                            {{ req.requested_by.user.get_full_name|default:req.requested_by.user.username }}
+                        {% else %}
+                            FRU
+                        {% endif %}
+                    </span>
+
+                    <span class="update-date">
+                        {{ req.requested_date|date:"M d, Y g:i A" }}
+                    </span>
+                </div>
+
+                <p class="detail-row">
+                    <strong>Request:</strong>
+                    {{ req.request_message|default:"-" }}
+                </p>
+
+                {% if req.response_message %}
+                    <p class="detail-row">
+                        <strong>Citizen's Response:</strong>
+                        {{ req.response_message }}
+                    </p>
+
+                    <p class="update-date">
+                        Answered {{ req.response_date|date:"M d, Y g:i A" }}
+                    </p>
+                {% else %}
+                    <p class="update-date">
+                        Waiting for the citizen to respond.
+                    </p>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="empty">No information requests recorded.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Field Engineer Inspection History -->
+    <div class="form-card full-width">
+        <h3>Field Engineer Inspection History</h3>
+
+        {% for v in report.history_inspections %}
+            <div class="update-card">
+                <div class="update-header">
+                    <span class="update-status">
+                        {{ v.validation_result|default:"Inspection Record" }}
+                    </span>
+
+                    <span class="update-date">
+                        {{ v.inspection_date|date:"M d, Y g:i A" }}
+                    </span>
+                </div>
+
+                <p class="detail-row">
+                    <strong>Inspected By:</strong>
+                    {% if v.inspected_by %}
+                        {{ v.inspected_by.user.get_full_name|default:v.inspected_by.user.username }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Severity Rating:</strong>
+                    {{ v.severity_rating|default:"Not recorded" }}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Findings:</strong>
+                    {{ v.findings|default:"No findings recorded." }}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Recommended Repairs:</strong>
+                    {{ v.recommended_repairs|default:"No recommendations recorded." }}
+                </p>
+
+                <p class="detail-row">
+                    <strong>Comments:</strong>
+                    {{ v.comments|default:"No comments recorded." }}
+                </p>
+            </div>
+        {% empty %}
+            <p class="empty">No inspection records available yet.</p>
+        {% endfor %}
+
+        <h3 style="margin-top:24px;">Inspection Photos</h3>
+
+        {% for photo in report.inspection_photos.all %}
+            {% if photo.image %}
+                <a class="photo-item" href="{{ photo.image.url }}" target="_blank" rel="noopener">
+                    <img src="{{ photo.image.url }}" alt="Field inspection photo">
+                    <span class="photo-caption">Open photo</span>
+                </a>
+            {% endif %}
+        {% empty %}
+            <p class="empty">No inspection photos available.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Work Order -->
+    <div class="form-card full-width">
+        <h3>Work Order</h3>
+
+        {% if report.work_order %}
+            <p class="detail-row">
+                <strong>Work Order ID:</strong>
+                #{{ report.work_order.pk }}
+            </p>
+
+            <p class="detail-row">
+                <strong>Details:</strong>
+                {{ report.work_order.work_order_details|default:"-" }}
+            </p>
+
+            <p class="detail-row">
+                <strong>Assigned Field Engineer:</strong>
+                {% if report.work_order.assigned_field_engineer %}
+                    {{ report.work_order.assigned_field_engineer.user.get_full_name|default:report.work_order.assigned_field_engineer.user.username }}
+                {% else %}
+                    Not assigned
+                {% endif %}
+            </p>
+
+            <p class="detail-row">
+                <strong>Issued By:</strong>
+                {% if report.work_order.issued_by %}
+                    {{ report.work_order.issued_by.user.get_full_name|default:report.work_order.issued_by.user.username }}
+                {% else %}
+                    Not recorded
+                {% endif %}
+            </p>
+
+            <p class="detail-row">
+                <strong>Approved By:</strong>
+                {% if report.work_order.approved_by %}
+                    {{ report.work_order.approved_by.user.get_full_name|default:report.work_order.approved_by.user.username }}
+                {% else %}
+                    Not recorded
+                {% endif %}
+            </p>
+
+            <p class="detail-row">
+                <strong>Status:</strong>
+                <span class="status">{{ report.work_order.status }}</span>
+            </p>
+
+            <p class="detail-row">
+                <strong>Date Issued:</strong>
+                {{ report.work_order.date_issued|date:"M d, Y g:i A" }}
+            </p>
+
+            {% if report.work_order.date_completed %}
+                <p class="detail-row">
+                    <strong>Date Completed:</strong>
+                    {{ report.work_order.date_completed|date:"M d, Y g:i A" }}
+                </p>
+            {% endif %}
+        {% else %}
+            <p class="empty">
+                No work order has been issued for this report yet.
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Repair Progress History -->
+    {% if report.work_order %}
+        <div class="form-card full-width">
+            <h3>Repair Progress History</h3>
+
+            {% for update in report.work_order.history_repair_updates %}
+                <div class="update-card">
+                    <div class="update-header">
+                        <span class="update-status">
+                            {{ update.status_update }}
+                        </span>
+
+                        <span class="update-date">
+                            {{ update.update_date|date:"M d, Y g:i A" }}
+                        </span>
+                    </div>
+
+                    <p class="detail-row">
+                        <strong>Submitted By:</strong>
+                        {% if update.submitted_by %}
+                            {{ update.submitted_by.user.get_full_name|default:update.submitted_by.user.username }}
+                        {% else %}
+                            Not recorded
+                        {% endif %}
+                    </p>
+
+                    <p class="detail-row">
+                        <strong>Remarks:</strong>
+                        {{ update.progress_remarks|default:"-" }}
+                    </p>
+
+                    {% if update.delay_reason %}
+                        <p class="detail-row">
+                            <strong>Delay Reason:</strong>
+                            {{ update.delay_reason }}
+                        </p>
+                    {% endif %}
+
+                    {% if update.completion_details %}
+                        <p class="detail-row">
+                            <strong>Completion Details:</strong>
+                            {{ update.completion_details }}
+                        </p>
+                    {% endif %}
+
+                    {% for photo in update.photos.all %}
+                        {% if photo.image %}
+                            <a class="photo-item" href="{{ photo.image.url }}" target="_blank" rel="noopener">
+                                <img src="{{ photo.image.url }}" alt="Repair progress photo">
+                                <span class="photo-caption">Open photo</span>
+                            </a>
+                        {% endif %}
+                    {% empty %}
+                        <p class="empty">No photos attached to this update.</p>
+                    {% endfor %}
+                </div>
+            {% empty %}
+                <p class="empty">No repair progress updates recorded yet.</p>
+            {% endfor %}
+        </div>
     {% endif %}
 
-    <p style="margin-top:10px; color:#888; font-size:13px;">
-        Submitted by {{ report.feedback.user.get_full_name }}
-        on {{ report.feedback.date_created|date:"M d, Y g:i A" }}
-    </p>
+    <!-- Citizen Feedback -->
+    {% if report.status == "Resolved" %}
+        <div class="form-card full-width">
+            <h3>Citizen Feedback</h3>
 
-    {% else %}
-    <p style="color:gray;">The citizen has not submitted feedback yet.</p>
+            {% if report.feedback %}
+                <div class="stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= report.feedback.rating %}
+                            <span>&#9733;</span>
+                        {% else %}
+                            <span class="off">&#9733;</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    <span style="font-size:16px;color:#555;letter-spacing:0;">
+                        {{ report.feedback.rating }} / 5
+                    </span>
+                </div>
+
+                {% if report.feedback.comment %}
+                    <p class="feedback-comment">
+                        "{{ report.feedback.comment }}"
+                    </p>
+                {% else %}
+                    <p class="empty">No feedback comment provided.</p>
+                {% endif %}
+
+                <p class="update-date" style="margin-top:12px;">
+                    Submitted by
+                    {{ report.feedback.user.get_full_name|default:report.feedback.user.username }}
+                    on {{ report.feedback.date_created|date:"M d, Y g:i A" }}
+                </p>
+            {% else %}
+                <p class="empty">
+                    The citizen has not submitted feedback yet.
+                </p>
+            {% endif %}
+        </div>
     {% endif %}
+
 </div>
-{% endif %}
 
 {% endblock %}

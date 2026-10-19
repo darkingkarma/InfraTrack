@@ -1,0 +1,298 @@
+
+{% extends "users/master.html" %}
+
+{% block title %}Inspection Details{% endblock %}
+{% block page_title %}Inspection Details{% endblock %}
+
+{% block style %}
+<style>
+    .inspection-page {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    .section-card {
+        background: white;
+        padding: 22px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        margin-bottom: 20px;
+    }
+
+    .section-card h3 {
+        color: #0A2E5C;
+        margin-top: 0;
+        margin-bottom: 16px;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .detail-label {
+        color: #777;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .detail-value {
+        color: #222;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+    }
+
+    .result-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        background: #e6f7ec;
+        color: #1e7e34;
+    }
+
+    .result-badge.not-confirmed {
+        background: #fde8e8;
+        color: #c0392b;
+    }
+
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    .photo-grid img {
+        width: 100%;
+        height: 190px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
+
+    .photo-caption {
+        color: #666;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    .empty {
+        color: #777;
+        font-size: 14px;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .action-btn {
+        display: inline-block;
+        padding: 10px 15px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: bold;
+        background: #0A2E5C;
+        color: white;
+    }
+
+    .action-btn.secondary {
+        background: #edf1f5;
+        color: #0A2E5C;
+    }
+
+    .action-btn:hover {
+        opacity: .88;
+    }
+
+    @media (max-width: 600px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-card {
+            padding: 16px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inspection-page">
+
+    <div class="actions">
+        <a href="{% url 'work_orders' %}" class="action-btn secondary">
+            ← Back to Work Orders
+        </a>
+
+        {% if report.status == "Inspected" %}
+            <a href="{% url 'create_work_order' report.report_id %}"
+               class="action-btn">
+                Create Work Order
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="section-card">
+        <h3>Report Information</h3>
+
+        <div class="detail-grid">
+            <div>
+                <div class="detail-label">Report ID</div>
+                <div class="detail-value">#{{ report.report_id }}</div>
+            </div>
+
+            <div>
+                <div class="detail-label">Report Title</div>
+                <div class="detail-value">{{ report.title }}</div>
+            </div>
+
+            <div>
+                <div class="detail-label">Infrastructure Type</div>
+                <div class="detail-value">
+                    {{ report.get_infrastructure_type_display }}
+                </div>
+            </div>
+
+            <div>
+                <div class="detail-label">Current Status</div>
+                <div class="detail-value">{{ report.get_status_display|default:report.status }}</div>
+            </div>
+
+            <div>
+                <div class="detail-label">Reported By</div>
+                <div class="detail-value">
+                    {{ report.citizen.get_full_name|default:report.citizen.username }}
+                </div>
+            </div>
+
+            <div>
+                <div class="detail-label">Location</div>
+                <div class="detail-value">
+                    {{ report.geographic_address|default:"No address provided" }}
+                </div>
+            </div>
+
+            <div>
+                <div class="detail-label">Date Reported</div>
+                <div class="detail-value">
+                    {{ report.reported_date|date:"M d, Y g:i A" }}
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="detail-label">Issue Description</div>
+        <div class="detail-value">{{ report.description|default:"No description provided." }}</div>
+    </div>
+
+    <div class="section-card">
+        <h3>Field Inspection Results</h3>
+
+        {% if inspection %}
+            <div class="detail-grid">
+
+                <div>
+                    <div class="detail-label">Inspection Result</div>
+                    <div>
+                        <span class="result-badge {% if inspection.validation_result == 'Not Confirmed' %}not-confirmed{% endif %}">
+                            {{ inspection.get_validation_result_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="detail-label">Severity</div>
+                    <div class="detail-value">
+                        {{ inspection.get_severity_rating_display|default:inspection.severity_rating }}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="detail-label">Inspected By</div>
+                    <div class="detail-value">
+                        {% if inspection.inspected_by %}
+                            {{ inspection.inspected_by.user.get_full_name|default:inspection.inspected_by.user.username }}
+                        {% else %}
+                            Not available
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="detail-label">Inspection Date</div>
+                    <div class="detail-value">
+                        {{ inspection.inspection_date|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div style="margin-bottom:18px;">
+                <div class="detail-label">Inspection Findings</div>
+                <div class="detail-value">{{ inspection.findings|default:"No findings provided." }}</div>
+            </div>
+
+            <div style="margin-bottom:18px;">
+                <div class="detail-label">Recommended Repairs</div>
+                <div class="detail-value">{{ inspection.recommended_repairs|default:"No recommendations provided." }}</div>
+            </div>
+
+            <div>
+                <div class="detail-label">Additional Comments</div>
+                <div class="detail-value">{{ inspection.comments|default:"No additional comments." }}</div>
+            </div>
+
+        {% else %}
+            <p class="empty">No inspection results have been recorded for this report.</p>
+        {% endif %}
+    </div>
+
+    <div class="section-card">
+        <h3>Inspection Photos</h3>
+
+        <div class="photo-grid">
+            {% for photo in report.inspection_photos.all %}
+                <div>
+                    <a href="{{ photo.image.url }}" target="_blank" rel="noopener">
+                        <img src="{{ photo.image.url }}" alt="Inspection photo">
+                    </a>
+                    <div class="photo-caption">
+                        Uploaded {{ photo.uploaded_at|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty">No inspection photos uploaded.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h3>Original Citizen Report Photos</h3>
+
+        <div class="photo-grid">
+            {% for photo in report.photos.all %}
+                {% if photo.file_path %}
+                    <div>
+                        <a href="{{ photo.file_path.url }}" target="_blank" rel="noopener">
+                            <img src="{{ photo.file_path.url }}" alt="Original report photo">
+                        </a>
+                        <div class="photo-caption">Original report evidence</div>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <p class="empty">No original report photos uploaded.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

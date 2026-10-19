@@ -1,0 +1,437 @@
+
+{% extends "users/master.html" %}
+
+{% block title %}
+Screening Details
+{% endblock %}
+
+{% block page_title %}
+Screening Details
+{% endblock %}
+
+{% block style %}
+<style>
+    .details-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .details-header h2 {
+        color: #0A2E5C;
+        margin: 0 0 6px;
+    }
+
+    .details-header p {
+        color: #777;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .back-btn {
+        display: inline-block;
+        padding: 10px 16px;
+        background: #0A2E5C;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    .back-btn:hover {
+        background: #16477f;
+    }
+
+    .details-card {
+        background: white;
+        padding: 25px;
+        margin-bottom: 22px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    }
+
+    .details-card h3 {
+        color: #0A2E5C;
+        font-size: 18px;
+        margin: 0 0 22px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e9ef;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .detail {
+        min-width: 0;
+    }
+
+    .detail.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .detail-label {
+        display: block;
+        margin-bottom: 7px;
+        color: #718096;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .detail-value {
+        color: #263238;
+        font-size: 14px;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: #e8edf3;
+        color: #344054;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .badge-validated {
+        background: #e6f7ec;
+        color: #1e7e34;
+    }
+
+    .badge-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-info {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    .photo-item {
+        padding: 10px;
+        border: 1px solid #e5e9ef;
+        border-radius: 8px;
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 5px;
+        display: block;
+    }
+
+    .photo-caption {
+        margin-top: 9px;
+        color: #687586;
+        font-size: 13px;
+    }
+
+    .request-item {
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid #e5e9ef;
+        border-radius: 8px;
+    }
+
+    .request-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .empty {
+        color: #777;
+        font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+        .details-card {
+            padding: 18px;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .detail.full-width {
+            grid-column: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="details-header">
+    <div>
+        <h2>Screening Details</h2>
+        <p>
+            Review the recorded screening for Report #{{ report.report_id }}.
+        </p>
+    </div>
+
+    <a href="{% url 'screening_history' %}" class="back-btn">
+        &larr; Back to Screening History
+    </a>
+</div>
+
+<!-- Report Information -->
+<div class="details-card">
+    <h3>Report Information</h3>
+
+    <div class="details-grid">
+        <div class="detail">
+            <span class="detail-label">Report ID</span>
+            <div class="detail-value">#{{ report.report_id }}</div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Current Report Status</span>
+            <div class="detail-value">
+                <span class="badge">{{ report.status }}</span>
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Report Title</span>
+            <div class="detail-value">
+                {{ report.title|default:"Not provided" }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Citizen</span>
+            <div class="detail-value">
+                {{ report.citizen.get_full_name|default:report.citizen.username }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Infrastructure Type</span>
+            <div class="detail-value">
+                {{ report.infrastructure_type|default:"Not specified" }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Registered Infrastructure</span>
+            <div class="detail-value">
+                {% if report.infrastructure %}
+                    {{ report.infrastructure }}
+                {% elif report.infrastructure_not_listed %}
+                    {{ report.infrastructure_not_listed }}
+                {% else %}
+                    Not linked to a registered infrastructure
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail full-width">
+            <span class="detail-label">Description</span>
+            <div class="detail-value">
+                {{ report.description|default:"No description provided."|linebreaksbr }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Geographic Address</span>
+            <div class="detail-value">
+                {{ report.geographic_address|default:"Not provided" }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Location Method</span>
+            <div class="detail-value">
+                {{ report.location_method|default:"Not specified" }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Latitude</span>
+            <div class="detail-value">
+                {{ report.latitude|default_if_none:"Not available" }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Longitude</span>
+            <div class="detail-value">
+                {{ report.longitude|default_if_none:"Not available" }}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Date Reported</span>
+            <div class="detail-value">
+                {{ report.reported_date|date:"M d, Y - g:i A"|default:"Not available" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Screening Results -->
+<div class="details-card">
+    <h3>Screening Results</h3>
+
+    <div class="details-grid">
+        <div class="detail">
+            <span class="detail-label">Screening Result</span>
+            <div class="detail-value">
+                {% if screening.screening_result == "Validated" %}
+                    <span class="badge badge-validated">
+                        {{ screening.screening_result }}
+                    </span>
+                {% elif screening.screening_result == "Rejected" %}
+                    <span class="badge badge-rejected">
+                        {{ screening.screening_result }}
+                    </span>
+                {% else %}
+                    <span class="badge badge-info">
+                        {{ screening.screening_result }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Completeness</span>
+            <div class="detail-value">
+                <span class="badge">{{ screening.completeness_status }}</span>
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Duplicate Check</span>
+            <div class="detail-value">
+                <span class="badge">{{ screening.duplicate_status }}</span>
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Jurisdiction Check</span>
+            <div class="detail-value">
+                <span class="badge">{{ screening.jurisdiction_status }}</span>
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Screened By</span>
+            <div class="detail-value">
+                {% if screening.screened_by %}
+                    {{ screening.screened_by.user.get_full_name|default:screening.screened_by.user.username }}
+                {% else %}
+                    Not recorded
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail">
+            <span class="detail-label">Date Screened</span>
+            <div class="detail-value">
+                {{ screening.screening_date|date:"M d, Y - g:i A" }}
+            </div>
+        </div>
+
+        <div class="detail full-width">
+            <span class="detail-label">Screening Remarks</span>
+            <div class="detail-value">
+                {% if screening.remarks %}
+                    {{ screening.remarks|linebreaksbr }}
+                {% else %}
+                    No remarks recorded.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submitted Photos -->
+<div class="details-card">
+    <h3>Submitted Photos</h3>
+
+    {% with photos=report.photos.all %}
+        {% if photos %}
+            <div class="photo-grid">
+                {% for photo in photos %}
+                    {% if photo.file_path %}
+                        <div class="photo-item">
+                            <a href="{{ photo.file_path.url }}" target="_blank" rel="noopener noreferrer">
+                                <img
+                                    src="{{ photo.file_path.url }}"
+                                    alt="Submitted report photo"
+                                >
+                            </a>
+
+                            <div class="photo-caption">
+                                {{ photo.get_photo_type_display|default:"Report Photo" }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% empty %}
+                    <p class="empty">No photos have been submitted.</p>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty">No photos have been submitted.</p>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<!-- Information Requests -->
+<div class="details-card">
+    <h3>Information Requests</h3>
+
+    {% for item in report.info_requests.all %}
+        <div class="request-item">
+            <div class="detail">
+                <span class="detail-label">Request Date</span>
+                <div class="detail-value">
+                    {{ item.requested_date|date:"M d, Y - g:i A"|default:"Not available" }}
+                </div>
+            </div>
+
+            <div class="detail" style="margin-top: 14px;">
+                <span class="detail-label">Requested Information</span>
+                <div class="detail-value">
+                    {{ item.request_message|default:"No message recorded."|linebreaksbr }}
+                </div>
+            </div>
+
+            <div class="detail" style="margin-top: 14px;">
+                <span class="detail-label">Citizen Response</span>
+                <div class="detail-value">
+                    {{ item.response_message|default:"No response recorded."|linebreaksbr }}
+                </div>
+            </div>
+
+            {% if item.response_date %}
+                <div class="detail" style="margin-top: 14px;">
+                    <span class="detail-label">Response Date</span>
+                    <div class="detail-value">
+                        {{ item.response_date|date:"M d, Y - g:i A" }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p class="empty">No information requests recorded for this report.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

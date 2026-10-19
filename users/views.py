@@ -2,10 +2,11 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from reports.models import Notification
+from reports.models import Notification, IssueReport, ReportScreening
 from .models import User, Personnel, Citizen
 from django.contrib import messages
 from datetime import date, timezone
+from datetime import datetime, timedelta
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +15,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from functools import wraps
+from difflib import SequenceMatcher
+from math import radians, sin, cos, sqrt, atan2
+from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 
 def login_view(request):
 
@@ -51,48 +56,113 @@ def login_view(request):
     return render(request, "users/login.html")
 
 @login_required
-def district_dashboard(request):
 
-    from django.db.models import Count
-    from reports.models import IssueReport, WorkOrder
+def district_dashboard(request):
+    from django.db.models import Count, OuterRef, Subquery
+    from reports.models import (
+        IssueReport,
+        WorkOrder,
+        InspectionValidation,
+    )
     from infrastructure.models import Infrastructure
+    from users.models import Personnel
+
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
             "Only District Engineer can access the dashboard."
         )
 
+    # Latest inspection information for each report.
+    latest_inspection = InspectionValidation.objects.filter(
+        report_id=OuterRef("report_id")
+    ).order_by("-inspection_date")
+
     reports = IssueReport.objects.all()
     total = reports.count()
 
+    # Count reports by their current workflow status.
     status_counts = {
         row["status"]: row["total"]
-        for row in reports.values("status").annotate(total=Count("report_id"))
+        for row in reports.values("status").annotate(
+            total=Count("report_id")
+        )
     }
 
     needs_info = status_counts.get("Needs More Info", 0)
-    screening = status_counts.get("Pending Screening", 0) + needs_info
+    screening = (
+        status_counts.get("Pending Screening", 0)
+        + needs_info
+    )
+
     awaiting_inspection = status_counts.get("Validated", 0)
-    ongoing = status_counts.get("Work Order Issued", 0) + status_counts.get("In Progress", 0)
+
+    ongoing = (
+        status_counts.get("Work Order Issued", 0)
+        + status_counts.get("In Progress", 0)
+    )
+
     resolved = status_counts.get("Resolved", 0)
     rejected = status_counts.get("Rejected", 0)
 
-    valid_total = total - rejected
-    resolution_rate = round(resolved / valid_total * 100) if valid_total else 0
 
-    # Items that need the District Engineer to act
-    ready_qs = reports.filter(
-        status="Inspected"
-    ).select_related("citizen").order_by("-reported_date")
+    # Inspected reports waiting for a work order.
+    ready_qs = (
+        reports.filter(status="Inspected")
+        .annotate(
+            severity_level=Subquery(
+                latest_inspection.values("severity_rating")[:1]
+            ),
+            inspection_date=Subquery(
+                latest_inspection.values("inspection_date")[:1]
+            ),
+        )
+        .select_related("citizen")
+        .order_by("-updated_date")
+    )
+
     ready_count = ready_qs.count()
 
-    update_qs = WorkOrder.objects.filter(update_requested=True).select_related(
-        "report", "assigned_field_engineer__user"
-    ).order_by("-update_requested_date")
+    # Work orders with update requests from Field Engineers.
+    update_qs = (
+        WorkOrder.objects.filter(update_requested=True)
+        .select_related(
+            "report",
+            "assigned_field_engineer__user",
+        )
+        .order_by("-update_requested_date")
+    )
+
     update_request_count = update_qs.count()
 
-    high_qs = reports.none()
-    high_open_count = 0
+    # High-severity reports that remain unresolved.
+    high_qs = (
+        reports.filter(
+            inspection_validations__severity_rating="High",
+            inspection_validations__validation_result="Confirmed",
+        )
+        .exclude(
+            status__in=[
+                "Resolved",
+                "Rejected",
+                "Not Confirmed",
+            ]
+        )
+        .annotate(
+            severity_level=Subquery(
+                latest_inspection.values("severity_rating")[:1]
+            ),
+            inspection_date=Subquery(
+                latest_inspection.values("inspection_date")[:1]
+            ),
+        )
+        .select_related("citizen")
+        .distinct()
+        .order_by("-reported_date")
+    )
+
     high_open_count = high_qs.count()
 
     context = {
@@ -102,21 +172,44 @@ def district_dashboard(request):
         "awaiting_inspection": awaiting_inspection,
         "ongoing": ongoing,
         "resolved": resolved,
-        "resolution_rate": resolution_rate,
+
         "ready_count": ready_count,
         "ready_for_work_order": ready_qs[:5],
+
         "update_request_count": update_request_count,
         "update_requests": update_qs[:5],
+
         "high_open_count": high_open_count,
         "high_open": high_qs[:5],
-        "recent_activity": reports.select_related("citizen").order_by("-updated_date")[:8],
-        "active_work_orders": WorkOrder.objects.exclude(status="Completed").count(),
+
+        "recent_activity": (
+            reports.select_related("citizen")
+            .order_by("-updated_date")[:8]
+        ),
+
+        "active_work_orders": (
+            WorkOrder.objects
+            .exclude(status="Completed")
+            .count()
+        ),
+
         "infrastructure_total": Infrastructure.objects.count(),
-        "infrastructure_maintenance": Infrastructure.objects.filter(status="maintenance").count(),
+
+        "infrastructure_maintenance": (
+            Infrastructure.objects
+            .filter(status="maintenance")
+            .count()
+        ),
+
         "personnel_total": Personnel.objects.count(),
     }
 
-    return render(request, "users/district/district_dashboard.html", context)
+    return render(
+        request,
+        "users/district/district_dashboard.html",
+        context,
+    )
+
 
 def logout_view(request):
     logout(request)
@@ -312,33 +405,50 @@ def edit_personnel(request, pk):
     })
 
 @login_required
-
 def fru_dashboard(request):
-    from reports.models import IssueReport, ReportScreening
-    from django.utils import timezone
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if request.user.role != "fru":
+        raise PermissionDenied(
+            "Only FRU personnel can access this dashboard."
+        )
+
+    today = timezone.localdate()
+
+    start_of_today = timezone.make_aware(
+        datetime.combine(today, datetime.min.time())
+    )
+
+    start_of_tomorrow = timezone.make_aware(
+        datetime.combine(
+            today + timedelta(days=1),
+            datetime.min.time()
+        )
+    )
 
     pending_count = IssueReport.objects.filter(
         status="Pending Screening"
     ).count()
 
-    start_of_today = timezone.localtime().replace(
-        hour=0,
-        minute=0,
-        second=0,
-        microsecond=0
-    )
-
     screened_today = ReportScreening.objects.filter(
-        screening_date__gte=start_of_today
+        screening_date__gte=start_of_today,
+        screening_date__lt=start_of_tomorrow,
+    ).count()
+
+    rejected_count = IssueReport.objects.filter(
+        status="Rejected"
+    ).count()
+
+    needs_info_count = IssueReport.objects.filter(
+        status="Needs More Info"
     ).count()
 
     context = {
         "pending_count": pending_count,
         "screened_today": screened_today,
-        "notifications_count": Notification.objects.filter(
-            recipient=request.user,
-            is_read=False
-        ).count(),
+        "rejected_count": rejected_count,
+        "needs_info_count": needs_info_count,
     }
 
     return render(
@@ -346,7 +456,6 @@ def fru_dashboard(request):
         "users/fru/fru_dashboard.html",
         context
     )
-
 
 
 @login_required
@@ -365,47 +474,318 @@ def pending_reports(request):
     return render(request, "users/fru/pending_reports.html", context)
 
 
+
 @login_required
 def screen_report(request, pk):
-
     from reports.models import IssueReport, InfoRequest, ReportScreening
     from reports.notifications import notify_users, notify_role
-    from django.utils import timezone
+    from django.http import HttpResponseForbidden
+
+    if request.user.role != "fru":
+        return HttpResponseForbidden(
+            "Only FRU personnel can screen reports."
+        )
 
     report = get_object_or_404(IssueReport, pk=pk)
 
-    if request.method == "POST":
 
-        if not hasattr(request.user, "personnel"):
-            messages.error(request, "Your account has no personnel record, so it can't screen reports.")
+    # A report needing more information can only be rescreened
+    # after the citizen responds to the latest information request.
+    if report.status == "Needs More Info":
+        latest_info_request = (
+            report.info_requests
+            .order_by("-requested_date", "-pk")
+            .first()
+        )
+
+        citizen_has_responded = (
+            latest_info_request is not None
+            and latest_info_request.response_date is not None
+            and bool(
+                latest_info_request.response_message
+                and latest_info_request.response_message.strip()
+            )
+        )
+
+        if not citizen_has_responded:
+            messages.error(
+                request,
+                "This report is waiting for the citizen to provide "
+                "the requested information before it can be screened again."
+            )
             return redirect("pending_reports")
 
-        screening_result = request.POST.get("screening_result")
-        screening_remarks = request.POST.get("screening_remarks")
-        completeness_status = request.POST.get("completeness_status", "Complete")
-        duplicate_status = request.POST.get("duplicate_status", "Not Duplicate")
-        jurisdiction_status = request.POST.get("jurisdiction_status", "Within Jurisdiction")
+        # Suggest jurisdiction based on the registered infrastructure.
+    jurisdiction_suggestion = {
+        "status": "Manual Verification Needed",
+        "message": (
+            "No registered infrastructure is linked to this report. "
+            "Please verify its jurisdiction manually."
+        ),
+        "infrastructure": None,
+        "type_matches": None,
+    }
+
+    if report.infrastructure_id:
+        infrastructure = report.infrastructure
+
+        type_matches = (
+            str(report.infrastructure_type).lower()
+            == str(infrastructure.infra_type).lower()
+        )
+
+        jurisdiction_suggestion = {
+            "status": (
+                "Reference Found"
+                if type_matches
+                else "Infrastructure Type Mismatch"
+            ),
+            "message": (
+                "A registered infrastructure is linked to this report. "
+                "Review its details and verify jurisdiction before deciding."
+                if type_matches
+                else
+                "The report type does not match the registered "
+                "infrastructure type. Please review it and verify "
+                "jurisdiction manually."
+            ),
+            "infrastructure": infrastructure,
+            "type_matches": type_matches,
+        }
+
+        # Find possible duplicate reports.
+    possible_duplicates = []
+
+    if report.latitude is not None and report.longitude is not None:
+        try:
+            current_lat = float(report.latitude)
+            current_lon = float(report.longitude)
+
+            if (
+                -90 <= current_lat <= 90
+                and -180 <= current_lon <= 180
+            ):
+                existing_reports = (
+                    IssueReport.objects
+                    .exclude(pk=report.pk)
+                    .exclude(status="Rejected")
+                    .filter(
+                        infrastructure_type=report.infrastructure_type
+                    )
+                    .order_by("-reported_date")
+                )
+
+                current_text = (
+                    f"{report.title or ''} "
+                    f"{report.description or ''}"
+                ).lower().strip()
+
+                for existing in existing_reports:
+                    try:
+                        existing_lat = float(existing.latitude)
+                        existing_lon = float(existing.longitude)
+                    except (TypeError, ValueError):
+                        continue
+
+                    if not (
+                        -90 <= existing_lat <= 90
+                        and -180 <= existing_lon <= 180
+                    ):
+                        continue
+
+                    # Calculate distance between the two locations.
+                    lat1 = radians(current_lat)
+                    lon1 = radians(current_lon)
+                    lat2 = radians(existing_lat)
+                    lon2 = radians(existing_lon)
+
+                    dlat = lat2 - lat1
+                    dlon = lon2 - lon1
+
+                    a = (
+                        sin(dlat / 2) ** 2
+                        + cos(lat1) * cos(lat2)
+                        * sin(dlon / 2) ** 2
+                    )
+
+                    distance = (
+                        6371000
+                        * 2
+                        * atan2(sqrt(a), sqrt(1 - a))
+                    )
+
+                    existing_text = (
+                        f"{existing.title or ''} "
+                        f"{existing.description or ''}"
+                    ).lower().strip()
+
+                    text_similarity = SequenceMatcher(
+                        None,
+                        current_text,
+                        existing_text,
+                    ).ratio()
+
+                    # Flag nearby reports with similar descriptions,
+                    # or reports with very similar descriptions.
+                    if (
+                        distance <= 500
+                        and text_similarity >= 0.25
+                    ) or text_similarity >= 0.65:
+                        possible_duplicates.append({
+                            "report": existing,
+                            "distance": round(distance),
+                            "similarity": round(
+                                text_similarity * 100
+                            ),
+                        })
+
+        except (TypeError, ValueError):
+            pass
+
+    possible_duplicates = possible_duplicates[:10]
+
+    is_awaiting_screening = report.status in (
+        "Pending Screening",
+        "Needs More Info",
+    )
+
+    if not is_awaiting_screening and request.method == "POST":
+        messages.error(
+            request,
+            "This report has already been screened and cannot be screened again here."
+        )
+        return redirect("pending_reports")
+
+    # Calculate completeness from the saved report data.
+    photos_exist = report.photos.filter(
+        file_path__isnull=False
+    ).exclude(file_path="").exists()
+
+    try:
+        latitude = float(report.latitude)
+        longitude = float(report.longitude)
+        coordinates_valid = (
+            -90 <= latitude <= 90
+            and -180 <= longitude <= 180
+        )
+    except (TypeError, ValueError):
+        coordinates_valid = False
+
+    infrastructure_types = {
+        choice[0] for choice in IssueReport._meta
+        .get_field("infrastructure_type").choices
+    }
+
+    completeness_checks = [
+        {
+            "label": "Report title",
+            "passed": bool(report.title and report.title.strip()),
+        },
+        {
+            "label": "Report description",
+            "passed": bool(
+                report.description and report.description.strip()
+            ),
+        },
+        {
+            "label": "Infrastructure type",
+            "passed": report.infrastructure_type in infrastructure_types,
+        },
+        {
+            "label": "Valid GPS coordinates",
+            "passed": coordinates_valid,
+        },
+        {
+            "label": "Location description",
+            "passed": bool(
+                report.geographic_address
+                and report.geographic_address.strip()
+            ),
+        },
+        {
+            "label": "At least one uploaded photo",
+            "passed": photos_exist,
+        },
+    ]
+
+    is_complete = all(
+        check["passed"] for check in completeness_checks
+    )
+
+    completeness_status = "Complete" if is_complete else "Incomplete"
+
+    def render_screening_page():
+        return render(
+            request,
+            "users/fru/screen_report.html",
+            {
+                "report": report,
+                "completeness_checks": completeness_checks,
+                "completeness_status": completeness_status,
+                "possible_duplicates": possible_duplicates,
+                "jurisdiction_suggestion": jurisdiction_suggestion,
+            },
+        )
+
+    if request.method == "POST":
+        if not hasattr(request.user, "personnel"):
+            messages.error(
+                request,
+                "Your account has no personnel record, so it can't screen reports."
+            )
+            return redirect("pending_reports")
+
+        screening_result = request.POST.get(
+            "screening_result", ""
+        ).strip()
+        screening_remarks = request.POST.get(
+            "screening_remarks", ""
+        ).strip()
+        duplicate_status = request.POST.get("duplicate_status", "")
+        jurisdiction_status = request.POST.get("jurisdiction_status", "")
+
+        if duplicate_status not in ("Not Duplicate", "Duplicate"):
+            messages.error(request, "Invalid duplicate status.")
+            return render_screening_page()
+
+        if jurisdiction_status not in (
+            "Within Jurisdiction",
+            "Outside Jurisdiction",
+        ):
+            messages.error(request, "Invalid jurisdiction status.")
+            return render_screening_page()
+
+        if screening_result not in (
+            "Validated",
+            "Needs More Info",
+            "Rejected",
+        ):
+            messages.error(request, "Invalid screening result.")
+            return render_screening_page()
 
         failed_checks = (
-            completeness_status != "Complete"
+            not is_complete
             or duplicate_status != "Not Duplicate"
             or jurisdiction_status != "Within Jurisdiction"
         )
+
         if screening_result == "Validated" and failed_checks:
             messages.error(
                 request,
-                "A report that is incomplete, a duplicate, or outside DPWH Iligan "
-                "jurisdiction cannot be validated. Choose Needs More Info or Rejected."
+                "This report cannot be validated because one or more "
+                "screening checks failed. Choose Needs More Info or Rejected."
             )
-            return render(request, "users/fru/screen_report.html", {
-                "report": report,
-            })
+            return render_screening_page()
 
-        report.status = screening_result
-        report.screening_remarks = screening_remarks
-        report.screened_by = request.user.personnel
-        report.screened_date = timezone.now()
-        report.save()
+        if (
+            screening_result in ("Needs More Info", "Rejected")
+            and not screening_remarks
+        ):
+            messages.error(
+                request,
+                "Please provide remarks explaining your decision."
+            )
+            return render_screening_page()
 
         ReportScreening.objects.create(
             report=report,
@@ -414,8 +794,11 @@ def screen_report(request, pk):
             duplicate_status=duplicate_status,
             jurisdiction_status=jurisdiction_status,
             screening_result=screening_result,
-            remarks=screening_remarks or "",
+            remarks=screening_remarks,
         )
+
+        report.status = screening_result
+        report.save(update_fields=["status", "updated_date"])
 
         if screening_result == "Needs More Info":
             InfoRequest.objects.create(
@@ -424,158 +807,523 @@ def screen_report(request, pk):
                 request_message=screening_remarks,
             )
             notify_users(
-                [report.citizen], 'info_requested', 'More information needed',
-                screening_remarks or f'Please add more details to "{report.title}".', report,
+                [report.citizen],
+                "info_requested",
+                "More information needed",
+                screening_remarks,
+                report,
             )
+
         elif screening_result == "Validated":
             notify_users(
-                [report.citizen], 'report_validated', 'Your report was validated',
-                f'"{report.title}" passed screening and is waiting for a field inspection.', report,
+                [report.citizen],
+                "report_validated",
+                "Your report was validated",
+                f'"{report.title}" passed screening and is waiting for a field inspection.',
+                report,
             )
             notify_role(
-                'field_engineer', 'report_validated', 'New report to inspect',
-                f'"{report.title}" is ready for inspection.', report,
+                "field_engineer",
+                "report_validated",
+                "New report to inspect",
+                f'"{report.title}" is ready for inspection.',
+                report,
             )
+
         elif screening_result == "Rejected":
             notify_users(
-                [report.citizen], 'report_rejected', 'Your report was rejected',
-                screening_remarks or f'"{report.title}" was rejected during screening.', report,
+                [report.citizen],
+                "report_rejected",
+                "Your report was rejected",
+                screening_remarks,
+                report,
             )
 
         messages.success(request, "Report screened successfully.")
         return redirect("pending_reports")
 
-    return render(request, "users/fru/screen_report.html", {
-        "report": report,
-    })
+    return render_screening_page()
+
+
 
 @login_required
 def validated_reports(request):
+    from django.db.models import Q, OuterRef, Subquery, Prefetch
+    from reports.models import (
+        IssueReport,
+        ReportScreening,
+        InspectionValidation,
+    )
 
-    from reports.models import IssueReport
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
             "Only District Engineer can access validated reports."
         )
 
-    reports = IssueReport.objects.filter(status="Validated").select_related(
-        "citizen", "screened_by__user"
-    ).order_by("-screened_date")
+    search_query = request.GET.get("q", "").strip()
 
-    return render(request, "users/district/validated_reports.html", {
-        "reports": reports,
-    })
+    # Find the latest screening date for each report
+    latest_screening = ReportScreening.objects.filter(
+        report_id=OuterRef("report_id")
+    ).order_by("-screening_date")
+
+    reports = (
+        IssueReport.objects
+        .filter(status="Validated")
+        .annotate(
+            latest_screening_date=Subquery(
+                latest_screening.values("screening_date")[:1]
+            )
+        )
+        .select_related("citizen")
+        .prefetch_related(
+            Prefetch(
+                "screenings",
+                queryset=ReportScreening.objects
+                .select_related("screened_by__user")
+                .order_by("-screening_date"),
+            ),
+            Prefetch(
+                "inspection_validations",
+                queryset=InspectionValidation.objects
+                .select_related("inspected_by__user")
+                .order_by("-inspection_date"),
+            ),
+        )
+    )
+
+    # Search by title, location, citizen name, or infrastructure type
+    if search_query:
+        search_filter = (
+            Q(title__icontains=search_query)
+            | Q(geographic_address__icontains=search_query)
+            | Q(citizen__first_name__icontains=search_query)
+            | Q(citizen__last_name__icontains=search_query)
+            | Q(infrastructure_type__icontains=search_query)
+        )
+
+        if search_query.isdigit():
+            search_filter |= Q(report_id=int(search_query))
+
+        reports = reports.filter(search_filter)
+
+    # Latest screened reports first
+    reports = reports.order_by(
+        "-latest_screening_date",
+        "-reported_date",
+    )
+
+    return render(
+        request,
+        "users/district/validated_reports.html",
+        {
+            "reports": reports,
+            "search_query": search_query,
+        },
+    )
+
+
+@login_required
+
+def screening_history(request):
+    from django.http import HttpResponseForbidden
+    from django.db.models import Q
+    from reports.models import ReportScreening
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if request.user.role != "fru":
+        return HttpResponseForbidden(
+            "Only FRU personnel can access screening history."
+        )
+
+    search_query = request.GET.get("q", "").strip()
+    result_filter = request.GET.get("result", "").strip()
+    completeness_filter = request.GET.get("completeness", "").strip()
+    duplicate_filter = request.GET.get("duplicate", "").strip()
+    jurisdiction_filter = request.GET.get("jurisdiction", "").strip()
+    sort_order = request.GET.get("sort", "newest").strip()
+
+    screenings = ReportScreening.objects.select_related(
+        "report",
+        "report__citizen",
+        "screened_by",
+        "screened_by__user",
+    )
+
+    # Search by report title, citizen, or FRU personnel.
+    if search_query:
+        search_conditions = (
+            Q(report__title__icontains=search_query)
+            | Q(report__citizen__first_name__icontains=search_query)
+            | Q(report__citizen__last_name__icontains=search_query)
+            | Q(report__citizen__username__icontains=search_query)
+            | Q(screened_by__user__first_name__icontains=search_query)
+            | Q(screened_by__user__last_name__icontains=search_query)
+            | Q(screened_by__user__username__icontains=search_query)
+        )
+
+        if search_query.isdigit():
+            search_conditions |= Q(
+                report__report_id=int(search_query)
+            )
+
+        screenings = screenings.filter(search_conditions)
+
+    # Screening result filter.
+    if result_filter in ("Validated", "Needs More Info", "Rejected"):
+        screenings = screenings.filter(
+            screening_result=result_filter
+        )
+
+    # Completeness filter.
+    if completeness_filter in ("Complete", "Incomplete"):
+        screenings = screenings.filter(
+            completeness_status=completeness_filter
+        )
+
+    # Duplicate filter.
+    if duplicate_filter in ("Not Duplicate", "Duplicate"):
+        screenings = screenings.filter(
+            duplicate_status=duplicate_filter
+        )
+
+    # Jurisdiction filter.
+    if jurisdiction_filter in (
+        "Within Jurisdiction",
+        "Outside Jurisdiction",
+    ):
+        screenings = screenings.filter(
+            jurisdiction_status=jurisdiction_filter
+        )
+
+    # Sorting.
+    if sort_order == "oldest":
+        screenings = screenings.order_by("screening_date", "pk")
+    else:
+        sort_order = "newest"
+        screenings = screenings.order_by("-screening_date", "-pk")
+
+    context = {
+        "screenings": screenings,
+        "search_query": search_query,
+        "result_filter": result_filter,
+        "completeness_filter": completeness_filter,
+        "duplicate_filter": duplicate_filter,
+        "jurisdiction_filter": jurisdiction_filter,
+        "sort_order": sort_order,
+    }
+
+    return render(
+        request,
+        "users/fru/screening_history.html",
+        context,
+    )
+
+@login_required
+
+def screening_details(request, pk):
+    from django.http import HttpResponseForbidden
+    from reports.models import ReportScreening
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if request.user.role != "fru":
+        return HttpResponseForbidden(
+            "Only FRU personnel can view screening details."
+        )
+
+    screening = get_object_or_404(
+        ReportScreening.objects.select_related(
+            "report",
+            "report__citizen",
+            "report__infrastructure",
+            "screened_by",
+            "screened_by__user",
+        ).prefetch_related(
+            "report__photos",
+            "report__info_requests",
+            "report__screenings",
+        ),
+        pk=pk,
+    )
+
+    return render(
+        request,
+        "users/fru/screening_details.html",
+        {
+            "screening": screening,
+            "report": screening.report,
+        },
+    )
+
 
 @login_required
 def work_orders(request):
+    from django.db.models import Q, OuterRef, Subquery
+    from reports.models import IssueReport, InspectionValidation
 
-    from reports.models import IssueReport
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
             "Only District Engineer can access work orders."
         )
 
-    reports = IssueReport.objects.filter(status="Inspected").order_by('-inspection_date')
+    search_query = request.GET.get("q", "").strip()
 
-    context = {
-        "reports": reports,
-    }
+    # Get the most recent inspection date for each report.
+    latest_inspection = InspectionValidation.objects.filter(
+        report_id=OuterRef("report_id")
+    ).order_by("-inspection_date")
 
-    return render(request, "users/district/work_orders.html", context)
+    reports = IssueReport.objects.filter(
+        status="Inspected"
+    ).annotate(
+        latest_inspection_date=Subquery(
+            latest_inspection.values("inspection_date")[:1]
+        )
+    ).select_related(
+        "citizen",
+        "infrastructure",
+    )
+
+    # Search by report ID, title, location, or infrastructure type.
+    if search_query:
+        search_filter = (
+            Q(title__icontains=search_query)
+            | Q(geographic_address__icontains=search_query)
+            | Q(infrastructure_type__icontains=search_query)
+        )
+
+        if search_query.isdigit():
+            search_filter |= Q(report_id=int(search_query))
+
+        reports = reports.filter(search_filter)
+
+    # Most recently inspected reports appear first.
+    reports = reports.order_by(
+        "-latest_inspection_date",
+        "-updated_date",
+    )
+
+    return render(
+        request,
+        "users/district/work_orders.html",
+        {
+            "reports": reports,
+            "search_query": search_query,
+        },
+    )
+
 
 
 @login_required
-def create_work_order(request, pk):
 
-    from reports.models import IssueReport, WorkOrder
+def create_work_order(request, pk):
+    from reports.models import IssueReport, WorkOrder, InspectionValidation
     from reports.notifications import notify_users
+
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
             "Only District Engineer can create work orders."
         )
 
-    report = get_object_or_404(IssueReport, pk=pk)
-    field_engineers = Personnel.objects.filter(position="field_engineer").select_related("user")
+    report = get_object_or_404(
+        IssueReport.objects.select_related(
+            "citizen",
+            "infrastructure",
+        ),
+        report_id=pk,
+    )
+
+    field_engineers = Personnel.objects.filter(
+        position="field_engineer"
+    ).select_related("user")
+
+    # Get the latest inspection record for this report.
+    inspection = report.inspection_validations.first()
+
+    # Allow work orders only for confirmed, inspected reports.
+    can_create_work_order = (
+        inspection is not None
+        and inspection.validation_result == "Confirmed"
+        and report.status == "Inspected"
+        and not WorkOrder.objects.filter(report=report).exists()
+    )
 
     if request.method == "POST":
 
         if not hasattr(request.user, "personnel"):
-            messages.error(request, "Your account has no personnel record, so it can't issue work orders.")
+            messages.error(
+                request,
+                "Your account has no personnel record, "
+                "so it cannot issue work orders."
+            )
             return redirect("work_orders")
 
-        if WorkOrder.objects.filter(report=report).exists():
-            messages.error(request, "A work order already exists for this report.")
+        if not can_create_work_order:
+            messages.error(
+                request,
+                "A work order cannot be created. "
+                "The report must have a confirmed inspection "
+                "and must not already have a work order."
+            )
             return redirect("work_orders")
 
-        assigned_engineer_id = request.POST.get("assigned_field_engineer")
-        work_order_details = request.POST.get("work_order_details")
-
-        assigned_engineer = get_object_or_404(Personnel, pk=assigned_engineer_id)
-
-        WorkOrder.objects.create(
-            report=report,
-            issued_by=request.user.personnel,
-            approved_by=request.user.personnel,
-            assigned_field_engineer=assigned_engineer,
-            work_order_details=work_order_details,
+        assigned_engineer_id = request.POST.get(
+            "assigned_field_engineer"
         )
+        work_order_details = request.POST.get(
+            "work_order_details", ""
+        ).strip()
 
-        report.status = "Work Order Issued"
-        report.save()
+        if not assigned_engineer_id or not work_order_details:
+            messages.error(
+                request,
+                "Please select a Field Engineer and enter "
+                "the work order details."
+            )
+        else:
+            assigned_engineer = get_object_or_404(
+                field_engineers,
+                pk=assigned_engineer_id,
+            )
 
-        notify_users(
-            [assigned_engineer.user], 'work_order_assigned', 'New work order assigned',
-            f'You were assigned to repair "{report.title}".', report,
-        )
-        notify_users(
-            [report.citizen], 'work_order_issued', 'Repair scheduled',
-            f'A work order was issued for "{report.title}".', report,
-        )
+            WorkOrder.objects.create(
+                report=report,
+                issued_by=request.user.personnel,
+                approved_by=request.user.personnel,
+                assigned_field_engineer=assigned_engineer,
+                work_order_details=work_order_details,
+            )
 
-        messages.success(request, "Work order created and assigned successfully.")
-        return redirect("work_orders")
+            report.status = "Work Order Issued"
+            report.save()
 
-    return render(request, "users/district/create_work_order.html", {
-        "report": report,
-        "field_engineers": field_engineers,
-    })
+            notify_users(
+                [assigned_engineer.user],
+                "work_order_assigned",
+                "New work order assigned",
+                f'You were assigned to repair "{report.title}".',
+                report,
+            )
+
+            notify_users(
+                [report.citizen],
+                "work_order_issued",
+                "Repair scheduled",
+                f'A work order was issued for "{report.title}".',
+                report,
+            )
+
+            messages.success(
+                request,
+                "Work order created and assigned successfully."
+            )
+            return redirect("work_orders")
+
+    return render(
+        request,
+        "users/district/create_work_order.html",
+        {
+            "report": report,
+            "field_engineers": field_engineers,
+            "inspection": inspection,
+            "can_create_work_order": can_create_work_order,
+        },
+    )
+
 
 @login_required
-def repair_monitoring(request):
 
-    from reports.models import WorkOrder
+def repair_monitoring(request):
+    from django.db.models import Q, Prefetch
+    from reports.models import WorkOrder, RepairUpdate
+
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
             "Only District Engineer can access repair monitoring."
         )
 
-    work_orders = WorkOrder.objects.exclude(status='Issued').select_related(
-        'report', 'assigned_field_engineer__user'
-    ).prefetch_related('repair_updates').order_by('-date_issued')
+    search_query = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
 
-    progress_map = {
-        'Not Started': 10,
-        'In Progress': 50,
-        'Completed': 100,
-    }
+    work_orders = WorkOrder.objects.select_related(
+        "report",
+        "assigned_field_engineer__user",
+    ).prefetch_related(
+        Prefetch(
+            "repair_updates",
+            queryset=RepairUpdate.objects.order_by("-update_date"),
+            to_attr="ordered_repair_updates",
+        )
+    )
+
+    if search_query:
+        filters = Q(report__title__icontains=search_query)
+
+        if search_query.isdigit():
+            filters |= Q(pk=int(search_query))
+
+        filters |= Q(
+            assigned_field_engineer__user__first_name__icontains=search_query
+        )
+        filters |= Q(
+            assigned_field_engineer__user__last_name__icontains=search_query
+        )
+        filters |= Q(
+            assigned_field_engineer__user__username__icontains=search_query
+        )
+
+        work_orders = work_orders.filter(filters)
+
+    valid_statuses = ["Issued", "In Progress", "Completed"]
+
+    if status_filter in valid_statuses:
+        work_orders = work_orders.filter(status=status_filter)
+    else:
+        status_filter = ""
+
+    work_orders = work_orders.order_by("-date_issued")
 
     for wo in work_orders:
-        wo.progress_percent = progress_map.get(wo.status, 10)
+        wo.latest_repair_update = (
+            wo.ordered_repair_updates[0]
+            if wo.ordered_repair_updates
+            else None
+        )
 
-    context = {
-        "work_orders": work_orders,
-    }
-
-    return render(request, "users/district/repair_monitoring.html", context)
+    return render(
+        request,
+        "users/district/repair_monitoring.html",
+        {
+            "work_orders": work_orders,
+            "search_query": search_query,
+            "status_filter": status_filter,
+        },
+    )
 
 @login_required
 def view_work_order(request, pk):
+    from django.contrib.auth.decorators import login_required
+    from django.db.models import Prefetch
+    from reports.models import WorkOrder, RepairUpdate, InspectionValidation
 
-    from reports.models import WorkOrder
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
@@ -583,14 +1331,42 @@ def view_work_order(request, pk):
         )
 
     work_order = get_object_or_404(
-        WorkOrder.objects.select_related('report', 'assigned_field_engineer__user', 'issued_by__user')
-        .prefetch_related('repair_updates__photos'),
-        pk=pk
+        WorkOrder.objects.select_related(
+            "report",
+            "report__citizen",
+            "report__infrastructure",
+            "assigned_field_engineer__user",
+            "issued_by__user",
+            "approved_by__user",
+        ).prefetch_related(
+            Prefetch(
+                "repair_updates",
+                queryset=RepairUpdate.objects.prefetch_related(
+                    "photos"
+                ).order_by("-update_date"),
+                to_attr="ordered_repair_updates",
+            ),
+        ),
+        pk=pk,
     )
 
-    return render(request, "users/district/view_work_order.html", {
-        "work_order": work_order,
-    })
+    inspection = (
+        InspectionValidation.objects.filter(
+            report=work_order.report
+        )
+        .select_related("inspected_by__user")
+        .order_by("-inspection_date")
+        .first()
+    )
+
+    return render(
+        request,
+        "users/district/view_work_order.html",
+        {
+            "work_order": work_order,
+            "inspection": inspection,
+        },
+    )
 
 @login_required
 def request_work_order_update(request, pk):
@@ -627,24 +1403,46 @@ def request_work_order_update(request, pk):
 
 @login_required
 def report_history(request):
-
+    from django.db.models import Q
     from reports.models import IssueReport
+
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
             "Only District Engineer can access report history."
         )
 
-    reports = IssueReport.objects.select_related('citizen').order_by('-reported_date')
+    search_query = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
 
-    search_query = request.GET.get('q', '')
-    status_filter = request.GET.get('status', '')
+    reports = IssueReport.objects.select_related(
+        "citizen",
+        "infrastructure",
+    ).order_by("-reported_date")
 
     if search_query:
-        reports = reports.filter(title__icontains=search_query)
+        search_filter = (
+            Q(title__icontains=search_query)
+            | Q(citizen__first_name__icontains=search_query)
+            | Q(citizen__last_name__icontains=search_query)
+            | Q(citizen__username__icontains=search_query)
+        )
 
-    if status_filter:
+        if search_query.isdigit():
+            search_filter |= Q(report_id=int(search_query))
+
+        reports = reports.filter(search_filter)
+
+    valid_statuses = [
+        value for value, label in IssueReport.STATUS_CHOICES
+    ]
+
+    if status_filter in valid_statuses:
         reports = reports.filter(status=status_filter)
+    else:
+        status_filter = ""
 
     context = {
         "reports": reports,
@@ -653,13 +1451,26 @@ def report_history(request):
         "status_choices": IssueReport.STATUS_CHOICES,
     }
 
-    return render(request, "users/district/report_history.html", context)
+    return render(
+        request,
+        "users/district/report_history.html",
+        context,
+    )
 
 
 @login_required
-def view_report_history_detail(request, pk):
 
-    from reports.models import IssueReport
+def view_report_history_detail(request, pk):
+    from django.db.models import Prefetch
+    from reports.models import (
+        IssueReport,
+        ReportScreening,
+        InspectionValidation,
+        RepairUpdate,
+    )
+
+    if not request.user.is_authenticated:
+        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
@@ -667,14 +1478,56 @@ def view_report_history_detail(request, pk):
         )
 
     report = get_object_or_404(
-        IssueReport.objects.select_related('citizen', 'screened_by__user', 'inspected_by__user')
-        .prefetch_related('photos', 'inspection_photos', 'info_requests', 'work_order__repair_updates__photos'),
-        pk=pk
+        IssueReport.objects
+        .select_related(
+            "citizen",
+            "infrastructure",
+            "work_order",
+            "feedback",
+        )
+        .prefetch_related(
+            "photos",
+            "inspection_photos",
+            "info_requests",
+            Prefetch(
+                "screenings",
+                queryset=ReportScreening.objects
+                .select_related("screened_by__user")
+                .order_by("-screening_date"),
+                to_attr="history_screenings",
+            ),
+            Prefetch(
+                "inspection_validations",
+                queryset=InspectionValidation.objects
+                .select_related("inspected_by__user")
+                .order_by("-inspection_date"),
+                to_attr="history_inspections",
+            ),
+            Prefetch(
+                "work_order__repair_updates",
+                queryset=RepairUpdate.objects
+                .select_related("submitted_by__user")
+                .prefetch_related("photos")
+                .order_by("-update_date"),
+                to_attr="history_repair_updates",
+            ),
+        ),
+        report_id=pk,
     )
 
-    return render(request, "users/district/view_report_history.html", {
-        "report": report,
-    })
+    if hasattr(report, "work_order"):
+        report.work_order.history_repair_updates = (
+            report.work_order.history_repair_updates
+        )
+
+    return render(
+        request,
+        "users/district/view_report_history.html",
+        {
+            "report": report,
+        },
+    )
+
 
 
 def landing_page(request):
@@ -837,31 +1690,238 @@ def role_required(*roles):
     return decorator
 
 
+@login_required
+def assign_inspection(request):
+    from django.db import transaction
+    from django.db.models import Q, OuterRef, Subquery
+    from reports.models import (
+        IssueReport,
+        InspectionAssignment,
+        ReportScreening,
+    )
+    from reports.notifications import notify_users
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if request.user.role != "district_engineer":
+        return HttpResponseForbidden(
+            "Only District Engineer can assign inspection reports."
+        )
+
+    # Search and filter values from the GET form
+    search_query = request.GET.get("q", "").strip()
+    assignment_filter = request.GET.get("assignment", "").strip()
+
+    # Get the latest screening date for each report
+    latest_screening = ReportScreening.objects.filter(
+        report_id=OuterRef("report_id")
+    ).order_by("-screening_date")
+
+    # Show the most recently screened validated reports first
+    reports = IssueReport.objects.filter(
+        status="Validated"
+    ).annotate(
+        latest_screening_date=Subquery(
+            latest_screening.values("screening_date")[:1]
+        )
+    ).select_related(
+        "citizen"
+    ).order_by(
+        "-latest_screening_date",
+        "-reported_date",
+    )
+
+    # Search by report title, location, citizen name, or infrastructure type
+    search_filter = (
+        Q(title__icontains=search_query)
+        | Q(geographic_address__icontains=search_query)
+        | Q(citizen__first_name__icontains=search_query)
+        | Q(citizen__last_name__icontains=search_query)
+        | Q(infrastructure_type__icontains=search_query)
+    )
+
+    # Allow exact report ID searches when the query is numeric
+    if search_query.isdigit():
+        search_filter |= Q(report_id=int(search_query))
+
+    if search_query:
+        reports = reports.filter(search_filter)
+
+    # Get report IDs that currently have an active assignment
+    active_assignment_ids = InspectionAssignment.objects.filter(
+        is_active=True
+    ).values_list("report_id", flat=True)
+
+    if assignment_filter == "unassigned":
+        reports = reports.exclude(
+            report_id__in=active_assignment_ids
+        )
+    elif assignment_filter == "assigned":
+        reports = reports.filter(
+            report_id__in=active_assignment_ids
+        )
+
+    # Get active Field Engineers
+    field_engineers = Personnel.objects.filter(
+        position="field_engineer",
+        user__is_active=True,
+    ).select_related(
+        "user"
+    ).order_by("user__first_name", "user__last_name")
+
+    if request.method == "POST":
+        report_id = request.POST.get("report_id")
+        engineer_id = request.POST.get("assigned_field_engineer")
+        remarks = request.POST.get("remarks", "").strip()
+
+        if not hasattr(request.user, "personnel"):
+            messages.error(
+                request,
+                "Your account has no personnel record."
+            )
+            return redirect("assign_inspection")
+
+        report = get_object_or_404(
+            IssueReport,
+            report_id=report_id,
+            status="Validated",
+        )
+
+        engineer = get_object_or_404(
+            field_engineers,
+            pk=engineer_id,
+        )
+
+        with transaction.atomic():
+            active_assignments = InspectionAssignment.objects.filter(
+                report=report,
+                is_active=True,
+            )
+
+            current_assignment = active_assignments.first()
+
+            if (
+                current_assignment
+                and current_assignment.assigned_field_engineer_id
+                == engineer.pk
+            ):
+                messages.info(
+                    request,
+                    "This Field Engineer is already assigned to this report."
+                )
+                return redirect("assign_inspection")
+
+            active_assignments.update(is_active=False)
+
+            InspectionAssignment.objects.create(
+                report=report,
+                assigned_field_engineer=engineer,
+                assigned_by=request.user.personnel,
+                remarks=remarks,
+                is_active=True,
+            )
+
+        notify_users(
+            [engineer.user],
+            "inspection_assigned",
+            "New inspection assigned",
+            f'You have been assigned to inspect "{report.title}".',
+            report,
+        )
+
+        messages.success(
+            request,
+            f'Inspection assigned to '
+            f'{engineer.user.get_full_name() or engineer.user.username}.'
+        )
+        return redirect("assign_inspection")
+
+    # Attach each report's current active assignment
+    assignments = InspectionAssignment.objects.filter(
+        report__in=reports,
+        is_active=True,
+    ).select_related(
+        "assigned_field_engineer__user"
+    )
+
+    assignments_by_report = {
+        assignment.report_id: assignment
+        for assignment in assignments
+    }
+
+    for report in reports:
+        report.active_inspection_assignment = (
+            assignments_by_report.get(report.report_id)
+        )
+
+    return render(
+        request,
+        "users/district/assign_inspection.html",
+        {
+            "reports": reports,
+            "field_engineers": field_engineers,
+            "search_query": search_query,
+            "assignment_filter": assignment_filter,
+        },
+    )
 
 @role_required("fru", "district_engineer")
 def follow_ups(request):
-
+    from django.db.models import Q
     from reports.models import FollowUpRequest
 
     status_filter = request.GET.get("status", "Pending")
+    search_query = request.GET.get("q", "").strip()
+
+    if status_filter not in ("Pending", "Answered", "All"):
+        status_filter = "Pending"
 
     items = FollowUpRequest.objects.select_related(
-        "report", "citizen", "responded_by__user"
+        "report",
+        "citizen",
+        "responded_by__user",
     )
 
     if status_filter in ("Pending", "Answered"):
         items = items.filter(status=status_filter)
 
-    # Oldest question first while pending, newest first otherwise
-    items = items.order_by("submitted_date" if status_filter == "Pending" else "-submitted_date")
+    if search_query:
+        search_term = search_query.lstrip("#").strip()
 
-    return render(request, "users/follow_ups.html", {
-        "items": items,
-        "status_filter": status_filter,
-        "pending_total": FollowUpRequest.objects.filter(status="Pending").count(),
-        "answered_total": FollowUpRequest.objects.filter(status="Answered").count(),
-    })
+        search_filter = (
+            Q(citizen__first_name__icontains=search_query)
+            | Q(citizen__last_name__icontains=search_query)
+            | Q(citizen__username__icontains=search_query)
+            | Q(report__title__icontains=search_query)
+            | Q(message__icontains=search_query)
+        )
 
+        if search_term.isdigit():
+            search_filter |= Q(report__report_id=int(search_term))
+
+        items = items.filter(search_filter)
+
+    if status_filter == "Pending":
+        items = items.order_by("submitted_date")
+    else:
+        items = items.order_by("-submitted_date")
+
+    return render(
+        request,
+        "users/follow_ups.html",
+        {
+            "items": items,
+            "status_filter": status_filter,
+            "search_query": search_query,
+            "pending_total": FollowUpRequest.objects.filter(
+                status="Pending"
+            ).count(),
+            "answered_total": FollowUpRequest.objects.filter(
+                status="Answered"
+            ).count(),
+        },
+    )
 
 @role_required("fru", "district_engineer")
 def reply_follow_up(request, pk):

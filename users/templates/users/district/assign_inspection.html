@@ -1,0 +1,690 @@
+
+{% extends "users/master.html" %}
+
+{% block title %}
+Assign Inspection
+{% endblock %}
+
+{% block page_title %}
+Assign Field Engineer
+{% endblock %}
+
+{% block style %}
+<style>
+    .page-header h2 {
+        color: #0A2E5C;
+    }
+
+    .page-header p {
+        color: #777;
+        margin: 4px 0 20px;
+    }
+
+    /* Search and filter - matching Report History */
+    .search-section {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .search-section input {
+        flex: 1;
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font: inherit;
+    }
+
+    .search-section select {
+        width: 220px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+        font: inherit;
+    }
+
+    .search-section button,
+    .search-reset {
+        border: none;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .search-section button {
+        background: #0A2E5C;
+        color: white;
+    }
+
+    .search-section button:hover {
+        background: #16477f;
+    }
+
+    .search-reset {
+        background: #e8f0fe;
+        color: #0A2E5C;
+    }
+
+    .search-reset:hover {
+        background: #cfe0fb;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        padding: 20px;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 13px 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        vertical-align: top;
+    }
+
+    th {
+        color: #0A2E5C;
+        white-space: nowrap;
+    }
+
+    .status {
+        display: inline-block;
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 5px 9px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .assignment-form {
+        min-width: 220px;
+    }
+
+    .assignment-form select,
+    .assignment-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 9px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+    }
+
+    .assignment-form textarea {
+        resize: vertical;
+        min-height: 55px;
+    }
+
+    .btn-assign {
+        background: #0A2E5C;
+        color: white;
+        border: none;
+        padding: 9px 13px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn-assign:hover {
+        background: #16477f;
+    }
+
+    .current-assignee {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty {
+        color: gray;
+        padding: 20px 10px;
+        text-align: center;
+    }
+
+    .no-engineers {
+        color: #b71c1c;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    /* Reassignment confirmation modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(12, 24, 42, .60);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        box-sizing: border-box;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+    }
+
+    .reassign-modal {
+        background: #fff;
+        width: 100%;
+        max-width: 460px;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, .22);
+        animation: modalAppear .18s ease-out;
+    }
+
+    .modal-header {
+        text-align: center;
+        padding: 25px 24px 18px;
+    }
+
+    .modal-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #e8eef7;
+        color: #0A2E5C;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+        font-size: 25px;
+    }
+
+    .modal-header h3 {
+        color: #0A2E5C;
+        margin: 0 0 8px;
+        font-size: 21px;
+    }
+
+    .modal-header p {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .modal-body {
+        padding: 0 24px 22px;
+    }
+
+    .assignment-detail {
+        background: #f7f9fc;
+        border: 1px solid #e6eaf0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+
+    .assignment-detail .detail-label {
+        color: #6b7280;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .assignment-detail .detail-value {
+        color: #263445;
+        font-weight: 600;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+
+    .modal-transfer {
+        text-align: center;
+        color: #0A2E5C;
+        font-size: 22px;
+        margin: 2px 0 12px;
+    }
+
+    .modal-notice {
+        font-size: 12px;
+        line-height: 1.5;
+        color: #7c5a17;
+        background: #fff8e6;
+        border: 1px solid #f3e1ae;
+        padding: 10px 12px;
+        border-radius: 7px;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 24px 22px;
+        border-top: 1px solid #edf0f4;
+    }
+
+    .btn-modal {
+        padding: 10px 15px;
+        border-radius: 7px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .btn-cancel {
+        background: #f0f2f5;
+        color: #374151;
+    }
+
+    .btn-cancel:hover {
+        background: #e1e5eb;
+    }
+
+    .btn-confirm {
+        background: #0A2E5C;
+        color: #fff;
+    }
+
+    .btn-confirm:hover {
+        background: #16477f;
+    }
+
+    .btn-modal:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+    @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @media (max-width: 700px) {
+        .search-section {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-section input {
+            flex-basis: 100%;
+        }
+
+        .search-section select {
+            flex: 1;
+            width: auto;
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .modal-actions {
+            flex-direction: column-reverse;
+        }
+
+        .btn-modal {
+            width: 100%;
+        }
+
+        .search-section button,
+        .search-reset {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Inspection Assignments</h2>
+    <p>
+        Assign validated infrastructure reports to Field Engineers
+        for inspection.
+    </p>
+</div>
+
+<!-- Search and Assignment Filter -->
+<form method="get" class="search-section">
+    <input
+        type="text"
+        name="q"
+        placeholder="Search by report title, ID, location, or citizen..."
+        value="{{ search_query }}"
+        aria-label="Search validated reports"
+    >
+
+    <select name="assignment" aria-label="Filter assignment status">
+        <option value="" {% if not assignment_filter %}selected{% endif %}>
+            All Assignments
+        </option>
+        <option value="unassigned" {% if assignment_filter == "unassigned" %}selected{% endif %}>
+            Not Yet Assigned
+        </option>
+        <option value="assigned" {% if assignment_filter == "assigned" %}selected{% endif %}>
+            Already Assigned
+        </option>
+    </select>
+
+    <button type="submit">Search</button>
+
+    {% if search_query or assignment_filter %}
+        <a href="{% url 'assign_inspection' %}" class="search-reset">
+            Reset
+        </a>
+    {% endif %}
+</form>
+
+<div class="table-card">
+    {% if reports %}
+    <table>
+        <thead>
+            <tr>
+                <th>Report</th>
+                <th>Infrastructure Type</th>
+                <th>Location</th>
+                <th>Reported Date</th>
+                <th>Status</th>
+                <th>Current Assignee</th>
+                <th>Assign Field Engineer</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>
+                    <strong>{{ report.title }}</strong>
+                    <br>
+                    <small>Report #{{ report.report_id }}</small>
+                </td>
+
+                <td>{{ report.get_infrastructure_type_display }}</td>
+
+                <td>
+                    {{ report.geographic_address|default:"Location not provided" }}
+                </td>
+
+                <td>{{ report.reported_date|date:"M d, Y" }}</td>
+
+                <td>
+                    <span class="status">{{ report.status }}</span>
+                </td>
+
+                <td>
+                    {% if report.active_inspection_assignment %}
+                        {% with assignment=report.active_inspection_assignment %}
+                            {% if assignment.assigned_field_engineer %}
+                                <div class="current-assignee">
+                                    {{ assignment.assigned_field_engineer.user.get_full_name|default:assignment.assigned_field_engineer.user.username }}
+                                </div>
+                                <small>
+                                    Assigned {{ assignment.assigned_date|date:"M d, Y" }}
+                                </small>
+                            {% else %}
+                                <span>Previous assignee unavailable</span>
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <span>Not assigned</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if field_engineers %}
+                    <form
+                        method="POST"
+                        action="{% url 'assign_inspection' %}"
+                        class="assignment-form"
+                        {% if report.active_inspection_assignment %}
+                            data-reassign="true"
+                        {% endif %}
+                    >
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="report_id"
+                            value="{{ report.report_id }}"
+                        >
+
+                        <select
+                            name="assigned_field_engineer"
+                            required
+                            aria-label="Select Field Engineer"
+                            data-current-engineer="{% if report.active_inspection_assignment %}{{ report.active_inspection_assignment.assigned_field_engineer_id|default:'' }}{% endif %}"
+                            data-current-name="{% if report.active_inspection_assignment and report.active_inspection_assignment.assigned_field_engineer %}{{ report.active_inspection_assignment.assigned_field_engineer.user.get_full_name|default:report.active_inspection_assignment.assigned_field_engineer.user.username|escape }}{% endif %}"
+                        >
+                            <option value="">Select Field Engineer</option>
+
+                            {% for engineer in field_engineers %}
+                            <option
+                                value="{{ engineer.pk }}"
+                                data-engineer-name="{{ engineer.user.get_full_name|default:engineer.user.username|escape }}"
+                                {% if report.active_inspection_assignment and report.active_inspection_assignment.assigned_field_engineer_id == engineer.pk %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ engineer.user.get_full_name|default:engineer.user.username }}
+                                ({{ engineer.employee_id }})
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <textarea
+                            name="remarks"
+                            placeholder="Optional assignment remarks"
+                        >{% if report.active_inspection_assignment %}{{ report.active_inspection_assignment.remarks|default:"" }}{% endif %}</textarea>
+
+                        <button type="submit" class="btn-assign">
+                            {% if report.active_inspection_assignment %}
+                                Reassign
+                            {% else %}
+                                Assign
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% else %}
+                        <p class="no-engineers">
+                            No active Field Engineers available.
+                        </p>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+        <p class="empty">
+            {% if search_query or assignment_filter %}
+                No reports match your search or selected assignment filter.
+            {% else %}
+                No validated reports are waiting for inspection assignment.
+            {% endif %}
+        </p>
+    {% endif %}
+</div>
+
+<!-- Reassignment Confirmation Modal -->
+<div
+    class="modal-overlay"
+    id="reassignModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reassignModalTitle"
+    aria-describedby="reassignModalDescription"
+>
+    <div class="reassign-modal">
+        <div class="modal-header">
+            <div class="modal-icon" aria-hidden="true">
+                &#8644;
+            </div>
+
+            <h3 id="reassignModalTitle">Confirm Reassignment</h3>
+
+            <p id="reassignModalDescription">
+                Please review the assignment change before continuing.
+            </p>
+        </div>
+
+        <div class="modal-body">
+            <div class="assignment-detail">
+                <div class="detail-label">Report</div>
+                <div class="detail-value" id="modalReportId">—</div>
+            </div>
+
+            <div class="assignment-detail">
+                <div class="detail-label">Current Field Engineer</div>
+                <div class="detail-value" id="modalCurrentEngineer">—</div>
+            </div>
+
+            <div class="modal-transfer" aria-hidden="true">
+                &#8595;
+            </div>
+
+            <div class="assignment-detail">
+                <div class="detail-label">New Field Engineer</div>
+                <div class="detail-value" id="modalNewEngineer">—</div>
+            </div>
+
+            <div class="modal-notice">
+                Confirming will replace the current active assignment.
+                The previous Field Engineer will no longer be assigned to
+                this report.
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button
+                type="button"
+                class="btn-modal btn-cancel"
+                id="cancelReassign"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="btn-modal btn-confirm"
+                id="confirmReassign"
+            >
+                Confirm Reassign
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const modal = document.getElementById("reassignModal");
+        const cancelButton = document.getElementById("cancelReassign");
+        const confirmButton = document.getElementById("confirmReassign");
+
+        let pendingForm = null;
+        let previousFocus = null;
+
+        function closeModal() {
+            modal.classList.remove("show");
+            pendingForm = null;
+            confirmButton.disabled = false;
+            confirmButton.textContent = "Confirm Reassign";
+
+            if (previousFocus) {
+                previousFocus.focus();
+            }
+        }
+
+        document.querySelectorAll(".assignment-form").forEach(function (form) {
+            form.addEventListener("submit", function (event) {
+                if (form.dataset.reassign !== "true") {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const select = form.querySelector(
+                    'select[name="assigned_field_engineer"]'
+                );
+
+                const selectedOption = select.options[select.selectedIndex];
+                const newEngineerId = select.value;
+                const currentEngineerId = select.dataset.currentEngineer;
+
+                if (!newEngineerId) {
+                    alert("Please select a Field Engineer.");
+                    select.focus();
+                    return;
+                }
+
+                if (newEngineerId === currentEngineerId) {
+                    alert("This Field Engineer is already assigned to this report.");
+                    select.focus();
+                    return;
+                }
+
+                pendingForm = form;
+                previousFocus = document.activeElement;
+
+                document.getElementById("modalReportId").textContent =
+                    "#" + form.querySelector('[name="report_id"]').value;
+
+                document.getElementById("modalCurrentEngineer").textContent =
+                    select.dataset.currentName || "Current Field Engineer";
+
+                document.getElementById("modalNewEngineer").textContent =
+                    selectedOption.dataset.engineerName ||
+                    selectedOption.text.trim();
+
+                modal.classList.add("show");
+                confirmButton.focus();
+            });
+        });
+
+        cancelButton.addEventListener("click", closeModal);
+
+        confirmButton.addEventListener("click", function () {
+            if (!pendingForm) {
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.textContent = "Reassigning...";
+
+            pendingForm.submit();
+        });
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                closeModal();
+            }
+        });
+    })();
+</script>
+
+{% endblock %}

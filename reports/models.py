@@ -314,3 +314,50 @@ class InspectionValidation(models.Model):
 
     def __str__(self):
         return f"Inspection of report #{self.report_id}: {self.validation_result}"
+
+
+
+class InspectionAssignment(models.Model):
+    report = models.ForeignKey(
+        IssueReport,
+        on_delete=models.CASCADE,
+        related_name='inspection_assignments',
+    )
+
+    assigned_field_engineer = models.ForeignKey(
+        'users.Personnel',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='inspection_assignments',
+    )
+
+    assigned_by = models.ForeignKey(
+        'users.Personnel',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='inspector_assignments_made',
+    )
+
+    assigned_date = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    remarks = models.TextField(
+        blank=True,
+        null=True,
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    class Meta:
+        ordering = ['-assigned_date']
+
+    def __str__(self):
+        return (
+            f"Inspection Assignment for Report "
+            f"#{self.report.report_id}"
+        )
