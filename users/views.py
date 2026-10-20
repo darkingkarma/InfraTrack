@@ -7,7 +7,7 @@ from .models import User, Personnel, Citizen
 from django.contrib import messages
 from datetime import date, timezone
 from datetime import datetime, timedelta
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ( CitizenRegisterSerializer, LoginSerializer, CitizenProfileSerializer, )
@@ -15,6 +15,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from functools import wraps
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from difflib import SequenceMatcher
 from math import radians, sin, cos, sqrt, atan2
 from django.core.exceptions import PermissionDenied
@@ -1459,7 +1461,6 @@ def report_history(request):
 
 
 @login_required
-
 def view_report_history_detail(request, pk):
     from django.db.models import Prefetch
     from reports.models import (
@@ -1593,17 +1594,15 @@ class LoginAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+
 class CitizenProfileAPIView(APIView):
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-
-        user = request.user
-
-        if user.role != "citizen":
-            return Response(
+    def get_citizen(self, request):
+        if request.user.role != "citizen":
+            return None, Response(
                 {
                     "error": "This endpoint is for citizens only."
                 },
@@ -1611,21 +1610,125 @@ class CitizenProfileAPIView(APIView):
             )
 
         try:
-            citizen = user.citizen_profile
-
+            citizen = request.user.citizen_profile
         except Citizen.DoesNotExist:
-            return Response(
+            return None, Response(
                 {
                     "error": "Citizen profile not found."
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        return citizen, None
+
+    def get(self, request):
+        citizen, error_response = self.get_citizen(request)
+
+        if error_response:
+            return error_response
+
         serializer = CitizenProfileSerializer(citizen)
 
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
+        )
+
+    def put(self, request):
+        return self.update_profile(request, partial=False)
+
+    def patch(self, request):
+        return self.update_profile(request, partial=True)
+
+    def update_profile(self, request, partial=False):
+        citizen, error_response = self.get_citizen(request)
+
+        if error_response:
+            return error_response
+
+        serializer = CitizenProfileSerializer(
+            citizen,
+            data=request.data,
+            partial=partial,
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class CitizenChangePasswordAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        current_password = request.data.get(
+            "current_password", ""
+        )
+        new_password = request.data.get(
+            "new_password", ""
+        )
+        confirm_password = request.data.get(
+            "confirm_password", ""
+        )
+
+        # Check required fields
+        if not current_password or not new_password or not confirm_password:
+            return Response(
+                {"error": "All password fields are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verify the current password
+        if not user.check_password(current_password):
+            return Response(
+                {"current_password": ["Current password is incorrect."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check password confirmation
+        if new_password != confirm_password:
+            return Response(
+                {"confirm_password": ["New passwords do not match."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Prevent reusing the current password
+        if user.check_password(new_password):
+            return Response(
+                {"new_password": [
+                    "Your new password must be different from your current password."
+                ]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Apply Django's configured password validators
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as error:
+            return Response(
+                {"new_password": error.messages},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Save the new password securely
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"message": "Password changed successfully."},
+            status=status.HTTP_200_OK,
         )
 
 @login_required

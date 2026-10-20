@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CitizenRegisterAPIView, LoginAPIView, CitizenProfileAPIView
+from .views import CitizenRegisterAPIView, LoginAPIView, CitizenProfileAPIView, CitizenChangePasswordAPIView
 
 urlpatterns = [
     path("", views.landing_page, name="landing_page"),
@@ -34,5 +34,6 @@ urlpatterns = [
     path("api/citizen/register/", CitizenRegisterAPIView.as_view(), name="citizen_register"),
     path("api/login/", LoginAPIView.as_view(), name="api-login",),
     path("api/citizen/profile/", CitizenProfileAPIView.as_view(), name="citizen-profile",),
+    path("api/citizen/change-password/",CitizenChangePasswordAPIView.as_view(),name="citizen_change_password"),
     
 ]

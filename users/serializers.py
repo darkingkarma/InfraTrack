@@ -88,22 +88,30 @@ class LoginSerializer(serializers.Serializer):
         data["user"] = user
         return data
 
+
 class CitizenProfileSerializer(serializers.ModelSerializer):
 
     first_name = serializers.CharField(
-        source="user.first_name"
+        source="user.first_name",
+        required=False,
+        allow_blank=True,
     )
 
     last_name = serializers.CharField(
-        source="user.last_name"
+        source="user.last_name",
+        required=False,
+        allow_blank=True,
     )
 
     username = serializers.CharField(
-        source="user.username"
+        source="user.username",
+        read_only=True,
     )
 
     email = serializers.EmailField(
-        source="user.email"
+        source="user.email",
+        required=False,
+        allow_blank=True,
     )
 
     class Meta:
@@ -116,3 +124,23 @@ class CitizenProfileSerializer(serializers.ModelSerializer):
             "contact_number",
             "address",
         ]
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+
+        # Update the related Django User fields.
+        user = instance.user
+
+        for field, value in user_data.items():
+            setattr(user, field, value)
+
+        if user_data:
+            user.save()
+
+        # Update the Citizen profile fields.
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+
+        instance.save()
+
+        return instance
