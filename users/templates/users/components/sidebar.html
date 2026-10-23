@@ -322,6 +322,13 @@
         </a>
         {% endif %}
 
+        {% if request.user.role == "district_engineer" %}
+        <a href="{% url 'feedback_list' %}" class="{% if request.resolver_match.url_name == 'feedback_list' %}active{% endif %}">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span>Feedback</span>
+        </a>
+        {% endif %}
+
 
     </nav>
 

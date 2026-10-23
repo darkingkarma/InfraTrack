@@ -115,6 +115,37 @@ Edit Personnel
     .cancel-btn:hover{
         background:#ddd;
     }
+
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-wrapper input {
+        width: 100%;
+        padding-right: 60px;
+        box-sizing: border-box;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        border: none;
+        background: transparent;
+        color: #0A2E5C;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: none;
+    }
 </style>
 {% endblock %}
 
@@ -180,8 +211,22 @@ Edit Personnel
 
             <div class="form-group full-width">
                 <label>New Password</label>
-                <input type="password" name="new_password" placeholder="Leave blank to keep current password">
-                <span class="hint">Only fill this in if you want to reset the password.</span>
+
+                <div class="password-wrapper">
+                    <input type="password"
+                        name="new_password"
+                        id="new_password"
+                        placeholder="Leave blank to keep current password">
+
+                    <button type="button" class="toggle-password"
+                            onclick="togglePassword('new_password', this)">
+                        Show
+                    </button>
+                </div>
+
+                <span class="hint">
+                    Only fill this in if you want to reset the password.
+                </span>
             </div>
 
         </div>
@@ -202,4 +247,17 @@ Edit Personnel
 
 </div>
 
+<script>
+function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
+
+    if (input.type === "password") {
+        input.type = "text";
+        button.textContent = "hide";
+    } else {
+        input.type = "password";
+        button.textContent = "show";
+    }
+}
+</script>
 {% endblock %}

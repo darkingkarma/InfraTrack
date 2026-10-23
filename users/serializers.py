@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import User, Citizen
+import re
 
 User = get_user_model()
 
@@ -12,8 +13,48 @@ class CitizenRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     contact_number = serializers.CharField(max_length=20)
     address = serializers.CharField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    confirm_password = serializers.CharField(write_only=True)
+
+    password = serializers.CharField(
+        write_only=True,
+        trim_whitespace=False
+    )
+    confirm_password = serializers.CharField(
+        write_only=True,
+        trim_whitespace=False
+    )
+
+    def validate_password(self, value):
+        errors = []
+
+        if len(value) < 8:
+            errors.append(
+                "Password must be at least 8 characters long."
+            )
+
+        if not re.search(r"[A-Z]", value):
+            errors.append(
+                "Password must contain at least one uppercase letter."
+            )
+
+        if not re.search(r"[a-z]", value):
+            errors.append(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not re.search(r"[0-9]", value):
+            errors.append(
+                "Password must contain at least one number."
+            )
+
+        if not re.search(r"[^A-Za-z0-9]", value):
+            errors.append(
+                "Password must contain at least one special character."
+            )
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return value
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():

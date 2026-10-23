@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CitizenRegisterAPIView, LoginAPIView, CitizenProfileAPIView, CitizenChangePasswordAPIView
+from .views import CitizenRegisterAPIView, CitizenVerifyEmailAPIView, LoginAPIView, CitizenProfileAPIView, CitizenChangePasswordAPIView, CitizenVerifyEmailAPIView
 
 urlpatterns = [
     path("", views.landing_page, name="landing_page"),
@@ -35,5 +35,10 @@ urlpatterns = [
     path("api/login/", LoginAPIView.as_view(), name="api-login",),
     path("api/citizen/profile/", CitizenProfileAPIView.as_view(), name="citizen-profile",),
     path("api/citizen/change-password/",CitizenChangePasswordAPIView.as_view(),name="citizen_change_password"),
-    
+    path('feedback/', views.feedback_list, name='feedback_list'),
+    path(
+    "api/citizen/verify-email/",
+    CitizenVerifyEmailAPIView.as_view(),
+    name="verify-citizen-email",
+),
 ]

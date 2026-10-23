@@ -2,7 +2,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from reports.models import Notification, IssueReport, ReportScreening
+from reports.models import Feedback, Notification, IssueReport, ReportScreening
 from .models import User, Personnel, Citizen
 from django.contrib import messages
 from datetime import date, timezone
@@ -21,6 +21,13 @@ from difflib import SequenceMatcher
 from math import radians, sin, cos, sqrt, atan2
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core import signing
+from django.core.mail import send_mail
+from django.urls import reverse
+
+User = get_user_model()
 
 def login_view(request):
 
@@ -817,6 +824,7 @@ def screen_report(request, pk):
             )
 
         elif screening_result == "Validated":
+            # Notify the Citizen
             notify_users(
                 [report.citizen],
                 "report_validated",
@@ -824,11 +832,22 @@ def screen_report(request, pk):
                 f'"{report.title}" passed screening and is waiting for a field inspection.',
                 report,
             )
+
+            # Notify Field Engineers
             notify_role(
                 "field_engineer",
                 "report_validated",
                 "New report to inspect",
                 f'"{report.title}" is ready for inspection.',
+                report,
+            )
+
+            # Notify the District Engineer
+            notify_role(
+                "district_engineer",
+                "report_validated",
+                "New validated report",
+                f'"{report.title}" has been validated by the FRU and is ready for inspection assignment.',
                 report,
             )
 
@@ -929,7 +948,6 @@ def validated_reports(request):
 
 
 @login_required
-
 def screening_history(request):
     from django.http import HttpResponseForbidden
     from django.db.models import Q
@@ -1535,6 +1553,7 @@ def landing_page(request):
     return render(request, "users/landing_page.html")
 
 #important dont delete
+
 class CitizenRegisterAPIView(APIView):
 
     def post(self, request):
@@ -1545,8 +1564,56 @@ class CitizenRegisterAPIView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
+            # Prevent login until email verification.
+            user.is_active = False
+            user.save(update_fields=["is_active"])
+
+            # Generate a signed, time-limited verification token.
+            verification_token = signing.dumps(
+                user.pk,
+                salt="citizen-email-verification"
+            )
+
+            verification_url = (
+                request.build_absolute_uri(
+                    reverse("verify-citizen-email")
+                )
+                + "?token="
+                + verification_token
+            )
+
+            # Send verification email.
+            try:
+                send_mail(
+                    subject="Verify Your InfraTrack Email",
+                    message=(
+                        f"Hello {user.first_name},\n\n"
+                        "Thank you for registering with InfraTrack.\n"
+                        "Please open the link below to verify your email:\n\n"
+                        f"{verification_url}\n\n"
+                        "This link expires after 24 hours.\n\n"
+                        "If you did not create this account, "
+                        "you can ignore this email."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print("EMAIL SENDING ERROR:", repr(e))
+                return Response({
+                    "message": (
+                        "Your account was created, but the "
+                        "verification email could not be sent. "
+                        "Please contact support to resend it."
+                    )
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
             return Response({
-                "message": "Citizen registered successfully.",
+                "message": (
+                    "Registration successful. "
+                    "Please check your email to verify your account."
+                ),
                 "user": {
                     "id": user.id,
                     "username": user.username,
@@ -1561,6 +1628,54 @@ class CitizenRegisterAPIView(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class CitizenVerifyEmailAPIView(APIView):
+
+    def get(self, request):
+        token = request.query_params.get("token")
+
+        if not token:
+            return Response({
+                "message": "Verification token is missing."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_id = signing.loads(
+                token,
+                salt="citizen-email-verification",
+                max_age=86400
+            )
+
+            user = User.objects.get(pk=user_id)
+
+        except signing.SignatureExpired:
+            return Response({
+                "message": (
+                    "Verification link expired. "
+                    "Please request a new verification email."
+                )
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except (signing.BadSignature, User.DoesNotExist):
+            return Response({
+                "message": "Invalid verification link."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_active:
+            return Response({
+                "message": "Your email is already verified."
+            }, status=status.HTTP_200_OK)
+
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+
+        return Response({
+            "message": (
+                "Email verified successfully. "
+                "You can now log in to InfraTrack."
+            )
+        }, status=status.HTTP_200_OK)
+
 
 class LoginAPIView(APIView):
 
@@ -2066,3 +2181,14 @@ def reply_follow_up(request, pk):
 
     messages.success(request, "Reply sent to the citizen.")
     return redirect("follow_ups")
+
+@login_required
+def feedback_list(request):
+    if request.user.role != "district_engineer":
+        raise PermissionDenied
+
+    feedbacks = Feedback.objects.all().order_by('-date_created')
+
+    return render(request, 'users/district/feedback_list.html', {
+        'feedbacks': feedbacks
+    })

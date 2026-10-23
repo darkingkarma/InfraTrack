@@ -9,7 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import transaction
 from .models import InspectionAssignment
-
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from .models import PushDevice
 
 from .models import (
     IssueReport,
@@ -1074,6 +1076,41 @@ class MarkAllNotificationsReadView(APIView):
         ).update(is_read=True)
 
         return Response({'status': 'ok'})
+
+
+class RegisterPushTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.data.get('expo_push_token')
+
+        if not token or not isinstance(token, str):
+            return Response(
+                {'error': 'A valid Expo push token is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token = token.strip()
+
+        if not (
+            token.startswith('ExponentPushToken[')
+            or token.startswith('ExpoPushToken[')
+        ):
+            return Response(
+                {'error': 'Invalid Expo push token format.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        PushDevice.objects.update_or_create(
+            expo_push_token=token,
+            defaults={'user': request.user},
+        )
+
+        return Response(
+            {'message': 'Push token registered successfully.'},
+            status=status.HTTP_200_OK,
+        )
+
 
 
 # =========================================================

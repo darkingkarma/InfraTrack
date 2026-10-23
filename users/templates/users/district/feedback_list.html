@@ -1,0 +1,21 @@
+{% extends "users/master.html" %}
+
+{% block title %}Citizen Feedback{% endblock %}
+
+{% block page_title %}Citizen Feedback{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <h2>Citizen Feedback</h2>
+
+    {% for feedback in feedbacks %}
+        <div style="padding: 15px; border-bottom: 1px solid #0A2E5C;">
+            <p><strong>Rating:</strong> {{ feedback.rating }}/5</p>
+            <p><strong>Comment:</strong> {{ feedback.comment }}</p>
+            <p><strong>Date:</strong> {{ feedback.date_created|date:"M d, Y" }}</p>
+        </div>
+    {% empty %}
+        <p>No feedback submitted yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -23,6 +23,7 @@ from .views import (
     MyInspectionListView,
     InspectionAssignmentListView,
     AssignInspectionView,
+    RegisterPushTokenView,
 )
 
 urlpatterns = [
@@ -58,6 +59,7 @@ urlpatterns = [
     path('notifications/unread-count/',UnreadNotificationCountView.as_view(),name='notifications-unread-count',),
     path('notifications/read-all/',MarkAllNotificationsReadView.as_view(),name='notifications-read-all',),
     path('notifications/<int:pk>/read/',MarkNotificationReadView.as_view(),name='notification-read',),
+    path('notifications/register-token/',RegisterPushTokenView.as_view(),name='notifications-register-token',),
 
     # Citizen feedback and follow-ups
     path('feedback/', SubmitFeedbackView.as_view(), name='submit-feedback'),
