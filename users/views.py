@@ -1607,6 +1607,9 @@ def landing_page(request):
 
 
 class CitizenRegisterAPIView(APIView):
+    import logging
+
+    logger = logging.getLogger(__name__)
 
     def post(self, request):
         serializer = CitizenRegisterSerializer(data=request.data)
@@ -1675,14 +1678,12 @@ class CitizenRegisterAPIView(APIView):
             )
 
         except Exception:
+            logger.exception("Citizen registration email failed")
             pending.delete()
 
             return Response(
                 {
-                    "message": (
-                        "We could not send the verification email. "
-                        "No account was created. Please try again later."
-                    )
+                    "message": "We could not send the verification email. No account was created. Please try again later."
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
