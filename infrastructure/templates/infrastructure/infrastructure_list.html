@@ -1,365 +1,1058 @@
+
 {% extends "users/master.html" %}
 
-{% block title %}
-Infrastructure Management
-{% endblock %}
-
-{% block page_title %}
-Infrastructure Management
-{% endblock %}
+{% block title %}Infrastructure Management{% endblock %}
+{% block page_title %}Infrastructure Management{% endblock %}
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+
+/* Summary cards */
+.summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.summary-card{
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.summary-card h3{
+    font-size:14px;
+    color:#666;
+    font-weight:600;
+    margin:0 0 10px;
+}
+
+.summary-count{
+    font-size:28px;
+    font-weight:bold;
+    color:#0A2E5C;
+    margin:0;
+}
+
+/* Page header */
+.page-header{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:20px;
+}
+
+.add-btn{
+    display:inline-block;
+    text-decoration:none;
+    background:#0A2E5C;
+    color:white;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.add-btn:hover{
+    background:#154A8A;
+}
+
+/* Search and filter */
+.search-section{
+    display:flex;
+    gap:15px;
+    margin-bottom:15px;
+}
+
+.search-section input,
+.search-section select{
+    height:42px;
+    padding:10px 12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:14px;
+    box-sizing:border-box;
+    background:white;
+}
+
+.search-section input{
+    flex:1;
+    min-width:0;
+}
+
+.search-section select{
+    width:220px;
+}
+
+.results-info{
+    color:#666;
+    font-size:13px;
+    margin-bottom:12px;
+}
+
+/* Table */
+.table-container{
+    background:white;
+    border-radius:10px;
+    overflow-x:auto;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    width:100%;
+}
+
+table{
+    width:100%;
+    min-width:1050px;
+    border-collapse:collapse;
+}
+
+thead{
+    background:#0A2E5C;
+    color:white;
+}
+
+th{
+    padding:15px;
+    text-align:left;
+    white-space:nowrap;
+    font-size:13px;
+}
+
+td{
+    padding:15px;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+    vertical-align:middle;
+}
+
+tbody tr:hover{
+    background:#f8fafc;
+}
+
+.empty{
+    text-align:center;
+    color:gray;
+    padding:40px;
+}
+
+.action-cell{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+}
+
+.view-btn,
+.edit-btn,
+.images-btn,
+.delete-btn{
+    border:none;
+    cursor:pointer;
+    padding:8px 12px;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:bold;
+    text-decoration:none;
+    white-space:nowrap;
+}
+
+.view-btn{
+    background:#e8f0fe;
+    color:#0A2E5C;
+}
+
+.edit-btn{
+    background:#fff4e0;
+    color:#a15c00;
+}
+
+.images-btn{
+    background:#e5f4ee;
+    color:#176b45;
+}
+
+.delete-btn{
+    background:#fdeaea;
+    color:#c0392b;
+}
+
+.view-btn:hover{background:#d7e5fc}
+.edit-btn:hover{background:#ffebc7}
+.images-btn:hover{background:#d3eddf}
+.delete-btn:hover{background:#f8d0d0}
+
+/* Status badges */
+.status-badge{
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.status-active{
+    background:#e6f7ec;
+    color:#1e7e34;
+}
+
+.status-maintenance{
+    background:#fff4e0;
+    color:#a15c00;
+}
+
+.status-closed{
+    background:#fdeaea;
+    color:#c0392b;
+}
+
+/* Image modal */
+.image-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.72);
+    z-index:9999;
+    padding:20px;
+    overflow-y:auto;
+}
+
+.image-modal.open{
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+}
+
+.modal-card{
+    background:white;
+    width:100%;
+    max-width:1050px;
+    margin:auto;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 10px 40px rgba(0,0,0,.25);
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    padding:18px 22px;
+    background:#0A2E5C;
+    color:white;
+}
+
+.modal-header h2{
+    margin:0;
+    font-size:20px;
+}
+
+.modal-close{
+    border:none;
+    background:transparent;
+    color:white;
+    font-size:30px;
+    cursor:pointer;
+    line-height:1;
+}
+
+.modal-body{
+    padding:22px;
+}
+
+.image-section{
+    margin-bottom:28px;
+}
+
+.image-section:last-child{
+    margin-bottom:0;
+}
+
+.image-section h3{
+    color:#0A2E5C;
+    margin:0 0 14px;
+}
+
+.image-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:15px;
+}
+
+.image-card{
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    overflow:hidden;
+    background:#f8fafc;
+}
+
+.image-card img{
+    display:block;
+    width:100%;
+    height:190px;
+    object-fit:contain;
+    background:#eef2f7;
+    cursor:pointer;
+}
+
+.image-caption{
+    padding:9px 11px;
+    font-size:13px;
+    color:#475569;
+    overflow-wrap:anywhere;
+}
+
+.no-image-message{
+    padding:20px;
+    border:1px dashed #cbd5e1;
+    border-radius:8px;
+    color:#64748b;
+    text-align:center;
+}
+
+.hidden-image-source{
+    display:none;
+}
+
+/* Image preview */
+#image-preview{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.9);
+    z-index:10001;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+#image-preview.open{
+    display:flex;
+}
+
+#image-preview img{
+    max-width:95%;
+    max-height:90vh;
+    object-fit:contain;
+}
+
+#image-preview button{
+    position:absolute;
+    right:25px;
+    top:15px;
+    background:transparent;
+    color:white;
+    border:none;
+    font-size:34px;
+    cursor:pointer;
+}
+
+/* Responsive design */
+@media(max-width:900px){
+
+    .summary-grid{
+        gap:12px;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
-        margin:0;
-    }
-
-    .page-header p{
-        margin:5px 0 0;
-        color:#777;
-    }
-
-    .add-btn{
-        text-decoration:none;
-        background:#0A2E5C;
-        color:white;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
-        transition:.3s;
-        margin-left:1085px;
-    }
-
-    .add-btn:hover{
-        background:#154A8A;
+    .summary-card{
+        padding:16px;
     }
 
     .search-section{
-        display:flex;
-        gap:15px;
-        margin-bottom:25px;
+        flex-direction:column;
     }
 
-    .search-section input{
-        flex:1;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
+    .search-section input,
     .search-section select{
-        width:220px;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
-    .table-container{
-        background:white;
-        border-radius:10px;
-        overflow:hidden;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-    }
-
-    table{
         width:100%;
-        border-collapse:collapse;
+    }
+}
+
+@media(max-width:600px){
+
+    .summary-grid{
+        grid-template-columns:1fr;
+        gap:12px;
     }
 
-    thead{
-        background:#0A2E5C;
-        color:white;
+    .summary-card{
+        padding:15px 18px;
     }
 
-    th{
-        padding:15px;
-        text-align:left;
-        white-space:nowrap;
+    .summary-count{
+        font-size:24px;
     }
 
-    td{
-        padding:15px;
-        border-bottom:1px solid #eee;
+    .page-header{
+        margin-bottom:18px;
     }
 
-    tbody tr:hover{
-        background:#f8fafc;
-    }
-
-    .empty{
+    .add-btn{
+        width:100%;
         text-align:center;
-        color:gray;
-        padding:40px;
+        box-sizing:border-box;
     }
 
-    .action-cell{
-        display:flex;
-        gap:8px;
+    .search-section{
+        gap:10px;
     }
 
-    .view-btn,
-    .edit-btn{
-        border:none;
-        cursor:pointer;
-        padding:8px 14px;
-        border-radius:6px;
-        font-size:13px;
-        font-weight:bold;
-        text-decoration:none;
-        display:inline-block;
+    .modal-body{
+        padding:15px;
     }
 
-    .view-btn{
-        background:#e8f0fe;
-        color:#0A2E5C;
+    .modal-header{
+        padding:15px;
     }
 
-    .view-btn:hover{
-        background:#cfe0fb;
+    .modal-header h2{
+        font-size:17px;
     }
 
-    .edit-btn{
-        background:#fff4e0;
-        color:#a15c00;
+    .image-grid{
+        grid-template-columns:1fr;
     }
 
-    .edit-btn:hover{
-        background:#ffe6bf;
+    .image-card img{
+        height:200px;
     }
+}
 
-    .status-badge{
-        padding:5px 12px;
-        border-radius:20px;
-        font-size:12px;
-        font-weight:bold;
-    }
-
-    .status-active{
-        background:#e6f7ec;
-        color:#1e7e34;
-    }
-
-    .status-maintenance{
-        background:#fff4e0;
-        color:#a15c00;
-    }
-
-    .status-closed{
-        background:#fdeaea;
-        color:#c0392b;
-    }
-    .delete-btn{
-        border:none;
-        cursor:pointer;
-        padding:8px 14px;
-        border-radius:6px;
-        font-size:13px;
-        font-weight:bold;
-        background:#fdeaea;
-        color:#c0392b;
-    }
-
-    .delete-btn:hover{
-        background:#f8d0d0;
-    }
-
-    @media(max-width:900px){
-        .page-header{
-            flex-direction:column;
-            align-items:flex-start;
-            gap:15px;
-        }
-
-        .search-section{
-            flex-direction:column;
-        }
-
-        .search-section select{
-            width:100%;
-        }
-    }
 </style>
 {% endblock %}
 
+
 {% block content %}
 
+<!-- Add Infrastructure Button -->
 <div class="page-header">
-
     <a href="{% url 'infrastructure-add' %}" class="add-btn">
         + Add Infrastructure
     </a>
+</div>
+
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+
+    <div class="summary-card">
+        <h3>Roads</h3>
+        <p class="summary-count" id="roadCount">0</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Bridges</h3>
+        <p class="summary-count" id="bridgeCount">0</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Drainage</h3>
+        <p class="summary-count" id="drainageCount">0</p>
+    </div>
 
 </div>
 
 
+<!-- Search and Filter -->
 <div class="search-section">
 
     <input
+        id="infraSearch"
         type="text"
-        placeholder="Search infrastructure...">
+        placeholder="Search infrastructure by name or location..."
+    >
 
-    <select>
-
-        <option>All Types</option>
-        <option>Road</option>
-        <option>Bridge</option>
-        <option>Drainage</option>
-
+    <select id="typeFilter">
+        <option value="">All Types</option>
+        <option value="road">Road</option>
+        <option value="bridge">Bridge</option>
+        <option value="drainage">Drainage</option>
     </select>
 
 </div>
 
 
+<!-- Results Count -->
+<div class="results-info">
+    Showing <strong id="visibleCount">0</strong>
+    of <strong id="totalCount">0</strong> infrastructure records
+</div>
+
+
+<!-- Infrastructure Table -->
 <div class="table-container">
 
-    <table>
+<table id="infrastructureTable">
 
-        <thead>
+    <thead>
+        <tr>
+            <th>No.</th>
+            <th>Infrastructure</th>
+            <th>Type</th>
+            <th>Road Classification</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Managed By</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
 
-            <tr>
+    <tbody>
 
-                <th>No.</th>
-                <th>Infrastructure</th>
-                <th>Type</th>
-                <th>Road Classification</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Managed By</th>
-                <th>Actions</th>
+    {% for infrastructure in infrastructures %}
 
-            </tr>
+        <tr
+            data-name="{{ infrastructure.infra_name|lower }}"
+            data-type="{{ infrastructure.infra_type }}"
+            data-location="{{ infrastructure.location_description|default:''|lower }}"
+        >
 
-        </thead>
+            <td>{{ forloop.counter }}</td>
 
-        <tbody>
+            <td>
+                <strong>{{ infrastructure.infra_name }}</strong>
+            </td>
 
-            {% for infrastructure in infrastructures %}
+            <td>{{ infrastructure.get_infra_type_display }}</td>
 
-            <tr>
+            <td>
+                {{ infrastructure.road_classification|default:"—" }}
+            </td>
 
-                <td>
-                    {{ forloop.counter }}
-                </td>
+            <td>
+                {{ infrastructure.location_description|default:"—" }}
+            </td>
 
-                <td>
-                    <strong>
-                        {{ infrastructure.infra_name }}
-                    </strong>
-                </td>
+            <td>
 
-                <td>
-                    {{ infrastructure.get_infra_type_display }}
-                </td>
+                {% if infrastructure.status == "active" %}
 
-                <td>
-                    {{ infrastructure.road_classification|default:"—" }}
-                </td>
+                    <span class="status-badge status-active">
+                        Active
+                    </span>
 
-                <td>
-                    {{ infrastructure.location_description|default:"—" }}
-                </td>
+                {% elif infrastructure.status == "maintenance" %}
 
-                <td>
+                    <span class="status-badge status-maintenance">
+                        Maintenance
+                    </span>
 
-                    {% if infrastructure.status == "active" %}
+                {% elif infrastructure.status == "closed" %}
 
-                        <span class="status-badge status-active">
-                            Active
-                        </span>
+                    <span class="status-badge status-closed">
+                        Closed
+                    </span>
 
-                    {% elif infrastructure.status == "maintenance" %}
+                {% else %}
 
-                        <span class="status-badge status-maintenance">
-                            Maintenance
-                        </span>
+                    {{ infrastructure.status }}
 
-                    {% elif infrastructure.status == "closed" %}
+                {% endif %}
 
-                        <span class="status-badge status-closed">
-                            Closed
-                        </span>
+            </td>
 
-                    {% endif %}
+            <td>
 
-                </td>
+                {% if infrastructure.managed_by %}
 
-                <td>
+                    {{ infrastructure.managed_by.user.get_full_name|default:infrastructure.managed_by.user.username }}
 
-                    {% if infrastructure.managed_by %}
+                {% else %}
 
-                        {{ infrastructure.managed_by.user.get_full_name }}
+                    —
 
-                    {% else %}
+                {% endif %}
 
-                        —
+            </td>
 
-                    {% endif %}
+            <td>
 
-                </td>
+                <div class="action-cell">
 
-                <td>
+                    <a
+                        href="{% url 'infrastructure_view' infrastructure.infrastructure_id %}"
+                        class="view-btn"
+                    >
+                        View
+                    </a>
 
-                    <div class="action-cell">
+                    <button
+                        type="button"
+                        class="images-btn"
+                        data-images-target="images-{{ infrastructure.infrastructure_id }}"
+                        data-infra-name="{{ infrastructure.infra_name }}"
+                    >
+                        View Images
+                    </button>
 
-                        <a
-                            href="{% url 'infrastructure_view' infrastructure.infrastructure_id %}"
-                            class="view-btn">
-                            View
-                        </a>
+                    <a
+                        href="{% url 'infrastructure-edit' infrastructure.infrastructure_id %}"
+                        class="edit-btn"
+                    >
+                        Edit
+                    </a>
 
-                        <a href="{% url 'infrastructure-edit' infrastructure.infrastructure_id %}"
-                           class="edit-btn">
-                            Edit
-                        </a>
+                    <form
+                        method="POST"
+                        action="{% url 'infrastructure_delete' infrastructure.infrastructure_id %}"
+                        style="display:inline"
+                        onsubmit="return confirm('Are you sure you want to delete this infrastructure?');"
+                    >
 
-                        <form
-                            method="POST"
-                            action="{% url 'infrastructure_delete' infrastructure.infrastructure_id %}"
-                            style="display:inline;"
-                            onsubmit="return confirm('Are you sure you want to delete this infrastructure?');"
+                        {% csrf_token %}
+
+                        <button type="submit" class="delete-btn">
+                            Delete
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    {% empty %}
+
+        <tr>
+            <td colspan="8" class="empty">
+                No infrastructure records found.
+            </td>
+        </tr>
+
+    {% endfor %}
+
+        <!-- Dynamic no-results message -->
+        <tr id="noResultsRow" style="display:none;">
+            <td colspan="8" class="empty">
+                No matching infrastructure records found.
+            </td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+<!-- Hidden Image Sources (Outside the Table) -->
+{% for infrastructure in infrastructures %}
+
+<div
+    class="hidden-image-source"
+    id="images-{{ infrastructure.infrastructure_id }}"
+>
+
+    <!-- Regular Images -->
+    <section class="image-section">
+
+        <h3>Regular Infrastructure Images</h3>
+
+        <div class="image-grid">
+
+            {% for item in infrastructure.images.all %}
+
+                {% if item.image_type == "regular" %}
+
+                    <div class="image-card">
+
+                        <img
+                            src="{{ item.image.url }}"
+                            alt="Infrastructure photo"
+                            loading="lazy"
                         >
-                            {% csrf_token %}
 
-                            <button
-                                type="submit"
-                                class="delete-btn">
-                                Delete
-                            </button>
-
-                        </form>
+                        <div class="image-caption">
+                            Infrastructure Photo {{ forloop.counter }}
+                        </div>
 
                     </div>
 
-                </td>
-
-            </tr>
-
-            {% empty %}
-
-            <tr>
-
-                <td colspan="8" class="empty">
-
-                    No infrastructure records found.
-
-                </td>
-
-            </tr>
+                {% endif %}
 
             {% endfor %}
 
-        </tbody>
+        </div>
 
-    </table>
+        <div class="no-image-message">
+            No regular infrastructure images uploaded.
+        </div>
+
+    </section>
+
+
+    <!-- Satellite Images -->
+    <section class="image-section">
+
+        <h3>Satellite Images</h3>
+
+        <div class="image-grid">
+
+            {% for item in infrastructure.images.all %}
+
+                {% if item.image_type == "satellite" %}
+
+                    <div class="image-card">
+
+                        <img
+                            src="{{ item.image.url }}"
+                            alt="Satellite image"
+                            loading="lazy"
+                        >
+
+                        <div class="image-caption">
+                            Satellite Image {{ forloop.counter }}
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+        <div class="no-image-message">
+            No satellite images uploaded.
+        </div>
+
+    </section>
 
 </div>
+
+{% endfor %}
+
+
+<!-- Reusable Images Modal -->
+<div class="image-modal" id="imagesModal" aria-hidden="true">
+
+    <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+    >
+
+        <div class="modal-header">
+
+            <h2 id="modalTitle">
+                Infrastructure Images
+            </h2>
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closeImagesModal"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+        </div>
+
+        <div class="modal-body" id="modalImagesContent"></div>
+
+    </div>
+
+</div>
+
+
+<!-- Image Preview -->
+<div id="image-preview" aria-hidden="true">
+
+    <button
+        type="button"
+        id="closeImagePreview"
+        aria-label="Close preview"
+    >
+        &times;
+    </button>
+
+    <img
+        id="previewImage"
+        src=""
+        alt="Enlarged infrastructure image"
+    >
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* --------------------------------
+       Search and Type Filter
+    -------------------------------- */
+
+    const searchInput = document.getElementById("infraSearch");
+    const typeFilter = document.getElementById("typeFilter");
+
+    const table = document.getElementById("infrastructureTable");
+
+    const rows = Array.from(
+        table.querySelectorAll("tbody tr[data-name]")
+    );
+
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+
+    totalCount.textContent = rows.length;
+
+
+    /* --------------------------------
+       Summary Card Counts
+    -------------------------------- */
+
+    function updateSummaryCounts() {
+
+        let roads = 0;
+        let bridges = 0;
+        let drainage = 0;
+
+        rows.forEach(function (row) {
+
+            const type = row.dataset.type;
+
+            if (type === "road") {
+                roads++;
+            }
+
+            else if (type === "bridge") {
+                bridges++;
+            }
+
+            else if (type === "drainage") {
+                drainage++;
+            }
+
+        });
+
+        document.getElementById("roadCount").textContent = roads;
+        document.getElementById("bridgeCount").textContent = bridges;
+        document.getElementById("drainageCount").textContent = drainage;
+
+    }
+
+    updateSummaryCounts();
+
+
+    /* --------------------------------
+       Filter Table
+    -------------------------------- */
+
+    function filterRows() {
+
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedType = typeFilter.value;
+
+        let visible = 0;
+
+        rows.forEach(function (row) {
+
+            const searchableText = [
+
+                row.dataset.name,
+                row.dataset.location,
+                row.textContent.toLowerCase()
+
+            ].join(" ");
+
+            const matchesSearch = searchableText.includes(query);
+
+            const matchesType =
+                !selectedType || row.dataset.type === selectedType;
+
+            const shouldShow = matchesSearch && matchesType;
+
+            row.style.display = shouldShow ? "" : "none";
+
+            if (shouldShow) {
+                visible++;
+            }
+
+        });
+
+        visibleCount.textContent = visible;
+
+        noResultsRow.style.display =
+            rows.length > 0 && visible === 0 ? "" : "none";
+
+    }
+
+    searchInput.addEventListener("input", filterRows);
+    typeFilter.addEventListener("change", filterRows);
+
+
+    /* --------------------------------
+       Infrastructure Images Modal
+    -------------------------------- */
+
+    const modal = document.getElementById("imagesModal");
+
+    const modalTitle = document.getElementById("modalTitle");
+
+    const modalContent = document.getElementById("modalImagesContent");
+
+
+    function closeModal() {
+
+        modal.classList.remove("open");
+
+        modal.setAttribute("aria-hidden", "true");
+
+        modalContent.replaceChildren();
+
+    }
+
+
+    document.querySelectorAll(".images-btn").forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            const source = document.getElementById(
+                button.dataset.imagesTarget
+            );
+
+            if (!source) return;
+
+            modalTitle.textContent =
+                button.dataset.infraName + " — Images";
+
+            modalContent.replaceChildren(source.cloneNode(true));
+
+            modalContent.querySelectorAll(".hidden-image-source").forEach(
+                function (element) {
+                    element.classList.remove("hidden-image-source");
+                }
+            );
+
+
+            /* Show empty messages only when no images exist */
+
+            modalContent.querySelectorAll(".image-section").forEach(
+                function (section) {
+
+                    const grid = section.querySelector(".image-grid");
+
+                    const emptyMessage =
+                        section.querySelector(".no-image-message");
+
+                    const hasImages =
+                        grid && grid.querySelector(".image-card");
+
+                    if (emptyMessage) {
+                        emptyMessage.style.display =
+                            hasImages ? "none" : "block";
+                    }
+
+                }
+            );
+
+
+            modal.classList.add("open");
+
+            modal.setAttribute("aria-hidden", "false");
+
+        });
+
+    });
+
+
+    document.getElementById("closeImagesModal").addEventListener(
+        "click",
+        closeModal
+    );
+
+
+    modal.addEventListener("click", function (event) {
+
+        if (event.target === modal) {
+            closeModal();
+        }
+
+    });
+
+
+    /* --------------------------------
+       Image Preview
+    -------------------------------- */
+
+    const preview = document.getElementById("image-preview");
+
+    const previewImage = document.getElementById("previewImage");
+
+
+    modalContent.addEventListener("click", function (event) {
+
+        if (event.target.tagName !== "IMG") return;
+
+        previewImage.src = event.target.src;
+
+        preview.classList.add("open");
+
+        preview.setAttribute("aria-hidden", "false");
+
+    });
+
+
+    function closePreview() {
+
+        preview.classList.remove("open");
+
+        preview.setAttribute("aria-hidden", "true");
+
+        previewImage.src = "";
+
+    }
+
+
+    document.getElementById("closeImagePreview").addEventListener(
+        "click",
+        closePreview
+    );
+
+
+    preview.addEventListener("click", function (event) {
+
+        if (event.target === preview) {
+            closePreview();
+        }
+
+    });
+
+
+    /* --------------------------------
+       Escape Key
+    -------------------------------- */
+
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+
+            if (preview.classList.contains("open")) {
+
+                closePreview();
+
+            }
+
+            else if (modal.classList.contains("open")) {
+
+                closeModal();
+
+            }
+
+        }
+
+    });
+
+});
+
+</script>
 
 {% endblock %}

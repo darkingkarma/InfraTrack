@@ -88,3 +88,17 @@ class Citizen(models.Model):
 
     def __str__(self):
         return self.user.get_full_name()
+
+
+class PendingCitizenRegistration(models.Model):
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    username = models.CharField(max_length=150)
+    email = models.EmailField()
+    contact_number = models.CharField(max_length=20)
+    address = models.TextField()
+    password_hash = models.CharField(max_length=256)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email

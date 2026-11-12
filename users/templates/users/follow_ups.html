@@ -1,668 +1,790 @@
-
 {% extends "users/master.html" %}
 
-{% block title %}
-Follow-ups
-{% endblock %}
-
-{% block page_title %}
-Follow-ups
-{% endblock %}
+{% block title %}Follow-ups{% endblock %}
+{% block page_title %}Follow-ups{% endblock %}
 
 {% block style %}
 <style>
-    * {
-        box-sizing: border-box;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    .page-header {
-        margin-bottom: 22px;
-    }
+.followups-container {
+    width: 100%;
+}
 
+/* Page Header */
+.page-header {
+    margin-bottom: 22px;
+}
+
+.page-header h2 {
+    color: #0A2E5C;
+    font-size: 23px;
+    font-weight: 700;
+    margin: 0 0 6px;
+}
+
+.page-header p {
+    color: #64748b;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Search Section */
+.filter-container {
+    background: #ffffff;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+
+.search-box input {
+    width: 100%;
+    height: 44px;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-box input:focus {
+    border-color: #0A2E5C;
+    box-shadow: 0 0 0 3px rgba(10, 46, 92, 0.08);
+}
+
+.search-btn {
+    height: 44px;
+    padding: 0 20px;
+    background: #0A2E5C;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.search-btn:hover {
+    background: #08244A;
+}
+
+.clear-btn {
+    height: 44px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    text-decoration: none;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.clear-btn:hover {
+    background: #f1f5f9;
+}
+
+/* Status Tabs */
+.tabs {
+    display: flex;
+    gap: 9px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.tab:hover {
+    background: #e2e8f0;
+}
+
+.tab.active {
+    background: #0A2E5C;
+    color: white;
+}
+
+.tab-count {
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+/* Results Information */
+.results-info {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+/* Follow-up Cards */
+.fu-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+    padding: 23px;
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.fu-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 13px;
+}
+
+/* Related Report */
+.fu-report {
+    min-width: 0;
+    flex: 1;
+}
+
+.fu-report-label {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.fu-report-title {
+    display: block;
+    color: #0A2E5C;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+}
+
+.fu-report-title:hover {
+    text-decoration: underline;
+}
+
+.fu-report-id {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Status Badges */
+.fu-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.fu-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.fu-badge.answered {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Metadata */
+.fu-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    color: #64748b;
+    font-size: 12px;
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+.fu-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.fu-meta i {
+    color: #94a3b8;
+}
+
+/* Citizen Question */
+.fu-message-label,
+.fu-response-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 9px;
+}
+
+.fu-message-label {
+    color: #0A2E5C;
+}
+
+.fu-message {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 15px 17px;
+    border-radius: 7px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    margin-bottom: 20px; /* Added to separate question from response */
+}
+
+/* --- FIXED STAFF RESPONSE SECTION --- */
+.fu-response {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 12px 16px;
+    border-radius: 7px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    gap: 6px; /* Prevents huge gaps between label, text, and footer */
+}
+
+.fu-response-label {
+    color: #166534;
+    margin-bottom: 0; 
+}
+
+.fu-response-text {
+    white-space: pre-wrap; /* Preserves line breaks in the text */
+    margin: 0;
+}
+
+.fu-response small {
+    display: block;
+    color: #64748b;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 11px;
+    line-height: 1.4;
+}
+/* ----------------------------------- */
+
+/* Reply Form */
+.fu-form {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.fu-form label {
+    display: block;
+    color: #0A2E5C;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 9px;
+}
+
+.fu-form textarea {
+    display: block;
+    width: 100%;
+    min-height: 110px;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+}
+
+.fu-form textarea:focus {
+    border-color: #0A2E5C;
+    box-shadow: 0 0 0 3px rgba(10, 46, 92, 0.08);
+}
+
+.fu-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.fu-form button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0A2E5C;
+    color: white;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.fu-form button:hover {
+    background: #08244A;
+}
+
+/* Empty State */
+.empty-state {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 48px 20px;
+    text-align: center;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 32px;
+    color: #94a3b8;
+    margin-bottom: 13px;
+}
+
+.empty-state h3 {
+    color: #334155;
+    font-size: 16px;
+    margin: 0 0 8px;
+}
+
+.empty-state p {
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
     .page-header h2 {
-        color: #0A2E5C;
-        font-size: 24px;
-        margin-bottom: 5px;
+        font-size: 21px;
     }
 
-    .page-header p {
-        color: #777;
-        margin-top: 4px;
-        font-size: 14px;
-    }
-
-    /* Search */
     .filter-container {
-        background: white;
-        padding: 18px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.06);
-        margin-bottom: 20px;
+        padding: 15px;
     }
 
-    .search-form {
-        display: flex;
-        gap: 10px;
-        width: 100%;
+    .fu-card {
+        padding: 19px;
     }
 
-    .search-box {
-        flex: 1;
-        min-width: 0;
-        position: relative;
-    }
-
-    .search-box i {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #9CA3AF;
-    }
-
-    .search-box input {
-        width: 100%;
-        height: 44px;
-        padding: 10px 12px 10px 40px;
-        border: 1px solid #D1D5DB;
-        border-radius: 8px;
-        font-size: 14px;
-        outline: none;
-    }
-
-    .search-box input:focus {
-        border-color: #0A2E5C;
-        box-shadow: 0 0 0 3px rgba(10,46,92,.08);
-    }
-
-    .search-btn {
-        height: 44px;
-        padding: 0 20px;
-        background: #0A2E5C;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .search-btn:hover {
-        background: #08244A;
-    }
-
-    .clear-btn {
-        height: 44px;
-        padding: 0 15px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #D1D5DB;
-        border-radius: 8px;
-        text-decoration: none;
-        color: #4B5563;
-        font-size: 14px;
-    }
-
-    .clear-btn:hover {
-        background: #F3F4F6;
-    }
-
-    /* Tabs */
     .tabs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 22px;
-        flex-wrap: wrap;
+        gap: 7px;
     }
 
     .tab {
-        text-decoration: none;
-        padding: 10px 18px;
-        border-radius: 8px;
-        background: #F3F4F6;
-        color: #4B5563;
-        font-weight: 600;
+        padding: 10px 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .followups-container {
+        padding: 8px;
+    }
+
+    .page-header {
+        margin-bottom: 17px;
+    }
+
+    .page-header h2 {
+        font-size: 20px;
+    }
+
+    .page-header p {
         font-size: 13px;
-        transition: .2s;
     }
 
-    .tab:hover {
-        background: #E5E7EB;
+    .filter-container {
+        padding: 13px;
     }
 
-    .tab.active {
-        background: #0A2E5C;
-        color: white;
-    }
-
-    /* Follow-up Cards */
-    .fu-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.07);
-        padding: 22px 24px;
-        max-width: 900px;
-        margin-bottom: 18px;
-        border: 1px solid #F0F0F0;
-    }
-
-    .fu-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 10px;
-    }
-
-    .fu-report {
-        font-weight: 700;
-        color: #0A2E5C;
-        font-size: 16px;
-        line-height: 1.5;
-        overflow-wrap: anywhere;
-    }
-
-    .fu-report a {
-        color: #0A2E5C;
-        text-decoration: none;
-    }
-
-    .fu-report a:hover {
-        text-decoration: underline;
-    }
-
-    .fu-report-id {
-        display: block;
-        color: #9CA3AF;
-        font-size: 12px;
-        font-weight: 500;
-        margin-top: 3px;
-    }
-
-    .fu-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .fu-badge.Pending {
-        background: #FEF3C7;
-        color: #92400E;
-    }
-
-    .fu-badge.Answered {
-        background: #DCFCE7;
-        color: #166534;
-    }
-
-    .fu-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 7px 12px;
-        color: #6B7280;
-        font-size: 12px;
-        margin-bottom: 16px;
-        line-height: 1.6;
-    }
-
-    .fu-meta span {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .fu-meta i {
-        color: #9CA3AF;
-    }
-
-    .fu-message-label,
-    .fu-response-label {
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 7px;
-    }
-
-    .fu-message-label {
-        color: #0A2E5C;
-    }
-
-    .fu-message {
-        background: #F8FAFC;
-        border-left: 4px solid #0A2E5C;
-        padding: 14px 16px;
-        border-radius: 6px;
-        color: #374151;
-        font-size: 14px;
-        line-height: 1.7;
-        overflow-wrap: anywhere;
-        white-space: pre-wrap;
-    }
-
-    /* Answered Response */
-    .fu-response {
-        background: #F0FDF4;
-        border-left: 4px solid #16A34A;
-        padding: 14px 16px;
-        border-radius: 6px;
-        margin-top: 16px;
-        color: #166534;
-        font-size: 14px;
-        line-height: 1.7;
-        overflow-wrap: anywhere;
-        white-space: pre-wrap;
-    }
-
-    .fu-response-label {
-        color: #166534;
-    }
-
-    .fu-response small {
-        display: block;
-        color: #6B7280;
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid #D1FAE5;
-        font-size: 11px;
-        line-height: 1.6;
-    }
-
-    /* Reply Form */
-    .fu-form {
-        margin-top: 18px;
-        padding-top: 16px;
-        border-top: 1px solid #E5E7EB;
-    }
-
-    .fu-form label {
-        display: block;
-        color: #0A2E5C;
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .fu-form textarea {
-        display: block;
-        width: 100%;
-        min-height: 100px;
-        padding: 12px;
-        border: 1px solid #D1D5DB;
-        border-radius: 8px;
-        font-family: inherit;
-        font-size: 14px;
-        line-height: 1.5;
-        resize: vertical;
-        outline: none;
-    }
-
-    .fu-form textarea:focus {
-        border-color: #0A2E5C;
-        box-shadow: 0 0 0 3px rgba(10,46,92,.08);
-    }
-
-    .fu-form-actions {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 10px;
-    }
-
-    .fu-form button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    .search-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
         gap: 8px;
-        background: #0A2E5C;
-        color: white;
-        border: none;
-        padding: 11px 20px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 13px;
-        cursor: pointer;
-        transition: background .2s;
     }
 
-    .fu-form button:hover {
-        background: #08244A;
+    .search-box {
+        grid-column: 1 / -1;
     }
 
-    /* Empty State */
-    .empty-state {
-        background: white;
-        border: 1px dashed #D1D5DB;
-        border-radius: 10px;
-        padding: 45px 20px;
-        text-align: center;
-        color: #6B7280;
+    .search-btn,
+    .clear-btn {
+        width: 100%;
+        padding: 0 12px;
     }
 
-    .empty-state i {
-        font-size: 32px;
-        color: #9CA3AF;
-        margin-bottom: 12px;
+    .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
     }
 
-    .empty-state h3 {
-        color: #374151;
-        font-size: 16px;
-        margin-bottom: 6px;
+    .tab {
+        padding: 10px 4px;
+        font-size: 11px;
+        gap: 4px;
     }
 
-    .empty-state p {
-        font-size: 13px;
-        line-height: 1.6;
-    }
-
-    .results-info {
-        color: #6B7280;
-        font-size: 13px;
+    .fu-card {
+        padding: 15px;
         margin-bottom: 14px;
     }
 
-    /* Tablet and Mobile */
-    @media (max-width: 768px) {
-        .page-header h2 {
-            font-size: 21px;
-        }
-
-        .filter-container {
-            padding: 14px;
-        }
-
-        .tabs {
-            gap: 7px;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px 8px;
-            font-size: 12px;
-        }
-
-        .fu-card {
-            padding: 18px;
-        }
+    .fu-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 9px;
     }
 
-    @media (max-width: 480px) {
-        .page-header {
-            margin-bottom: 16px;
-        }
-
-        .page-header h2 {
-            font-size: 19px;
-        }
-
-        .page-header p {
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .search-form {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px;
-        }
-
-        .search-box {
-            grid-column: 1 / -1;
-        }
-
-        .search-btn,
-        .clear-btn {
-            width: 100%;
-        }
-
-        .tabs {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 6px;
-        }
-
-        .tab {
-            padding: 10px 4px;
-            font-size: 11px;
-        }
-
-        .fu-card {
-            padding: 15px;
-            margin-bottom: 14px;
-        }
-
-        .fu-top {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .fu-report {
-            font-size: 15px;
-        }
-
-        .fu-meta {
-            flex-direction: column;
-            gap: 5px;
-            margin-bottom: 13px;
-        }
-
-        .fu-message,
-        .fu-response {
-            padding: 12px;
-            font-size: 13px;
-        }
-
-        .fu-form textarea {
-            min-height: 110px;
-            font-size: 16px;
-        }
-
-        .fu-form-actions {
-            display: block;
-        }
-
-        .fu-form button {
-            width: 100%;
-            min-height: 44px;
-        }
-
-        .empty-state {
-            padding: 35px 16px;
-        }
+    .fu-report-title {
+        font-size: 14px;
     }
+
+    .fu-meta {
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 15px;
+    }
+
+    .fu-message {
+        padding: 12px;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    .fu-response {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .fu-form textarea {
+        min-height: 110px;
+        font-size: 16px;
+    }
+
+    .fu-form-actions {
+        display: block;
+    }
+
+    .fu-form button {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .empty-state {
+        padding: 35px 16px;
+    }
+}
 </style>
 {% endblock %}
 
+
 {% block content %}
+<div class="followups-container">
 
-<div class="page-header">
-    <h2>Citizen Follow-ups</h2>
-    <p>Review and respond to questions citizens send about their reports.</p>
-</div>
-
-<!-- Search -->
-<div class="filter-container">
-    <form method="get" action="{% url 'follow_ups' %}" class="search-form">
-
-        <input type="hidden" name="status" value="{{ status_filter }}">
-
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input
-                type="search"
-                name="q"
-                value="{{ search_query }}"
-                placeholder="Search citizen, report, question, or report ID..."
-                aria-label="Search follow-ups"
-            >
-        </div>
-
-        <button type="submit" class="search-btn">
-            <i class="fa-solid fa-search"></i> Search
-        </button>
-
-        {% if search_query %}
-            <a href="{% url 'follow_ups' %}?status={{ status_filter }}"
-               class="clear-btn">
-                <i class="fa-solid fa-xmark"></i>&nbsp; Clear
-            </a>
-        {% endif %}
-
-    </form>
-</div>
-
-<!-- Status Tabs -->
-<div class="tabs">
-
-    <a href="?status=Pending{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-       class="tab {% if status_filter == 'Pending' %}active{% endif %}">
-        Pending ({{ pending_total }})
-    </a>
-
-    <a href="?status=Answered{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-       class="tab {% if status_filter == 'Answered' %}active{% endif %}">
-        Answered ({{ answered_total }})
-    </a>
-
-    <a href="?status=All{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-       class="tab {% if status_filter == 'All' %}active{% endif %}">
-        All
-    </a>
-
-</div>
-
-{% if search_query %}
-    <div class="results-info">
-        Search results for <strong>"{{ search_query }}"</strong>
-    </div>
-{% endif %}
-
-<!-- Follow-up Cards -->
-{% for item in items %}
-<div class="fu-card">
-
-    <div class="fu-top">
-        <div class="fu-report">
-            {% if request.user.role == "district_engineer" %}
-                <a href="{% url 'view_report_history_detail' item.report.pk %}">
-                    {{ item.report.title }}
-                </a>
-            {% else %}
-                {{ item.report.title }}
-            {% endif %}
-
-            <span class="fu-report-id">
-                Report #{{ item.report.pk }}
-            </span>
-        </div>
-
-        <span class="fu-badge {{ item.status }}">
-            {% if item.status == "Pending" %}
-                <i class="fa-solid fa-clock"></i>&nbsp;
-            {% else %}
-                <i class="fa-solid fa-check-circle"></i>&nbsp;
-            {% endif %}
-            {{ item.status }}
-        </span>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>Citizen Follow-ups</h2>
+        <p>Review and respond to questions citizens send about their reports.</p>
     </div>
 
-    <div class="fu-meta">
-        <span>
-            <i class="fa-solid fa-user"></i>
-            {{ item.citizen.get_full_name|default:item.citizen.username }}
-        </span>
 
-        <span>
-            <i class="fa-solid fa-clipboard-list"></i>
-            Report status: {{ item.report.status }}
-        </span>
+    <!-- Search -->
+    <div class="filter-container">
+        <form method="get" action="{% url 'follow_ups' %}" class="search-form">
 
-        <span>
-            <i class="fa-regular fa-calendar"></i>
-            {{ item.submitted_date|date:"M d, Y g:i A" }}
-        </span>
-    </div>
+            <input type="hidden" name="status" value="{{ status_filter }}">
 
-    <span class="fu-message-label">Citizen's Question</span>
-    <div class="fu-message">{{ item.message }}</div>
+            <div class="search-box">
 
-    {% if item.status == "Answered" %}
-        <div class="fu-response">
-            <span class="fu-response-label">
-                <i class="fa-solid fa-reply"></i> Staff Response
-            </span>
-
-            {{ item.response }}
-
-            <small>
-                Answered by
-                {{ item.responded_by.user.get_full_name|default:"staff" }}
-                on
-                {{ item.responded_date|date:"M d, Y g:i A" }}
-            </small>
-        </div>
-    {% else %}
-        <form method="post"
-              action="{% url 'reply_follow_up' item.pk %}"
-              class="fu-form">
-
-            {% csrf_token %}
-
-            <label for="response-{{ item.pk }}">
-                <i class="fa-solid fa-reply"></i>
-                Write a Reply
-            </label>
-
-            <textarea
-                id="response-{{ item.pk }}"
-                name="response"
-                placeholder="Write a helpful response to the citizen..."
-                required
-            ></textarea>
-
-            <div class="fu-form-actions">
-                <button type="submit">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    Send Reply
-                </button>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search citizen, report, question, or report ID..."
+                    aria-label="Search follow-ups"
+                >
             </div>
 
+            <button type="submit" class="search-btn">
+                <i class="fa-solid fa-search"></i>
+                Search
+            </button>
+
+            {% if search_query %}
+                <a
+                    href="{% url 'follow_ups' %}?status={{ status_filter|urlencode }}"
+                    class="clear-btn"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                    Clear
+                </a>
+            {% endif %}
+
         </form>
+    </div>
+
+
+    <!-- Status Tabs -->
+    <div class="tabs">
+
+        <a
+            href="?status=Pending{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+            class="tab {% if status_filter == 'Pending' %}active{% endif %}"
+        >
+            Pending
+            <span class="tab-count">({{ pending_total }})</span>
+        </a>
+
+        <a
+            href="?status=Answered{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+            class="tab {% if status_filter == 'Answered' %}active{% endif %}"
+        >
+            Answered
+            <span class="tab-count">({{ answered_total }})</span>
+        </a>
+
+        <a
+            href="?status=All{% if status_filter == 'All' %}active{% endif %}"
+            class="tab {% if status_filter == 'All' %}active{% endif %}"
+        >
+            All
+        </a>
+
+    </div>
+
+
+    <!-- Search Results -->
+    {% if search_query %}
+        <div class="results-info">
+            Search results for <strong>"{{ search_query }}"</strong>
+        </div>
     {% endif %}
 
+
+    <!-- Follow-up Cards -->
+    {% for item in items %}
+
+        <div class="fu-card">
+
+            <!-- Related Report and Follow-up Status -->
+            <div class="fu-top">
+
+                <div class="fu-report">
+
+                    <span class="fu-report-label">
+                        Related Infrastructure Report
+                    </span>
+
+                    {% if request.user.role == "district_engineer" %}
+                        <a
+                            href="{% url 'view_report_history_detail' item.report.pk %}"
+                            class="fu-report-title"
+                        >
+                            {{ item.report.title }}
+                        </a>
+                    {% else %}
+                        <span class="fu-report-title">
+                            {{ item.report.title }}
+                        </span>
+                    {% endif %}
+
+                    <span class="fu-report-id">
+                        Report ID: #{{ item.report.pk }}
+                    </span>
+
+                    {% if item.report.infrastructure %}
+                        <span class="fu-report-id">
+                            Infrastructure: {{ item.report.infrastructure.infra_name }}
+                        </span>
+                    {% elif item.report.infrastructure_not_listed %}
+                        <span class="fu-report-id">
+                            Infrastructure: {{ item.report.infrastructure_not_listed }}
+                        </span>
+                    {% endif %}
+
+                </div>
+
+
+                {% if item.status == "Pending" %}
+                    <span class="fu-badge pending">
+                        <i class="fa-solid fa-clock"></i>
+                        Pending
+                    </span>
+                {% else %}
+                    <span class="fu-badge answered">
+                        <i class="fa-solid fa-check-circle"></i>
+                        Answered
+                    </span>
+                {% endif %}
+
+            </div>
+
+
+            <!-- Follow-up Metadata -->
+            <div class="fu-meta">
+
+                <span>
+                    <i class="fa-solid fa-user"></i>
+                    {{ item.citizen.get_full_name|default:item.citizen.username }}
+                </span>
+
+                <span>
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    Report status: {{ item.report.status }}
+                </span>
+
+                <span>
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ item.submitted_date|date:"M d, Y g:i A" }}
+                </span>
+
+            </div>
+
+
+            <!-- Citizen Question -->
+            <span class="fu-message-label">
+                Citizen's Question
+            </span>
+
+            <div class="fu-message">{{ item.message }}</div>
+
+
+            <!-- Staff Response -->
+            {% if item.status == "Answered" %}
+
+                <div class="fu-response">
+
+                    <span class="fu-response-label">
+                        <i class="fa-solid fa-reply"></i>
+                        Staff Response
+                    </span>
+
+                    <div class="fu-response-text">{{ item.response }}</div>
+
+                    <small>
+                        Answered by
+                        {{ item.responded_by.user.get_full_name|default:"staff" }}
+                        on
+                        {{ item.responded_date|date:"M d, Y g:i A" }}
+                    </small>
+
+                </div>
+
+            {% else %}
+
+                <!-- Reply Form -->
+                <form
+                    method="post"
+                    action="{% url 'reply_follow_up' item.pk %}"
+                    class="fu-form"
+                >
+
+                    {% csrf_token %}
+
+                    <label for="response-{{ item.pk }}">
+                        <i class="fa-solid fa-reply"></i>
+                        Write a Reply
+                    </label>
+
+                    <textarea
+                        id="response-{{ item.pk }}"
+                        name="response"
+                        placeholder="Write a helpful response to the citizen..."
+                        required
+                    ></textarea>
+
+                    <div class="fu-form-actions">
+                        <button type="submit">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Send Reply
+                        </button>
+                    </div>
+
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    {% empty %}
+
+        <!-- Empty State -->
+        <div class="empty-state">
+
+            <i class="fa-regular fa-folder-open"></i>
+
+            <h3>
+                {% if search_query %}
+                    No Matching Follow-ups Found
+                {% else %}
+                    No Follow-ups Here
+                {% endif %}
+            </h3>
+
+            <p>
+                {% if search_query %}
+                    Try another search term or clear your search to see more results.
+                {% elif status_filter == "Pending" %}
+                    There are no pending citizen questions right now.
+                {% elif status_filter == "Answered" %}
+                    No answered follow-ups are available yet.
+                {% else %}
+                    No citizen follow-ups have been submitted yet.
+                {% endif %}
+            </p>
+
+        </div>
+
+    {% endfor %}
+
 </div>
-
-{% empty %}
-    <div class="empty-state">
-        <i class="fa-regular fa-folder-open"></i>
-
-        <h3>
-            {% if search_query %}
-                No matching follow-ups found
-            {% else %}
-                No follow-ups here
-            {% endif %}
-        </h3>
-
-        <p>
-            {% if search_query %}
-                Try another search term or clear your search to see more results.
-            {% elif status_filter == "Pending" %}
-                There are no pending citizen questions right now.
-            {% elif status_filter == "Answered" %}
-                No answered follow-ups are available yet.
-            {% else %}
-                No citizen follow-ups have been submitted yet.
-            {% endif %}
-        </p>
-    </div>
-{% endfor %}
-
 {% endblock %}

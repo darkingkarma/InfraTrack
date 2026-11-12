@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CitizenRegisterAPIView, CitizenVerifyEmailAPIView, LoginAPIView, CitizenProfileAPIView, CitizenChangePasswordAPIView, CitizenVerifyEmailAPIView
+from .views import CitizenRegisterAPIView, CitizenVerifyEmailAPIView, LoginAPIView, CitizenProfileAPIView, CitizenChangePasswordAPIView, VerifyTokenAPIView
 
 urlpatterns = [
     path("", views.landing_page, name="landing_page"),
@@ -21,6 +21,11 @@ urlpatterns = [
     path("work-orders/<int:pk>/request-update/", views.request_work_order_update, name="request_work_order_update"),
     path("report-history/", views.report_history, name="report_history"),
     path("report-history/<int:pk>/view/", views.view_report_history_detail, name="view_report_history_detail"),
+    path(
+        "personnel-reports/",
+        views.personnel_reports,
+        name="personnel_reports",
+    ),
     path("fru-dashboard/", views.fru_dashboard, name="fru_dashboard"),
     path("pending-reports/", views.pending_reports, name="pending_reports"),
     path("pending-reports/<int:pk>/screen/", views.screen_report, name="screen_report"),
@@ -33,6 +38,11 @@ urlpatterns = [
     #dont delete
     path("api/citizen/register/", CitizenRegisterAPIView.as_view(), name="citizen_register"),
     path("api/login/", LoginAPIView.as_view(), name="api-login",),
+    path(
+        "api/verify-token/",
+        VerifyTokenAPIView.as_view(),
+        name="verify-token",
+    ),
     path("api/citizen/profile/", CitizenProfileAPIView.as_view(), name="citizen-profile",),
     path("api/citizen/change-password/",CitizenChangePasswordAPIView.as_view(),name="citizen_change_password"),
     path('feedback/', views.feedback_list, name='feedback_list'),

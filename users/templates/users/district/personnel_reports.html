@@ -1,0 +1,563 @@
+{% extends "users/master.html" %}
+
+{% block title %}Personnel Reports | InfraTrack{% endblock %}
+{% block page_title %}Personnel Reports{% endblock %}
+
+{% block style %}
+<style>
+/* Page header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.page-header h2 {
+    color: #0A2E5C;
+    font-size: 22px;
+    margin: 0;
+}
+
+.page-header p {
+    color: #64748b;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.print-btn,
+.csv-btn {
+    border: none;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.print-btn {
+    background: #0A2E5C;
+}
+
+.print-btn:hover {
+    background: #154A8A;
+}
+
+.csv-btn {
+    background: #15803d;
+}
+
+.csv-btn:hover {
+    background: #166534;
+}
+
+/* Summary cards */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    border: 1px solid #eee;
+}
+
+.summary-card .label {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.summary-card .number {
+    color: #0A2E5C;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+/* Filter section */
+.filter-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    margin-bottom: 25px;
+}
+
+.section-title {
+    color: #0A2E5C;
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 16px;
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #475569;
+    margin-bottom: 7px;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.filter-btn,
+.reset-btn {
+    display: inline-block;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.filter-btn {
+    background: #0A2E5C;
+    color: white;
+}
+
+.filter-btn:hover {
+    background: #154A8A;
+}
+
+.reset-btn {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+/* Activity table */
+.table-container {
+    background: white;
+    border-radius: 10px;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.activity-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+}
+
+.activity-table thead {
+    background: #0A2E5C;
+    color: white;
+}
+
+.activity-table th {
+    padding: 15px;
+    text-align: left;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.activity-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    color: #334155;
+    vertical-align: top;
+}
+
+.activity-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.role-badge {
+    display: inline-block;
+    background: #e8f0fe;
+    color: #0A2E5C;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.empty {
+    text-align: center;
+    color: gray;
+    padding: 40px !important;
+}
+
+/* Print heading */
+.print-heading {
+    display: none;
+}
+
+/* Responsive */
+@media(max-width: 1100px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media(max-width: 900px) {
+    .filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media(max-width: 550px) {
+    .summary-grid,
+    .filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+    }
+
+    .filter-actions {
+        flex-wrap: wrap;
+    }
+}
+
+/* Print */
+@media print {
+    @page {
+        size: 8.5in 13in;
+        margin: 0.5in;
+    }
+
+    body {
+        background: white !important;
+        padding: 0 !important;
+    }
+
+    .sidebar,
+    .sb-topbar,
+    .sb-overlay,
+    .filter-card,
+    .header-actions {
+        display: none !important;
+    }
+
+    .page-header {
+        display: none !important;
+    }
+
+    .print-heading {
+        display: block;
+        text-align: center;
+        margin-bottom: 22px;
+    }
+
+    .print-heading h2 {
+        color: #0A2E5C;
+        margin-bottom: 5px;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .summary-card,
+    .table-container {
+        box-shadow: none;
+        border: 1px solid #cbd5e1;
+        break-inside: avoid;
+    }
+
+    .activity-table {
+        min-width: 0;
+    }
+
+    .activity-table th,
+    .activity-table td {
+        font-size: 10px;
+        padding: 8px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="print-heading">
+    <h2>DEPARTMENT OF PUBLIC WORKS AND HIGHWAYS</h2>
+    <h3>Iligan City District Engineering Office</h3>
+    <p>Personnel Activity and Accomplishment Report</p>
+    <p>
+        Reporting Period:
+        {{ start_date }} to {{ end_date }}
+    </p>
+</div>
+
+<div class="page-header">
+
+    <div class="header-actions">
+
+        <button class="csv-btn" type="button" onclick="exportCSV()">
+            <i class="fa-solid fa-file-csv"></i>
+            Export CSV
+        </button>
+
+        <button class="print-btn" type="button" onclick="window.print()">
+            <i class="fa-solid fa-file-pdf"></i>
+            Print / Save as PDF
+        </button>
+
+    </div>
+</div>
+
+<!-- Summary cards -->
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="label">Reports Screened</div>
+        <div class="number">{{ total_screenings }}</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="label">Inspections</div>
+        <div class="number">{{ total_inspections }}</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="label">Work Order Activities</div>
+        <div class="number">{{ total_work_orders }}</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="label">Personnel Involved</div>
+        <div class="number">{{ total_personnel }}</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-card">
+    <div class="section-title">Filter Activity Records</div>
+
+    <form method="GET" class="filter-form">
+
+        <div class="filter-group">
+            <label for="start_date">Start Date</label>
+            <input
+                type="date"
+                id="start_date"
+                name="start_date"
+                value="{{ start_date }}"
+            >
+        </div>
+
+        <div class="filter-group">
+            <label for="end_date">End Date</label>
+            <input
+                type="date"
+                id="end_date"
+                name="end_date"
+                value="{{ end_date }}"
+            >
+        </div>
+
+        <div class="filter-group">
+            <label for="role">Personnel Role</label>
+            <select name="role" id="role">
+                <option value="">All Roles</option>
+
+                <option value="district_engineer"
+                    {% if selected_role == "district_engineer" %}selected{% endif %}>
+                    District Engineer
+                </option>
+
+                <option value="fru"
+                    {% if selected_role == "fru" %}selected{% endif %}>
+                    FRU Personnel
+                </option>
+
+                <option value="field_engineer"
+                    {% if selected_role == "field_engineer" %}selected{% endif %}>
+                    Field Engineer
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="personnel">Personnel</label>
+            <select name="personnel" id="personnel">
+                <option value="">All Personnel</option>
+
+                {% for person in personnel_list %}
+                <option value="{{ person.pk }}"
+                    {% if selected_personnel == person.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ person.user.get_full_name|default:person.user.username }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="filter-btn">
+                <i class="fa-solid fa-filter"></i> Apply Filters
+            </button>
+
+            <a href="{% url 'personnel_reports' %}" class="reset-btn">
+                Reset
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<!-- Activity records -->
+<div class="table-container">
+    <div style="padding:20px 20px 0;">
+        <div class="section-title">Personnel Activity Records</div>
+    </div>
+
+    <table class="activity-table" id="activityTable">
+        <thead>
+            <tr>
+                <th>Date and Time</th>
+                <th>Employee</th>
+                <th>Role</th>
+                <th>Activity</th>
+                <th>Accomplishment</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in events %}
+            <tr>
+                <td>{{ item.date|date:"M d, Y - h:i A" }}</td>
+
+                <td>
+                    <strong>{{ item.employee }}</strong>
+                </td>
+
+                <td>
+                    <span class="role-badge">{{ item.role }}</span>
+                </td>
+
+                <td>{{ item.activity }}</td>
+
+                <td>{{ item.accomplishment }}</td>
+            </tr>
+
+            {% empty %}
+            <tr>
+                <td colspan="5" class="empty">
+                    No activity records found. Try changing your date range or filters.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function exportCSV() {
+    const table = document.getElementById("activityTable");
+
+    if (!table) {
+        alert("Activity table not found.");
+        return;
+    }
+
+    const rows = [];
+
+    // Get table headers
+    const headers = Array.from(table.querySelectorAll("thead th"))
+        .map(th => th.innerText.trim());
+
+    rows.push(headers);
+
+    // Get table records
+    const bodyRows = table.querySelectorAll("tbody tr");
+
+    bodyRows.forEach(row => {
+        if (row.querySelector(".empty")) return;
+
+        const columns = Array.from(row.querySelectorAll("td"))
+            .map(td => td.innerText.trim());
+
+        rows.push(columns);
+    });
+
+    if (rows.length <= 1) {
+        alert("There are no activity records to export.");
+        return;
+    }
+
+    // Convert records into CSV format
+    const csvContent = rows.map(row =>
+        row.map(value => {
+            if (/^[=+\-@\t\r]/.test(value)) {
+                value = "'" + value;
+            }
+
+            return '"' + value.replace(/"/g, '""') + '"';
+        }).join(",")
+    ).join("\r\n");
+
+    // UTF-8 BOM for Excel compatibility
+    const blob = new Blob(
+        ["\uFEFF" + csvContent],
+        { type: "text/csv;charset=utf-8;" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    const startDate = "{{ start_date }}";
+    const endDate = "{{ end_date }}";
+
+    link.href = url;
+    link.download = `InfraTrack_Personnel_Reports_${startDate}_to_${endDate}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+}
+</script>
+
+{% endblock %}

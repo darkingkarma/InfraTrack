@@ -1,973 +1,973 @@
-{% extends "users/master.html" %}
 
+{% extends "users/master.html" %}
 
 {% block title %}
 Infrastructure Map
 {% endblock %}
 
-
 {% block page_title %}
 Infrastructure Map
 {% endblock %}
 
-
 {% block style %}
-
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
 
-
 <style>
-
-    /* =========================
-       PAGE HEADER
-    ========================= */
-
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    * {
+        box-sizing: border-box;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
-        margin:0;
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
     }
 
-    .page-header p{
-        margin:5px 0 0;
-        color:#777;
+    .page-header h2 {
+        color: #0A2E5C;
+        margin: 0;
     }
 
-
-    /* =========================
-       MAP
-    ========================= */
-
-    .map-container{
-        background:white;
-        border-radius:10px;
-        overflow:hidden;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        height:600px;
+    .page-header p {
+        margin: 5px 0 0;
+        color: #777;
     }
 
-    #map{
-        width:100%;
-        height:100%;
+    /* Summary cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 22px;
     }
 
-
-    /* =========================
-       LEGEND
-    ========================= */
-
-    .legend{
-        display:flex;
-        gap:20px;
-        margin-top:15px;
-        font-size:13px;
-        color:#333;
+    .summary-card {
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        min-width: 0;
     }
 
-    .legend-item{
-        display:flex;
-        align-items:center;
-        gap:8px;
+    .summary-info h3 {
+        margin: 0 0 8px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
     }
 
-    .legend-dot{
-        width:12px;
-        height:12px;
-        border-radius:50%;
-        display:inline-block;
+    .summary-count {
+        margin: 0;
+        color: #0A2E5C;
+        font-size: 28px;
+        font-weight: 700;
     }
 
-    .dot-road{
-        background:#0A2E5C;
+    /* Map */
+    .map-container {
+        position: relative;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        height: 600px;
+        width: 100%;
     }
 
-    .dot-bridge{
-        background:#e2a03f;
+    #map {
+        width: 100%;
+        height: 100%;
     }
 
-    .dot-drainage{
-        background:#1e7e34;
+    /* Empty map message */
+    .map-empty-state {
+        display: none;
+        position: absolute;
+        z-index: 500;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(100% - 40px);
+        max-width: 350px;
+        padding: 22px;
+        text-align: center;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.15);
+        pointer-events: none;
     }
 
-
-    /* =========================
-       CUSTOM MAP MARKERS
-    ========================= */
-
-    .infra-marker{
-        width:30px;
-        height:30px;
-
-        border-radius:50%;
-
-        border:3px solid white;
-
-        display:flex;
-        align-items:center;
-        justify-content:center;
-
-        color:white;
-
-        font-size:13px;
-        font-weight:bold;
-
-        box-shadow:0 2px 6px rgba(0,0,0,.35);
+    .map-empty-state .empty-icon {
+        font-size: 35px;
+        margin-bottom: 10px;
+        color: #94a3b8;
     }
 
-
-    .marker-road{
-        background:#0A2E5C;
+    .map-empty-state h3 {
+        margin: 0 0 7px;
+        color: #0A2E5C;
+        font-size: 16px;
     }
 
-
-    .marker-bridge{
-        background:#e2a03f;
+    .map-empty-state p {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
-
-    .marker-drainage{
-        background:#1e7e34;
+    /* Legend */
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 15px;
+        font-size: 13px;
+        color: #333;
     }
 
-
-    /* =========================
-       MODAL
-    ========================= */
-
-    .modal{
-        display:none;
-
-        position:fixed;
-
-        z-index:9999;
-
-        left:0;
-        top:0;
-
-        width:100%;
-        height:100%;
-
-        background:rgba(0,0,0,.45);
-
-        align-items:center;
-        justify-content:center;
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-
-    .modal-content{
-        background:white;
-
-        width:500px;
-
-        max-width:90%;
-
-        border-radius:12px;
-
-        padding:25px;
-
-        box-shadow:0 5px 20px rgba(0,0,0,.25);
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
     }
 
-
-    .modal-header{
-        display:flex;
-
-        justify-content:space-between;
-
-        align-items:center;
-
-        margin-bottom:20px;
+    .dot-road {
+        background: #0A2E5C;
     }
 
-
-    .modal-header h3{
-        margin:0;
-
-        color:#0A2E5C;
+    .dot-bridge {
+        background: #e2a03f;
     }
 
-
-    .close-modal{
-        border:none;
-
-        background:none;
-
-        font-size:28px;
-
-        cursor:pointer;
-
-        color:#777;
+    .dot-drainage {
+        background: #1e7e34;
     }
 
-
-    .close-modal:hover{
-        color:#333;
+    /* Map markers */
+    .infra-marker {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 3px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 13px;
+        font-weight: bold;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
     }
 
-
-    /* =========================
-       MODAL DETAILS
-    ========================= */
-
-    .detail-row{
-        margin-bottom:16px;
+    .marker-road {
+        background: #0A2E5C;
     }
 
-
-    .detail-label{
-        font-size:12px;
-
-        color:#777;
-
-        margin-bottom:4px;
+    .marker-bridge {
+        background: #e2a03f;
     }
 
-
-    .detail-value{
-        font-weight:500;
-
-        color:#333;
+    .marker-drainage {
+        background: #1e7e34;
     }
 
-
-    .modal-button{
-        margin-top:10px;
-
-        width:100%;
-
-        padding:11px;
-
-        border:none;
-
-        border-radius:7px;
-
-        background:#0A2E5C;
-
-        color:white;
-
-        font-weight:bold;
-
-        cursor:pointer;
+    /* Details modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
     }
 
-
-    .modal-button:hover{
-        background:#154A8A;
+    .modal-content {
+        background: white;
+        width: 600px;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
     }
 
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
 
-    /* =========================
-       MOBILE
-    ========================= */
+    .modal-header h3 {
+        margin: 0;
+        color: #0A2E5C;
+        overflow-wrap: anywhere;
+    }
 
-    @media(max-width:700px){
+    .close-modal {
+        flex-shrink: 0;
+        border: none;
+        background: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #777;
+    }
 
-        .map-container{
-            height:450px;
+    .close-modal:hover {
+        color: #333;
+    }
+
+    /* Infrastructure information */
+    .detail-row {
+        margin-bottom: 15px;
+        overflow-wrap: anywhere;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: #777;
+        margin-bottom: 4px;
+    }
+
+    .detail-value {
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .modal-button {
+        margin-top: 10px;
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 7px;
+        background: #0A2E5C;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .modal-button:hover {
+        background: #154A8A;
+    }
+
+    .maps-link {
+        display: inline-block;
+        margin: 0 0 16px;
+        color: #2563eb;
+        font-size: 13px;
+        text-decoration: none;
+    }
+
+    .maps-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Image sections */
+    .image-section {
+        margin-top: 22px;
+    }
+
+    .image-section h4 {
+        color: #0A2E5C;
+        font-size: 15px;
+        margin: 0 0 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .image-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+    }
+
+    .gallery-item {
+        min-width: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 7px;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    .gallery-image {
+        display: block;
+        width: 100%;
+        height: 95px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .gallery-image:hover {
+        transform: scale(1.04);
+    }
+
+    .empty-gallery {
+        grid-column: 1 / -1;
+        padding: 16px;
+        text-align: center;
+        border: 1px dashed #cbd5e1;
+        border-radius: 7px;
+        color: #64748b;
+        background: #f8fafc;
+        font-size: 13px;
+    }
+
+    /* Full-size image preview */
+    .image-preview-modal {
+        display: none;
+        position: fixed;
+        z-index: 10001;
+        inset: 0;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-preview-modal.active {
+        display: flex;
+    }
+
+    .image-preview-content {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    .image-preview-content img {
+        max-width: 100%;
+        max-height: 85vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 5px;
+    }
+
+    .image-preview-close {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        background: white;
+        color: #333;
+        font-size: 26px;
+        cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .summary-grid {
+            gap: 12px;
         }
 
-        .legend{
-            flex-wrap:wrap;
+        .summary-card {
+            padding: 15px;
+            gap: 10px;
         }
 
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 19px;
+        }
     }
 
+    @media (max-width: 700px) {
+        .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .summary-card:last-child {
+            grid-column: 1 / -1;
+        }
+
+        .map-container {
+            height: 55vh;
+            min-height: 350px;
+            max-height: 500px;
+        }
+
+        .modal {
+            padding: 12px;
+        }
+
+        .modal-content {
+            padding: 16px;
+            max-height: 92vh;
+        }
+
+        .image-gallery {
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 8px;
+        }
+
+        .gallery-image {
+            height: 85px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .summary-grid {
+            gap: 10px;
+        }
+
+        .summary-card {
+            padding: 12px;
+        }
+
+        .summary-count {
+            font-size: 23px;
+        }
+
+        .summary-info h3 {
+            font-size: 12px;
+        }
+
+        .map-container {
+            height: 50vh;
+            min-height: 350px;
+            max-height: 430px;
+        }
+
+        .page-header h2 {
+            font-size: 21px;
+        }
+
+        .page-header p {
+            font-size: 13px;
+        }
+
+        .legend {
+            gap: 12px;
+        }
+
+        .modal-content {
+            padding: 13px;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+        }
+
+        .image-gallery {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 7px;
+        }
+
+        .gallery-image {
+            height: 75px;
+        }
+
+        .image-preview-modal {
+            padding: 10px;
+        }
+    }
+
+    @media (max-width: 350px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-card:last-child {
+            grid-column: auto;
+        }
+    }
 </style>
-
 {% endblock %}
-
-
 
 {% block content %}
 
-
-<!-- =========================
-     PAGE HEADER
-========================= -->
-
 <div class="page-header">
-
     <div>
+        <h2>Infrastructure Map</h2>
+        <p>View DPWH infrastructure locations in Iligan City.</p>
+    </div>
+</div>
+<!-- Infrastructure Summary Cards -->
+<div class="summary-grid">
 
-        <h2>
-            Infrastructure Map
-        </h2>
+    <div class="summary-card">
+        <div class="summary-info">
+            <h3>Roads</h3>
+            <p class="summary-count" id="roadCount">0</p>
+        </div>
+    </div>
 
-        <p>
-            View DPWH infrastructure locations in Iligan City.
-        </p>
+    <div class="summary-card">
+        <div class="summary-info">
+            <h3>Bridges</h3>
+            <p class="summary-count" id="bridgeCount">0</p>
+        </div>
+    </div>
 
+    <div class="summary-card">
+        <div class="summary-info">
+            <h3>Drainage</h3>
+            <p class="summary-count" id="drainageCount">0</p>
+        </div>
     </div>
 
 </div>
 
-
-
-<!-- =========================
-     MAP
-========================= -->
-
+<!-- Infrastructure Map -->
 <div class="map-container">
 
     <div id="map"></div>
 
+    <div id="mapEmptyState" class="map-empty-state">
+        <div class="empty-icon">📍</div>
+        <h3>No Infrastructure Locations</h3>
+        <p>
+            There are currently no infrastructure records with valid
+            map coordinates to display.
+        </p>
+    </div>
+
 </div>
 
-
-
-<!-- =========================
-     LEGEND
-========================= -->
-
+<!-- Map Legend -->
 <div class="legend">
 
     <div class="legend-item">
-
         <span class="legend-dot dot-road"></span>
-
         Road
-
     </div>
 
-
     <div class="legend-item">
-
         <span class="legend-dot dot-bridge"></span>
-
         Bridge
-
     </div>
 
-
     <div class="legend-item">
-
         <span class="legend-dot dot-drainage"></span>
-
         Drainage
-
     </div>
 
 </div>
 
-
-
-<!-- =========================
-     INFRASTRUCTURE MODAL
-========================= -->
-
-<div
-    id="infrastructureModal"
-    class="modal"
->
-
-
+<!-- Infrastructure details modal -->
+<div id="infrastructureModal" class="modal">
     <div class="modal-content">
 
-
-        <!-- MODAL HEADER -->
-
         <div class="modal-header">
-
-            <h3 id="modalTitle">
-                Infrastructure Details
-            </h3>
-
+            <h3 id="modalTitle">Infrastructure Details</h3>
 
             <button
+                type="button"
                 class="close-modal"
                 onclick="closeInfrastructureModal()"
+                aria-label="Close details"
             >
-
                 &times;
-
             </button>
-
         </div>
-
-
-
-        <!-- INFRASTRUCTURE TYPE -->
 
         <div class="detail-row">
-
-            <div class="detail-label">
-                Infrastructure Type
-            </div>
-
-            <div
-                class="detail-value"
-                id="modalType"
-            >
-            </div>
-
+            <div class="detail-label">Infrastructure Type</div>
+            <div class="detail-value" id="modalType"></div>
         </div>
-
-
-
-        <!-- ROAD CLASSIFICATION -->
 
         <div class="detail-row">
-
-            <div class="detail-label">
-                Road Classification
-            </div>
-
-            <div
-                class="detail-value"
-                id="modalClassification"
-            >
-            </div>
-
+            <div class="detail-label">Road Classification</div>
+            <div class="detail-value" id="modalClassification"></div>
         </div>
-
-
-
-        <!-- LOCATION -->
 
         <div class="detail-row">
-
-            <div class="detail-label">
-                Location
-            </div>
-
-            <div
-                class="detail-value"
-                id="modalLocation"
-            >
-            </div>
-
+            <div class="detail-label">Location</div>
+            <div class="detail-value" id="modalLocation"></div>
         </div>
-
-
-
-        <!-- STATUS -->
 
         <div class="detail-row">
-
-            <div class="detail-label">
-                Status
-            </div>
-
-            <div
-                class="detail-value"
-                id="modalStatus"
-            >
-            </div>
-
+            <div class="detail-label">Status</div>
+            <div class="detail-value" id="modalStatus"></div>
         </div>
-
-
-
-        <!-- COORDINATES -->
 
         <div class="detail-row">
-
-            <div class="detail-label">
-                Coordinates
-            </div>
-
-            <div
-                class="detail-value"
-                id="modalCoordinates"
-            >
-            </div>
-
+            <div class="detail-label">Coordinates</div>
+            <div class="detail-value" id="modalCoordinates"></div>
         </div>
 
+        <a
+            id="modalMapsLink"
+            class="maps-link"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Open location in Google Maps
+        </a>
 
+        <!-- Regular images -->
+        <div class="image-section">
+            <h4>Infrastructure Images</h4>
+            <div id="regularImageGallery" class="image-gallery"></div>
+        </div>
 
-        <!-- CLOSE BUTTON -->
+        <!-- Satellite images -->
+        <div class="image-section">
+            <h4>Satellite Images</h4>
+            <div id="satelliteImageGallery" class="image-gallery"></div>
+        </div>
 
         <button
+            type="button"
             class="modal-button"
             onclick="closeInfrastructureModal()"
         >
-
             Close
-
         </button>
 
-
     </div>
-
 </div>
 
+<!-- Full-size image preview -->
+<div
+    id="imagePreviewModal"
+    class="image-preview-modal"
+    onclick="closeImagePreview()"
+>
+    <div
+        class="image-preview-content"
+        onclick="event.stopPropagation()"
+    >
+        <button
+            type="button"
+            class="image-preview-close"
+            onclick="closeImagePreview()"
+            aria-label="Close image preview"
+        >
+            &times;
+        </button>
 
-
-<!-- =========================
-     DJANGO DATA
-========================= -->
+        <img id="imagePreview" src="" alt="Infrastructure image preview">
+    </div>
+</div>
 
 {{ infrastructure_data|json_script:"infrastructure-data" }}
 
-
-
-<!-- =========================
-     LEAFLET
-========================= -->
-
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-></script>
-
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-
-
-    /* =========================
-       GET INFRASTRUCTURE DATA
-    ========================= */
-
     const infrastructures = JSON.parse(
-
-        document
-            .getElementById("infrastructure-data")
-            .textContent
-
+        document.getElementById("infrastructure-data").textContent
     );
 
+    /* Validate infrastructure coordinates */
+    function hasValidCoordinates(infrastructure) {
+        const latitude = Number(infrastructure.latitude);
+        const longitude = Number(infrastructure.longitude);
 
+        return (
+            Number.isFinite(latitude) &&
+            Number.isFinite(longitude) &&
+            latitude >= -90 &&
+            latitude <= 90 &&
+            longitude >= -180 &&
+            longitude <= 180 &&
+            infrastructure.latitude !== null &&
+            infrastructure.longitude !== null &&
+            infrastructure.latitude !== "" &&
+            infrastructure.longitude !== ""
+        );
+    }
 
-    /* =========================
-       CREATE MAP
-    ========================= */
+    /* Update infrastructure summary counts */
+    function updateInfrastructureCounts() {
+        let roadCount = 0;
+        let bridgeCount = 0;
+        let drainageCount = 0;
 
-    const map = L.map("map").setView(
+        infrastructures.forEach(function(infrastructure) {
+            if (!hasValidCoordinates(infrastructure)) {
+                return;
+            }
 
-        [8.2280, 124.2452],
+            const type = String(
+                infrastructure.infra_type || ""
+            ).toLowerCase();
 
-        13
+            if (type === "road") {
+                roadCount++;
+            } else if (type === "bridge") {
+                bridgeCount++;
+            } else if (type === "drainage") {
+                drainageCount++;
+            }
+        });
 
-    );
+        document.getElementById("roadCount").textContent = roadCount;
+        document.getElementById("bridgeCount").textContent = bridgeCount;
+        document.getElementById("drainageCount").textContent = drainageCount;
+    }
 
+    updateInfrastructureCounts();
 
-
-    /* =========================
-       MAP TILES
-    ========================= */
+    /* Create map */
+    const map = L.map("map").setView([8.2280, 124.2452], 13);
 
     L.tileLayer(
-
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-
         {
-
-            maxZoom:19,
-
-            attribution:"Tiles &copy; Esri"
-
+            maxZoom: 19,
+            attribution: "Tiles &copy; Esri"
         }
-
     ).addTo(map);
 
+    /* Count valid locations */
+    let validInfrastructureCount = 0;
 
+    /* Create a marker for each infrastructure */
+    infrastructures.forEach(function(infrastructure) {
 
-    /* =========================
-       CREATE MARKERS
-    ========================= */
+        if (!hasValidCoordinates(infrastructure)) {
+            return;
+        }
 
-    infrastructures.forEach(
+        const latitude = Number(infrastructure.latitude);
+        const longitude = Number(infrastructure.longitude);
 
-        function(infrastructure){
+        validInfrastructureCount++;
 
+        let markerClass = "marker-road";
+        let markerLetter = "R";
 
-            const latitude = Number(
+        if (infrastructure.infra_type === "bridge") {
+            markerClass = "marker-bridge";
+            markerLetter = "B";
+        } else if (infrastructure.infra_type === "drainage") {
+            markerClass = "marker-drainage";
+            markerLetter = "D";
+        }
 
-                infrastructure.latitude
+        const customIcon = L.divIcon({
+            className: "",
+            html: `<div class="infra-marker ${markerClass}">${markerLetter}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -15]
+        });
 
-            );
+        const marker = L.marker(
+            [latitude, longitude],
+            { icon: customIcon }
+        ).addTo(map);
 
+        /* Build popup safely */
+        const popup = document.createElement("div");
+        popup.style.padding = "5px";
 
-            const longitude = Number(
+        const name = document.createElement("strong");
+        name.textContent =
+            infrastructure.infra_name || "Unnamed Infrastructure";
 
-                infrastructure.longitude
+        popup.appendChild(name);
 
-            );
+        const type = document.createElement("div");
+        type.textContent = infrastructure.infra_type || "Unknown type";
+        type.style.marginTop = "4px";
 
+        popup.appendChild(type);
 
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "View Details";
 
-            /* Ignore invalid coordinates */
+        button.style.cssText =
+            "margin-top:10px;background:#0A2E5C;color:white;" +
+            "border:none;padding:8px 12px;border-radius:6px;" +
+            "cursor:pointer;font-weight:bold;";
 
-            if(
+        button.addEventListener("click", function() {
+            showInfrastructureDetails(infrastructure.infrastructure_id);
+        });
 
-                isNaN(latitude) ||
+        popup.appendChild(button);
+        marker.bindPopup(popup);
+    });
 
-                isNaN(longitude)
+    /* Show empty state when no valid locations exist */
+    if (validInfrastructureCount === 0) {
+        document.getElementById("mapEmptyState").style.display = "block";
+    }
 
-            ){
+    /* Display images in a compact gallery */
+    function populateImageGallery(containerId, images, emptyMessage) {
+        const container = document.getElementById(containerId);
+        container.replaceChildren();
 
+        if (!Array.isArray(images) || images.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty-gallery";
+            empty.textContent = emptyMessage;
+            container.appendChild(empty);
+            return;
+        }
+
+        images.forEach(function(image, index) {
+            if (!image || !image.url) {
                 return;
-
             }
 
+            const item = document.createElement("div");
+            item.className = "gallery-item";
 
+            const thumbnail = document.createElement("img");
+            thumbnail.className = "gallery-image";
+            thumbnail.src = image.url;
+            thumbnail.alt = "Infrastructure image " + (index + 1);
+            thumbnail.loading = "lazy";
 
-            /* =========================
-               DEFAULT MARKER
-            ========================= */
-
-            let markerClass = "marker-road";
-
-            let markerIcon = "R";
-
-
-
-            /* =========================
-               BRIDGE MARKER
-            ========================= */
-
-            if(
-
-                infrastructure.infra_type === "bridge"
-
-            ){
-
-                markerClass = "marker-bridge";
-
-                markerIcon = "B";
-
-            }
-
-
-
-            /* =========================
-               DRAINAGE MARKER
-            ========================= */
-
-            else if(
-
-                infrastructure.infra_type === "drainage"
-
-            ){
-
-                markerClass = "marker-drainage";
-
-                markerIcon = "D";
-
-            }
-
-
-
-            /* =========================
-               CUSTOM MARKER
-            ========================= */
-
-            const customIcon = L.divIcon({
-
-                className:"",
-
-                html:`
-
-                    <div
-                        class="infra-marker ${markerClass}"
-                    >
-
-                        ${markerIcon}
-
-                    </div>
-
-                `,
-
-                iconSize:[30,30],
-
-                iconAnchor:[15,15],
-
-                popupAnchor:[0,-15]
-
+            thumbnail.addEventListener("click", function() {
+                openImagePreview(image.url, thumbnail.alt);
             });
 
+            item.appendChild(thumbnail);
+            container.appendChild(item);
+        });
 
-
-            /* =========================
-               CREATE MARKER
-            ========================= */
-
-            const marker = L.marker(
-
-                [latitude,longitude],
-
-                {
-
-                    icon:customIcon
-
-                }
-
-            ).addTo(map);
-
-
-
-            /* =========================
-               POPUP
-            ========================= */
-
-            marker.bindPopup(`
-
-                <div style="padding:5px;">
-
-                    <strong>
-                        ${infrastructure.infra_name}
-                    </strong>
-
-                    <br>
-
-                    <span>
-                        ${infrastructure.infra_type}
-                    </span>
-
-                    <br><br>
-
-                    <button
-
-                        onclick="
-                            showInfrastructureDetails(
-                                ${infrastructure.infrastructure_id}
-                            )
-                        "
-
-                        style="
-                            background:#0A2E5C;
-                            color:white;
-                            border:none;
-                            padding:8px 12px;
-                            border-radius:6px;
-                            cursor:pointer;
-                            font-weight:bold;
-                        "
-
-                    >
-
-                        View Details
-
-                    </button>
-
-                </div>
-
-            `);
-
+        if (container.children.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty-gallery";
+            empty.textContent = emptyMessage;
+            container.appendChild(empty);
         }
+    }
 
-    );
+    /* Show infrastructure details */
+    function showInfrastructureDetails(id) {
+        const infrastructure = infrastructures.find(function(item) {
+            return Number(item.infrastructure_id) === Number(id);
+        });
 
-
-
-    /* =========================
-       SHOW MODAL
-    ========================= */
-
-    function showInfrastructureDetails(id){
-
-
-        const infrastructure =
-
-            infrastructures.find(
-
-                function(item){
-
-                    return (
-
-                        item.infrastructure_id === id
-
-                    );
-
-                }
-
-            );
-
-
-
-        /* Stop if infrastructure
-           does not exist */
-
-        if(!infrastructure){
-
+        if (!infrastructure) {
             return;
-
         }
 
+        document.getElementById("modalTitle").textContent =
+            infrastructure.infra_name || "Infrastructure Details";
 
+        document.getElementById("modalType").textContent =
+            infrastructure.infra_type || "N/A";
 
-        /* =========================
-           SET MODAL INFORMATION
-        ========================= */
+        document.getElementById("modalClassification").textContent =
+            infrastructure.road_classification || "N/A";
 
-        document.getElementById(
+        document.getElementById("modalLocation").textContent =
+            infrastructure.location_description || "N/A";
 
-            "modalTitle"
+        document.getElementById("modalStatus").textContent =
+            infrastructure.status || "N/A";
 
-        ).textContent =
+        const latitude = Number(infrastructure.latitude);
+        const longitude = Number(infrastructure.longitude);
 
-            infrastructure.infra_name;
+        if (
+            hasValidCoordinates(infrastructure)
+        ) {
+            document.getElementById("modalCoordinates").textContent =
+                latitude.toFixed(7) + ", " + longitude.toFixed(7);
 
+            document.getElementById("modalMapsLink").href =
+                "https://www.google.com/maps?q=" +
+                encodeURIComponent(latitude + "," + longitude);
 
+            document.getElementById("modalMapsLink").style.display =
+                "inline-block";
+        } else {
+            document.getElementById("modalCoordinates").textContent = "N/A";
+            document.getElementById("modalMapsLink").style.display = "none";
+        }
 
-        document.getElementById(
+        populateImageGallery(
+            "regularImageGallery",
+            infrastructure.regular_images,
+            "No infrastructure images available."
+        );
 
-            "modalType"
+        populateImageGallery(
+            "satelliteImageGallery",
+            infrastructure.satellite_images,
+            "No satellite images available."
+        );
 
-        ).textContent =
-
-            infrastructure.infra_type;
-
-
-
-        document.getElementById(
-
-            "modalClassification"
-
-        ).textContent =
-
-            infrastructure.road_classification ||
-
-            "N/A";
-
-
-
-        document.getElementById(
-
-            "modalLocation"
-
-        ).textContent =
-
-            infrastructure.location_description ||
-
-            "N/A";
-
-
-
-        document.getElementById(
-
-            "modalStatus"
-
-        ).textContent =
-
-            infrastructure.status ||
-
-            "N/A";
-
-
-
-        document.getElementById(
-
-            "modalCoordinates"
-
-        ).textContent =
-
-            Number(
-
-                infrastructure.latitude
-
-            ).toFixed(7)
-
-            +
-
-            ", "
-
-            +
-
-            Number(
-
-                infrastructure.longitude
-
-            ).toFixed(7);
-
-
-
-        /* =========================
-           SHOW MODAL
-        ========================= */
-
-        document.getElementById(
-
-            "infrastructureModal"
-
-        ).style.display = "flex";
-
+        document.getElementById("infrastructureModal").style.display = "flex";
+        document.body.style.overflow = "hidden";
     }
 
-
-
-    /* =========================
-       CLOSE MODAL
-    ========================= */
-
-    function closeInfrastructureModal(){
-
-
-        document.getElementById(
-
-            "infrastructureModal"
-
-        ).style.display = "none";
-
+    /* Close details modal */
+    function closeInfrastructureModal() {
+        document.getElementById("infrastructureModal").style.display = "none";
+        document.body.style.overflow = "";
     }
 
+    /* Open full-size image preview */
+    function openImagePreview(src, alt) {
+        const previewModal = document.getElementById("imagePreviewModal");
+        const previewImage = document.getElementById("imagePreview");
 
+        previewImage.src = src;
+        previewImage.alt = alt || "Infrastructure image preview";
 
-    /* =========================
-       CLOSE WHEN CLICKING
-       OUTSIDE MODAL
-    ========================= */
+        previewModal.classList.add("active");
+    }
 
-    window.addEventListener(
+    /* Close full-size image preview */
+    function closeImagePreview() {
+        const previewModal = document.getElementById("imagePreviewModal");
+        const previewImage = document.getElementById("imagePreview");
 
+        previewModal.classList.remove("active");
+        previewImage.src = "";
+    }
+
+    /* Close modals with Escape or by clicking outside */
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            closeImagePreview();
+            closeInfrastructureModal();
+        }
+    });
+
+    document.getElementById("infrastructureModal").addEventListener(
         "click",
-
-        function(event){
-
-
-            const modal =
-
-                document.getElementById(
-
-                    "infrastructureModal"
-
-                );
-
-
-            if(
-
-                event.target === modal
-
-            ){
-
+        function(event) {
+            if (event.target === this) {
                 closeInfrastructureModal();
-
             }
-
         }
-
     );
 
-
-
-    /* =========================
-       FIX MAP SIZE
-    ========================= */
-
-    setTimeout(
-
-        function(){
-
+    /* Ensure Leaflet renders correctly */
+    window.addEventListener("load", function() {
+        setTimeout(function() {
             map.invalidateSize();
-
-        },
-
-        200
-
-    );
-
-
+        }, 200);
+    });
 </script>
-
 
 {% endblock %}

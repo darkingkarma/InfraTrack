@@ -1,255 +1,125 @@
 {% extends "users/master.html" %}
 
-{% block title %}
-Add Infrastructure
-{% endblock %}
-
-{% block page_title %}
-Add Infrastructure
-{% endblock %}
+{% block title %}Add Infrastructure{% endblock %}
+{% block page_title %}Add Infrastructure{% endblock %}
 
 {% block style %}
 <style>
-
-.form-card{
-    background:#fff;
-    padding:25px;
-    border-radius:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
-}
-
-.section-title{
-    margin-bottom:15px;
-    color:#0A2E5C;
-}
-
-.form-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
-}
-
-.form-group{
-    display:flex;
-    flex-direction:column;
-}
-
-.form-group label{
-    margin-bottom:6px;
-    font-weight:bold;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea{
-    padding:10px;
-    border:1px solid #ccc;
-    border-radius:6px;
-    font-size:14px;
-}
-
-.form-group textarea{
-    resize:vertical;
-    min-height:90px;
-}
-
-.full-width{
-    grid-column:1 / -1;
-}
-
-.button-group{
-    margin-top:25px;
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-}
-
-.cancel-btn{
-    padding:10px 20px;
-    text-decoration:none;
-    background:#6c757d;
-    color:white;
-    border-radius:6px;
-}
-
-.save-btn{
-    padding:10px 20px;
-    border:none;
-    background:#0A2E5C;
-    color:white;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-.error-message{
-    background:#f8d7da;
-    color:#842029;
-    padding:10px;
-    border-radius:6px;
-    margin-bottom:20px;
-}
-
+.form-card{background:#fff;padding:25px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.section-title{margin-bottom:15px;color:#0A2E5C}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{margin-bottom:6px;font-weight:bold}
+.form-group input,.form-group select,.form-group textarea{padding:10px;border:1px solid #ccc;border-radius:6px;font-size:14px}
+.form-group textarea{resize:vertical;min-height:90px}
+.full-width{grid-column:1/-1}
+.help-text{font-size:12px;color:#666;margin-top:5px}
+.button-group{margin-top:25px;display:flex;justify-content:flex-end;gap:10px}
+.cancel-btn,.save-btn{padding:10px 20px;border-radius:6px;text-decoration:none}
+.cancel-btn{background:#6c757d;color:white}
+.save-btn{border:none;background:#0A2E5C;color:white;cursor:pointer}
+.error-message{background:#f8d7da;color:#842029;padding:10px;border-radius:6px;margin-bottom:20px}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr}.full-width{grid-column:auto}}
 </style>
 {% endblock %}
 
 {% block content %}
-
 <div class="form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
 
-<form method="POST">
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
 
-    {% csrf_token %}
+        <h3 class="section-title">Infrastructure Information</h3>
 
-    {% if error %}
-        <div class="error-message">
-            {{ error }}
-        </div>
-    {% endif %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Infrastructure Name</label>
+                <input type="text" name="infra_name"
+                       placeholder="e.g. Iligan-Dipolog Road" required>
+            </div>
 
-    <h3 class="section-title">Infrastructure Information</h3>
+            <div class="form-group">
+                <label>Infrastructure Type</label>
+                <select name="infra_type" required>
+                    <option value="">Select Type</option>
+                    <option value="road">Road</option>
+                    <option value="bridge">Bridge</option>
+                    <option value="drainage">Drainage</option>
+                </select>
+            </div>
 
-    <div class="form-grid">
+            <div class="form-group">
+                <label>Road Classification</label>
+                <input type="text" name="road_classification"
+                       placeholder="e.g. National Road">
+            </div>
 
-        <div class="form-group">
-            <label>Infrastructure Name</label>
-
-            <input
-                type="text"
-                name="infra_name"
-                placeholder="e.g. Iligan-Dipolog Road"
-                required
-            >
-        </div>
-
-
-        <div class="form-group">
-            <label>Infrastructure Type</label>
-
-            <select name="infra_type" required>
-
-                <option value="">
-                    Select Type
-                </option>
-
-                <option value="road">
-                    Road
-                </option>
-
-                <option value="bridge">
-                    Bridge
-                </option>
-
-                <option value="drainage">
-                    Drainage
-                </option>
-
-            </select>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" required>
+                    <option value="">Select Status</option>
+                    <option value="active">Active</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="closed">Closed</option>
+                </select>
+            </div>
         </div>
 
+        <br>
 
-        <div class="form-group">
-            <label>Road Classification</label>
+        <h3 class="section-title">Location Information</h3>
 
-            <input
-                type="text"
-                name="road_classification"
-                placeholder="e.g. National Road"
-            >
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Latitude</label>
+                <input type="number" name="latitude" step="any"
+                       placeholder="e.g. 8.2280" required>
+            </div>
+
+            <div class="form-group">
+                <label>Longitude</label>
+                <input type="number" name="longitude" step="any"
+                       placeholder="e.g. 124.2450" required>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Location Description</label>
+                <textarea name="location_description"
+                          placeholder="Describe the location..."></textarea>
+            </div>
         </div>
 
+        <br>
 
-        <div class="form-group">
-            <label>Status</label>
+        <h3 class="section-title">Infrastructure Images</h3>
 
-            <select name="status" required>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Regular Infrastructure Images</label>
+                <input type="file" name="regular_images"
+                       accept="image/*" multiple>
+                <span class="help-text">
+                    Select multiple photos of the actual road, bridge, or drainage.
+                </span>
+            </div>
 
-                <option value="">
-                    Select Status
-                </option>
-
-                <option value="active">
-                    Active
-                </option>
-
-                <option value="maintenance">
-                    Maintenance
-                </option>
-
-                <option value="closed">
-                    Closed
-                </option>
-
-            </select>
+            <div class="form-group">
+                <label>Satellite Images</label>
+                <input type="file" name="satellite_images"
+                       accept="image/*" multiple>
+                <span class="help-text">
+                    Select multiple satellite or aerial images of this infrastructure.
+                </span>
+            </div>
         </div>
 
-    </div>
-
-
-    <br>
-
-
-    <h3 class="section-title">Location Information</h3>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Latitude</label>
-
-            <input
-                type="number"
-                name="latitude"
-                step="any"
-                placeholder="e.g. 8.2280"
-                required
-            >
+        <div class="button-group">
+            <a href="{% url 'infrastructure_list' %}" class="cancel-btn">Cancel</a>
+            <button type="submit" class="save-btn">Save Infrastructure</button>
         </div>
-
-
-        <div class="form-group">
-            <label>Longitude</label>
-
-            <input
-                type="number"
-                name="longitude"
-                step="any"
-                placeholder="e.g. 124.2450"
-                required
-            >
-        </div>
-
-
-        <div class="form-group full-width">
-            <label>Location Description</label>
-
-            <textarea
-                name="location_description"
-                placeholder="Describe the location..."
-            ></textarea>
-        </div>
-
-    </div>
-
-
-    <div class="button-group">
-
-        <a
-            href="{% url 'infrastructure_list' %}"
-            class="cancel-btn"
-        >
-            Cancel
-        </a>
-
-        <button
-            type="submit"
-            class="save-btn"
-        >
-            Save Infrastructure
-        </button>
-
-    </div>
-
-</form>
-
+    </form>
 </div>
-
 {% endblock %}

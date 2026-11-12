@@ -1,161 +1,215 @@
+
 {% extends "users/master.html" %}
 
-{% block title %}
-Report History
-{% endblock %}
-
-{% block page_title %}
-Report History
-{% endblock %}
+{% block title %}Report History{% endblock %}
+{% block page_title %}Report History{% endblock %}
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+* {
+    box-sizing: border-box;
+}
+
+
+.filter-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.filter-container input,
+.filter-container select {
+    padding: 11px 13px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    background: white;
+}
+
+.filter-container input {
+    flex: 1;
+    min-width: 220px;
+}
+
+.filter-container select {
+    min-width: 180px;
+}
+
+.filter-container input:focus,
+.filter-container select:focus {
+    border-color: #0A2E5C;
+    box-shadow: 0 0 0 2px rgba(10, 46, 92, 0.1);
+}
+
+.results-info {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow-x: auto;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #0A2E5C;
+    color: white;
+}
+
+th {
+    padding: 15px 13px;
+    text-align: left;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+td {
+    padding: 14px 13px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    color: #444;
+    vertical-align: middle;
+}
+
+tbody tr:hover {
+    background: #f7f9fc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.resolved {
+    background: #e6f7ec;
+    color: #218838;
+}
+
+.rejected {
+    background: #fdeaea;
+    color: #dc3545;
+}
+
+.inprogress {
+    background: #fff4e0;
+    color: #b7791f;
+}
+
+.default {
+    background: #e8f0fe;
+    color: #2456a6;
+}
+
+.work-order-issued {
+    background: #e8f0fe;
+    color: #2456a6;
+}
+
+.view-btn {
+    display: inline-block;
+    padding: 7px 13px;
+    background: #0A2E5C;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.view-btn:hover {
+    background: #154A8A;
+}
+
+.no-results {
+    text-align: center;
+    padding: 25px;
+    color: #888;
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    .filter-container input,
+    .filter-container select {
+        width: 100%;
+        min-width: 100%;
     }
 
-    .search-section{
-        display:flex;
-        gap:15px;
-        margin-bottom:25px;
+    .table-container {
+        border-radius: 8px;
     }
-
-    .search-section input{
-        flex:1;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
-    .search-section select{
-        width:220px;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-    }
-
-    .search-section button{
-        border:none;
-        cursor:pointer;
-        padding:10px 20px;
-        border-radius:6px;
-        font-weight:bold;
-        background:#0A2E5C;
-        color:white;
-    }
-
-    .table-container{
-        background:white;
-        border-radius:10px;
-        overflow:hidden;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-    }
-
-    table{
-        width:100%;
-        border-collapse:collapse;
-    }
-
-    thead{
-        background:#0A2E5C;
-        color:white;
-    }
-
-    th{
-        padding:15px;
-        text-align:left;
-    }
-
-    td{
-        padding:15px;
-        border-bottom:1px solid #eee;
-    }
-
-    .empty{
-        text-align:center;
-        color:gray;
-        padding:40px;
-    }
-
-    .view-btn{
-        border:none;
-        cursor:pointer;
-        padding:8px 14px;
-        border-radius:6px;
-        font-size:13px;
-        font-weight:bold;
-        text-decoration:none;
-        display:inline-block;
-        background:#e8f0fe;
-        color:#0A2E5C;
-    }
-
-    .view-btn:hover{
-        background:#cfe0fb;
-    }
-
-    .status-badge{
-        padding:5px 12px;
-        border-radius:20px;
-        font-size:12px;
-        font-weight:bold;
-        white-space:nowrap;
-    }
-
-    .status-resolved{
-        background:#e6f7ec;
-        color:#1e7e34;
-    }
-
-    .status-rejected{
-        background:#fdeaea;
-        color:#c0392b;
-    }
-
-    .status-inprogress{
-        background:#fff4e0;
-        color:#a15c00;
-    }
-
-    .status-default{
-        background:#e8f0fe;
-        color:#0A2E5C;
-    }
+}
 </style>
 {% endblock %}
 
+
 {% block content %}
 
-<div class="page-header">
-    <h2>Report History</h2>
-</div>
 
-<form method="get" class="search-section">
+<div class="filter-container">
 
-    <input type="text" name="q" placeholder="Search by report title..." value="{{ search_query }}">
+    <input
+        type="text"
+        id="reportSearch"
+        placeholder="Search report ID, title, citizen, or infrastructure..."
+        value="{{ search_query }}"
+    >
 
-    <select name="status">
-        <option value="">All Status</option>
+    <select id="statusFilter">
+        <option value="">All Report Statuses</option>
+
         {% for value, label in status_choices %}
-        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            <option
+                value="{{ value }}"
+                {% if status_filter == value %}selected{% endif %}
+            >
+                {{ label }}
+            </option>
         {% endfor %}
     </select>
 
-    <button type="submit">Search</button>
+    <select id="workOrderFilter">
+        <option value="">All Work Orders</option>
+        <option value="issued"
+            {% if work_order_filter == "issued" %}selected{% endif %}>
+            With Work Order
+        </option>
+        <option value="none"
+            {% if work_order_filter == "none" %}selected{% endif %}>
+            Without Work Order
+        </option>
+    </select>
 
-</form>
+</div>
+
+<div class="results-info">
+    Showing <strong id="visibleCount">{{ reports|length }}</strong>
+    of <strong id="totalCount">{{ reports|length }}</strong> reports
+</div>
 
 <div class="table-container">
 
     <table>
-
         <thead>
             <tr>
                 <th>No.</th>
@@ -163,45 +217,178 @@ Report History
                 <th>Citizen</th>
                 <th>Infrastructure</th>
                 <th>Status</th>
+                <th>Work Order</th>
                 <th>Date Reported</th>
                 <th>Actions</th>
             </tr>
         </thead>
 
-        <tbody>
+        <tbody id="reportTableBody">
 
             {% for report in reports %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ report.title }}</td>
-                <td>{{ report.citizen.get_full_name }}</td>
-                <td>{{ report.get_infrastructure_type_display }}</td>
-                <td>
-                    <span class="status-badge
-                        {% if report.status == 'Resolved' %}status-resolved
-                        {% elif report.status == 'Rejected' %}status-rejected
-                        {% elif report.status == 'In Progress' %}status-inprogress
-                        {% else %}status-default{% endif %}">
-                        {{ report.status }}
-                    </span>
+
+            <tr class="report-row"
+                data-status="{{ report.status|lower }}"
+                data-work-order="{% if report.work_order %}issued{% else %}none{% endif %}">
+
+                <td>#{{ report.report_id }}</td>
+
+                <td class="search-title">
+                    {{ report.title }}
                 </td>
-                <td>{{ report.reported_date|date:"M d, Y g:i A" }}</td>
-                <td>
-                    <a href="{% url 'view_report_history_detail' report.pk %}" class="view-btn">View</a>
+
+                <td class="search-citizen">
+                    {{ report.citizen.first_name }}
+                    {{ report.citizen.last_name }}
+                    <br>
+                    <small>@{{ report.citizen.username }}</small>
                 </td>
+
+                <td class="search-infrastructure">
+                    {{ report.get_infrastructure_type_display }}
+                </td>
+
+                <td>
+                    {% if report.status == "Resolved" %}
+                        <span class="status-badge resolved">
+                            {{ report.status }}
+                        </span>
+
+                    {% elif report.status == "Rejected" %}
+                        <span class="status-badge rejected">
+                            {{ report.status }}
+                        </span>
+
+                    {% elif report.status == "In Progress" %}
+                        <span class="status-badge inprogress">
+                            {{ report.status }}
+                        </span>
+
+                    {% elif report.status == "Work Order Issued" %}
+                        <span class="status-badge work-order-issued">
+                            {{ report.status }}
+                        </span>
+
+                    {% else %}
+                        <span class="status-badge default">
+                            {{ report.status }}
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if report.work_order %}
+                        <span class="status-badge resolved">
+                            WO #{{ report.work_order.pk }}
+                        </span>
+                        <br>
+                        <small>
+                            {{ report.work_order.get_status_display }}
+                        </small>
+                    {% else %}
+                        <span class="status-badge default">
+                            No Work Order
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ report.reported_date|date:"M d, Y" }}
+                </td>
+
+                <td>
+                    <a
+                        href="{% url 'view_report_history_detail' report.report_id %}?from=report_history"
+                        class="view-btn"
+                    >
+                        View Details
+                    </a>
+                </td>
+
             </tr>
+
             {% empty %}
+
             <tr>
-                <td colspan="7" class="empty">
+                <td colspan="8" style="text-align:center; padding:25px;">
                     No reports found.
                 </td>
             </tr>
+
             {% endfor %}
 
-        </tbody>
+            <tr id="noResultsRow" style="display:none;">
+                <td colspan="8" class="no-results">
+                    No matching reports found.
+                </td>
+            </tr>
 
+        </tbody>
     </table>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("reportSearch");
+    const statusFilter = document.getElementById("statusFilter");
+    const workOrderFilter = document.getElementById("workOrderFilter");
+
+    const rows = document.querySelectorAll(".report-row");
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+
+    totalCount.textContent = rows.length;
+
+    function filterReports() {
+
+        const searchValue = searchInput.value.toLowerCase().trim();
+        const selectedStatus = statusFilter.value.toLowerCase();
+        const selectedWorkOrder = workOrderFilter.value;
+
+        let count = 0;
+
+        rows.forEach(function (row) {
+
+            const rowText = row.innerText.toLowerCase();
+
+            const rowStatus = row.dataset.status;
+            const rowWorkOrder = row.dataset.workOrder;
+
+            const matchesSearch = rowText.includes(searchValue);
+
+            const matchesStatus =
+                !selectedStatus || rowStatus === selectedStatus;
+
+            const matchesWorkOrder =
+                !selectedWorkOrder || rowWorkOrder === selectedWorkOrder;
+
+            const shouldShow =
+                matchesSearch && matchesStatus && matchesWorkOrder;
+
+            row.style.display = shouldShow ? "" : "none";
+
+            if (shouldShow) {
+                count++;
+            }
+
+        });
+
+        visibleCount.textContent = count;
+
+        noResultsRow.style.display = count === 0 ? "table-row" : "none";
+    }
+
+    searchInput.addEventListener("input", filterReports);
+    statusFilter.addEventListener("change", filterReports);
+    workOrderFilter.addEventListener("change", filterReports);
+
+    filterReports();
+
+});
+</script>
 
 {% endblock %}

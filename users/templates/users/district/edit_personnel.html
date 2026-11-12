@@ -1,3 +1,4 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -10,240 +11,295 @@ Edit Personnel
 
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
-    }
 
-    .page-header h2{
-        color:#0A2E5C;
-    }
+.form-card{
+    background:#fff;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
 
-    .back-btn{
-        text-decoration:none;
-        background:#eee;
-        color:#333;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
-        transition:.3s;
-    }
+.section-title{
+    margin-bottom:15px;
+    color:#0A2E5C;
+}
 
-    .back-btn:hover{
-        background:#ddd;
-    }
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
 
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group label{
+    margin-bottom:6px;
+    font-weight:bold;
+    font-size:14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:14px;
+    box-sizing:border-box;
+    width:100%;
+}
+
+.form-group textarea{
+    resize:vertical;
+    min-height:90px;
+}
+
+.full-width{
+    grid-column:1 / -1;
+}
+
+.hint{
+    font-size:12px;
+    color:gray;
+    margin-top:4px;
+}
+
+.button-group{
+    margin-top:25px;
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+.cancel-btn{
+    padding:10px 20px;
+    text-decoration:none;
+    background:#6c757d;
+    color:white;
+    border-radius:6px;
+    font-size:14px;
+}
+
+.cancel-btn:hover{
+    background:#5a6268;
+}
+
+.save-btn{
+    padding:10px 20px;
+    border:none;
+    background:#0A2E5C;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.save-btn:hover{
+    background:#154A8A;
+}
+
+.password-wrapper {
+    position:relative;
+    display:flex;
+    align-items:center;
+}
+
+.password-wrapper input {
+    width:100%;
+    padding-right:60px;
+}
+
+.toggle-password {
+    position:absolute;
+    right:10px;
+    border:none;
+    background:transparent;
+    color:#0A2E5C;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:bold;
+}
+
+a {
+    text-decoration:none;
+}
+
+@media(max-width:600px){
     .form-card{
-        background:white;
-        border-radius:10px;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        padding:30px;
-        max-width:700px;
+        padding:18px;
     }
 
     .form-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:20px;
+        grid-template-columns:1fr;
+        gap:15px;
     }
 
-    .form-group{
-        display:flex;
-        flex-direction:column;
+    .full-width{
+        grid-column:auto;
     }
 
-    .form-group.full-width{
-        grid-column:1 / -1;
+    .button-group{
+        flex-direction:column-reverse;
     }
 
-    .form-group label{
-        font-size:13px;
-        font-weight:bold;
-        color:#333;
-        margin-bottom:6px;
+    .button-group a,
+    .button-group button{
+        width:100%;
+        text-align:center;
+        box-sizing:border-box;
     }
+}
 
-    .form-group input, .form-group select{
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
-        font-size:14px;
-    }
-
-    .hint{
-        font-size:12px;
-        color:gray;
-        margin-top:4px;
-    }
-
-    .form-actions{
-        margin-top:30px;
-        padding-top:20px;
-        border-top:1px solid #eee;
-        display:flex;
-        gap:10px;
-    }
-
-    .save-btn{
-        border:none;
-        cursor:pointer;
-        padding:10px 22px;
-        border-radius:8px;
-        font-size:14px;
-        font-weight:bold;
-        background:#0A2E5C;
-        color:white;
-        transition:.3s;
-    }
-
-    .save-btn:hover{
-        background:#154A8A;
-    }
-
-    .cancel-btn{
-        text-decoration:none;
-        padding:10px 22px;
-        border-radius:8px;
-        font-size:14px;
-        font-weight:bold;
-        background:#eee;
-        color:#333;
-    }
-
-    .cancel-btn:hover{
-        background:#ddd;
-    }
-
-    .password-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .password-wrapper input {
-        width: 100%;
-        padding-right: 60px;
-        box-sizing: border-box;
-    }
-
-    .toggle-password {
-        position: absolute;
-        right: 10px;
-        border: none;
-        background: transparent;
-        color: #0A2E5C;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-    a {
-        text-decoration: none;
-    }
-
-    a:hover {
-        text-decoration: none;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="page-header">
-
-    <h2>Edit Personnel</h2>
-
-    <a href="{% url 'personnel' %}" class="back-btn">
-        Back 
-    </a>
-
-</div>
-    
 <div class="form-card">
 
-    <form method="post">
+<form method="POST">
 
-        {% csrf_token %}
+    {% csrf_token %}
 
-        <div class="form-grid">
+    <h3 class="section-title">Account Information</h3>
 
-            <div class="form-group">
-                <label>First Name</label>
-                <input type="text" name="first_name" value="{{ person.user.first_name }}" required>
-            </div>
+    <div class="form-grid">
 
-            <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" name="last_name" value="{{ person.user.last_name }}" required>
-            </div>
-
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" value="{{ person.user.email }}" required>
-            </div>
-
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" value="{{ person.user.username }}" disabled>
-                <span class="hint">Username cannot be changed.</span>
-            </div>
-
-            <div class="form-group">
-                <label>Contact Number</label>
-                <input type="text" name="contact_number" value="{{ person.contact_number }}" required>
-            </div>
-
-            <div class="form-group">
-                <label>Position</label>
-                <select name="position" required>
-                    <option value="district_engineer" {% if person.position == "district_engineer" %}selected{% endif %}>District Engineer</option>
-                    <option value="fru" {% if person.position == "fru" %}selected{% endif %}>FRU Personnel</option>
-                    <option value="field_engineer" {% if person.position == "field_engineer" %}selected{% endif %}>Field Engineer</option>
-                </select>
-            </div>
-
-            <div class="form-group full-width">
-                <label>Address</label>
-                <input type="text" name="address" value="{{ person.address }}" required>
-            </div>
-
-            <div class="form-group full-width">
-                <label>New Password</label>
-
-                <div class="password-wrapper">
-                    <input type="password"
-                        name="new_password"
-                        id="new_password"
-                        placeholder="Leave blank to keep current password">
-
-                    <button type="button" class="toggle-password"
-                            onclick="togglePassword('new_password', this)">
-                        Show
-                    </button>
-                </div>
-
-                <span class="hint">
-                    Only fill this in if you want to reset the password.
-                </span>
-            </div>
-
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text"
+                   value="{{ person.user.username }}"
+                   disabled>
+            <span class="hint">Username cannot be changed.</span>
         </div>
 
-        <div class="form-actions">
-
-            <button type="submit" class="save-btn">
-                Save Changes
-            </button>
-
-            <a href="{% url 'personnel' %}" class="cancel-btn">
-                Cancel
-            </a>
-
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email"
+                   name="email"
+                   value="{{ person.user.email }}"
+                   required>
         </div>
 
-    </form>
+        <div class="form-group">
+            <label>New Password</label>
+
+            <div class="password-wrapper">
+                <input type="password"
+                       name="new_password"
+                       id="new_password"
+                       placeholder="Leave blank to keep current password">
+
+                <button type="button"
+                        class="toggle-password"
+                        onclick="togglePassword('new_password', this)">
+                    Show
+                </button>
+            </div>
+
+            <span class="hint">
+                Only fill this in if you want to reset the password.
+            </span>
+        </div>
+
+    </div>
+
+    <br>
+
+    <h3 class="section-title">Personnel Information</h3>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label>Employee ID</label>
+            <input type="text"
+                   value="{{ person.employee_id }}"
+                   disabled>
+        </div>
+
+        <div class="form-group">
+            <label>Position</label>
+
+            <select name="position" required>
+
+                <option value="district_engineer"
+                    {% if person.position == "district_engineer" %}selected{% endif %}>
+                    District Engineer
+                </option>
+
+                <option value="fru"
+                    {% if person.position == "fru" %}selected{% endif %}>
+                    FRU Personnel
+                </option>
+
+                <option value="field_engineer"
+                    {% if person.position == "field_engineer" %}selected{% endif %}>
+                    Field Engineer
+                </option>
+
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>First Name</label>
+            <input type="text"
+                   name="first_name"
+                   value="{{ person.user.first_name }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Last Name</label>
+            <input type="text"
+                   name="last_name"
+                   value="{{ person.user.last_name }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Contact Number</label>
+            <input type="text"
+                   name="contact_number"
+                   value="{{ person.contact_number }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Account Status</label>
+            <select name="is_active" required>
+                <option value="1" {% if person.user.is_active %}selected{% endif %}>
+                    Active
+                </option>
+
+                <option value="0" {% if not person.user.is_active %}selected{% endif %}>
+                    Inactive
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group full-width">
+            <label>Address</label>
+            <textarea name="address" required>{{ person.address }}</textarea>
+        </div>
+
+    </div>
+
+    <div class="button-group">
+
+        <a href="{% url 'personnel' %}" class="cancel-btn">
+            Cancel
+        </a>
+
+        <button type="submit" class="save-btn">
+            Save Changes
+        </button>
+
+    </div>
+
+</form>
 
 </div>
 
@@ -253,11 +309,12 @@ function togglePassword(inputId, button) {
 
     if (input.type === "password") {
         input.type = "text";
-        button.textContent = "hide";
+        button.textContent = "Hide";
     } else {
         input.type = "password";
-        button.textContent = "show";
+        button.textContent = "Show";
     }
 }
 </script>
+
 {% endblock %}

@@ -1,3 +1,4 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -7,143 +8,233 @@ Personnel Management
 {% block page_title %}
 Personnel Management
 {% endblock %}
+
 {% block style %}
 <style>
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
+    .page-header h2 {
+        color: #0A2E5C;
+        margin: 0;
     }
 
-    .add-btn{
-        text-decoration:none;
-        background:#0A2E5C;
-        color:white;
-        padding:10px 18px;
-        border-radius:8px;
-        font-weight:bold;
-        transition:.3s;
+    .add-btn {
+        text-decoration: none;
+        background: #0A2E5C;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: .3s;
+        white-space: nowrap;
     }
 
-    .add-btn:hover{
-        background:#154A8A;
+    .add-btn:hover {
+        background: #154A8A;
     }
 
-    .search-section{
-        display:flex;
-        gap:15px;
-        margin-bottom:25px;
+    /* Search and filter */
+    .search-section {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
     }
 
-    .search-section input{
-        flex:1;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
+    .search-section input,
+    .search-section select {
+        padding: 11px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        outline: none;
     }
 
-    .search-section select{
-        width:220px;
-        padding:10px;
-        border:1px solid #ccc;
-        border-radius:6px;
+    .search-section input {
+        flex: 1;
+        min-width: 0;
     }
 
-    .table-container{
-        background:white;
-        border-radius:10px;
-        overflow:hidden;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
+    .search-section select {
+        width: 220px;
     }
 
-    table{
-        width:100%;
-        border-collapse:collapse;
+    .search-section input:focus,
+    .search-section select:focus {
+        border-color: #0A2E5C;
+        box-shadow: 0 0 0 2px rgba(10, 46, 92, .08);
     }
 
-    thead{
-        background:#0A2E5C;
-        color:white;
+    .results-info {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 12px;
     }
 
-    th{
-        padding:15px;
-        text-align:left;
+    /* Table */
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        overflow-x: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
     }
 
-    td{
-        padding:15px;
-        border-bottom:1px solid #eee;
+    table {
+        width: 100%;
+        min-width: 850px;
+        border-collapse: collapse;
     }
 
-    .empty{
-        text-align:center;
-        color:gray;
-        padding:40px;
+    thead {
+        background: #0A2E5C;
+        color: white;
     }
 
-    .action-cell{
-        display:flex;
-        gap:8px;
+    th {
+        padding: 15px;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 13px;
     }
 
-    .view-btn, .edit-btn, .delete-btn{
-        border:none;
-        cursor:pointer;
-        padding:8px 14px;
-        border-radius:6px;
-        font-size:13px;
-        font-weight:bold;
-        text-decoration:none;
-        display:inline-block;
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        color: #334155;
     }
 
-    .view-btn{
-        background:#e8f0fe;
-        color:#0A2E5C;
+    tbody tr:hover {
+        background: #f8fafc;
     }
 
-    .view-btn:hover{
-        background:#cfe0fb;
+    tbody tr:last-child td {
+        border-bottom: none;
     }
 
-    .edit-btn{
-        background:#fff4e0;
-        color:#a15c00;
+    .empty {
+        text-align: center;
+        color: gray;
+        padding: 40px;
     }
 
-    .edit-btn:hover{
-        background:#ffe6bf;
+    /* Actions */
+    .action-cell {
+        display: flex;
+        gap: 8px;
+        align-items: center;
     }
 
-    .delete-btn{
-        background:#fdeaea;
-        color:#c0392b;
+    .view-btn,
+    .edit-btn,
+    .delete-btn {
+        border: none;
+        cursor: pointer;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        white-space: nowrap;
     }
 
-    .delete-btn:hover{
-        background:#f8d0d0;
+    .view-btn {
+        background: #e8f0fe;
+        color: #0A2E5C;
     }
 
-    .status-badge{
-        padding:5px 12px;
-        border-radius:20px;
-        font-size:12px;
-        font-weight:bold;
+    .view-btn:hover {
+        background: #cfe0fb;
     }
 
-    .status-active{
-        background:#e6f7ec;
-        color:#1e7e34;
+    .edit-btn {
+        background: #fff4e0;
+        color: #a15c00;
+    }
+
+    .edit-btn:hover {
+        background: #ffe6bf;
+    }
+
+    .delete-btn {
+        background: #fdeaea;
+        color: #c0392b;
+    }
+
+    .delete-btn:hover {
+        background: #f8d0d0;
+    }
+
+    /* Status */
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .status-active {
+        background: #e6f7ec;
+        color: #1e7e34;
+    }
+
+    .status-inactive {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+        .page-header {
+            align-items: flex-start;
+        }
+
+        .page-header h2 {
+            font-size: 21px;
+        }
+
+        .add-btn {
+            padding: 9px 12px;
+            font-size: 13px;
+        }
+
+        .search-section {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .search-section input,
+        .search-section select {
+            width: 100%;
+        }
+
+        .table-container {
+            border-radius: 8px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .page-header {
+            flex-direction: column;
+        }
+
+        .add-btn {
+            align-self: flex-start;
+        }
     }
 </style>
-
 {% endblock %}
+
+
 {% block content %}
 
 <div class="page-header">
@@ -156,73 +247,102 @@ Personnel Management
 
 </div>
 
+<!-- Search and Role Filter -->
 <div class="search-section">
 
     <input
         type="text"
-        placeholder="Search personnel...">
+        id="personnelSearch"
+        placeholder="Search personnel by name or username..."
+        autocomplete="off"
+    >
 
-    <select>
-
-        <option>All Roles</option>
-        <option>District Engineer</option>
-        <option>FRU Personnel</option>
-        <option>Field Engineer</option>
-
+    <select id="roleFilter" class="filter-select">
+        <option value="">All Roles</option>
+        <option value="district_engineer">District Engineer</option>
+        <option value="fru">FRU Personnel</option>
+        <option value="field_engineer">Field Engineer</option>
     </select>
 
 </div>
 
+<!-- Results Count -->
+<div class="results-info">
+    Showing <strong id="visibleCount">0</strong> of
+    <strong id="totalCount">0</strong> personnel records
+</div>
+
+<!-- Personnel Table -->
 <div class="table-container">
 
-    <table>
+    <table id="personnelTable">
 
         <thead>
-
             <tr>
-
                 <th>No.</th>
                 <th>Name</th>
                 <th>Username</th>
                 <th>Role</th>
                 <th>Status</th>
                 <th>Actions</th>
-
             </tr>
-
         </thead>
 
-        <tbody>
+        <tbody id="personnelTableBody">
 
             {% for person in personnel_list %}
 
-            <tr>
+            <tr class="personnel-row">
 
                 <td>{{ forloop.counter }}</td>
-                <td>{{ person.user.first_name }} {{ person.user.last_name }}</td>
-                <td>{{ person.user.username }}</td>
-                <td>{{ person.position }}</td>
-                <td>
-                    <span class="status-badge status-active">
-                        {% if person.user.is_active %}Active{% else %}Inactive{% endif %}
-                    </span>
+
+                <td class="person-name">
+                    {{ person.user.first_name }} {{ person.user.last_name }}
                 </td>
+
+                <td class="person-username">
+                    {{ person.user.username }}
+                </td>
+
+                <td class="person-role">
+                    {{ person.position }}
+                </td>
+
+                <td>
+                    {% if person.user.is_active %}
+                        <span class="status-badge status-active">
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            Inactive
+                        </span>
+                    {% endif %}
+                </td>
+
                 <td>
                     <div class="action-cell">
 
-                        <a href="{% url 'view_personnel' person.pk %}" class="view-btn">
+                        <a
+                            href="{% url 'view_personnel' person.pk %}"
+                            class="view-btn"
+                        >
                             View
                         </a>
 
-                        <a href="{% url 'edit_personnel' person.pk %}" class="edit-btn">
+                        <a
+                            href="{% url 'edit_personnel' person.pk %}"
+                            class="edit-btn"
+                        >
                             Edit
                         </a>
 
-                        <form method="post"
-                              action="{% url 'delete_personnel' person.pk %}"
-                              onsubmit="return confirm('Delete this personnel record? This cannot be undone.');"
-                              style="display:inline;">
-
+                        <form
+                            method="post"
+                            action="{% url 'delete_personnel' person.pk %}"
+                            onsubmit="return confirm('Delete this personnel record? This cannot be undone.');"
+                            style="display:inline;"
+                        >
                             {% csrf_token %}
 
                             <button type="submit" class="delete-btn">
@@ -239,21 +359,97 @@ Personnel Management
             {% empty %}
 
             <tr>
-
                 <td colspan="6" class="empty">
-
                     No personnel records found.
-
                 </td>
-
             </tr>
 
             {% endfor %}
+
+            <!-- No matching search results -->
+            <tr id="noResultsRow" style="display:none;">
+                <td colspan="6" class="empty">
+                    No matching personnel records found.
+                </td>
+            </tr>
 
         </tbody>
 
     </table>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const searchInput = document.getElementById("personnelSearch");
+    const roleFilter = document.getElementById("roleFilter");
+
+    const rows = document.querySelectorAll(".personnel-row");
+
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    totalCount.textContent = rows.length;
+
+    function filterPersonnel() {
+
+        const searchValue = searchInput.value
+            .toLowerCase()
+            .trim();
+
+        const selectedRole = roleFilter.value
+            .toLowerCase()
+            .trim();
+
+        let visible = 0;
+
+        rows.forEach(function(row) {
+
+            const name = row.querySelector(".person-name")
+                .textContent.toLowerCase();
+
+            const username = row.querySelector(".person-username")
+                .textContent.toLowerCase();
+
+            const role = row.querySelector(".person-role")
+                .textContent.trim().toLowerCase()
+                .replace(/\s+/g, "_");
+
+            const matchesSearch =
+                name.includes(searchValue) ||
+                username.includes(searchValue);
+
+            const selectedRole = roleFilter.value;
+            const matchesRole = selectedRole === "" || role === selectedRole;
+
+            if (matchesSearch && matchesRole) {
+
+                row.style.display = "";
+                visible++;
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+        visibleCount.textContent = visible;
+
+        noResultsRow.style.display =
+            visible === 0 && rows.length > 0 ? "" : "none";
+    }
+
+    searchInput.addEventListener("input", filterPersonnel);
+    roleFilter.addEventListener("change", filterPersonnel);
+
+    filterPersonnel();
+
+});
+</script>
 
 {% endblock %}

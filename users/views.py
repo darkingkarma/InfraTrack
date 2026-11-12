@@ -3,13 +3,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from reports.models import Feedback, Notification, IssueReport, ReportScreening
-from .models import User, Personnel, Citizen
+from .models import User, Personnel, Citizen, PendingCitizenRegistration
 from django.contrib import messages
 from datetime import date, timezone
 from datetime import datetime, timedelta
+from django.db import transaction, IntegrityError
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 from .serializers import ( CitizenRegisterSerializer, LoginSerializer, CitizenProfileSerializer, )
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
@@ -26,6 +28,7 @@ from django.contrib.auth import get_user_model
 from django.core import signing
 from django.core.mail import send_mail
 from django.urls import reverse
+from django.contrib.auth.hashers import make_password
 
 User = get_user_model()
 
@@ -224,6 +227,7 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+
 @login_required
 def add_personnel(request):
 
@@ -239,6 +243,7 @@ def add_personnel(request):
         contact_number = request.POST.get("contact_number")
         address = request.POST.get("address")
         position = request.POST.get("position")
+        is_active = request.POST.get("is_active", "1") == "1"
 
         # ----------------------------
         # Validation
@@ -276,6 +281,7 @@ def add_personnel(request):
             first_name=first_name,
             last_name=last_name,
             role=position,
+            is_active=is_active,
         )
 
         # ----------------------------
@@ -300,6 +306,76 @@ def add_personnel(request):
         return redirect("personnel")
 
     return render(request, "users/district/add_personnel.html")
+
+
+@login_required
+def edit_personnel(request, pk):
+
+    person = get_object_or_404(
+        Personnel.objects.select_related("user"),
+        pk=pk
+    )
+
+    user = person.user
+
+    if request.method == "POST":
+
+        email = request.POST.get("email")
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        contact_number = request.POST.get("contact_number")
+        address = request.POST.get("address")
+        position = request.POST.get("position")
+        new_password = request.POST.get("new_password")
+        is_active = request.POST.get("is_active", "1") == "1"
+
+        # ----------------------------
+        # Validation
+        # ----------------------------
+
+        if User.objects.filter(email=email).exclude(pk=user.pk).exists():
+
+            messages.error(
+                request,
+                "Email already in use by another account."
+            )
+
+            return redirect("edit_personnel", pk=pk)
+
+        # ----------------------------
+        # Update User
+        # ----------------------------
+
+        user.email = email
+        user.first_name = first_name
+        user.last_name = last_name
+        user.role = position
+        user.is_active = is_active
+
+        if new_password:
+            user.set_password(new_password)
+
+        user.save()
+
+        # ----------------------------
+        # Update Personnel
+        # ----------------------------
+
+        person.contact_number = contact_number
+        person.address = address
+        person.position = position
+        person.save()
+
+        messages.success(
+            request,
+            "Personnel updated successfully."
+        )
+
+        return redirect("personnel")
+
+    return render(request, "users/district/edit_personnel.html", {
+        "person": person
+    })
 
 
 def generate_employee_id():
@@ -356,62 +432,6 @@ def delete_personnel(request, pk):
         return redirect("personnel")
 
     return redirect("personnel")
-
-@login_required
-def edit_personnel(request, pk):
-
-    person = get_object_or_404(Personnel.objects.select_related("user"), pk=pk)
-    user = person.user
-
-    if request.method == "POST":
-
-        email = request.POST.get("email")
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        contact_number = request.POST.get("contact_number")
-        address = request.POST.get("address")
-        position = request.POST.get("position")
-        new_password = request.POST.get("new_password")
-
-        # ----------------------------
-        # Validation
-        # ----------------------------
-
-        if User.objects.filter(email=email).exclude(pk=user.pk).exists():
-
-            messages.error(request, "Email already in use by another account.")
-            return redirect("edit_personnel", pk=pk)
-
-        # ----------------------------
-        # Update User
-        # ----------------------------
-
-        user.email = email
-        user.first_name = first_name
-        user.last_name = last_name
-        user.role = position
-
-        if new_password:
-            user.set_password(new_password)
-
-        user.save()
-
-        # ----------------------------
-        # Update Personnel
-        # ----------------------------
-
-        person.contact_number = contact_number
-        person.address = address
-        person.position = position
-        person.save()
-
-        messages.success(request, "Personnel updated successfully.")
-
-        return redirect("personnel")
-
-    return render(request, "users/district/edit_personnel.html", {
-        "person": person
-    })
 
 @login_required
 def fru_dashboard(request):
@@ -1421,13 +1441,11 @@ def request_work_order_update(request, pk):
 
     return redirect("view_work_order", pk=pk)
 
+
 @login_required
 def report_history(request):
     from django.db.models import Q
     from reports.models import IssueReport
-
-    if not request.user.is_authenticated:
-        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
@@ -1436,12 +1454,15 @@ def report_history(request):
 
     search_query = request.GET.get("q", "").strip()
     status_filter = request.GET.get("status", "").strip()
+    work_order_filter = request.GET.get("work_order", "").strip()
 
     reports = IssueReport.objects.select_related(
         "citizen",
         "infrastructure",
+        "work_order",
     ).order_by("-reported_date")
 
+    # Search reports
     if search_query:
         search_filter = (
             Q(title__icontains=search_query)
@@ -1455,6 +1476,7 @@ def report_history(request):
 
         reports = reports.filter(search_filter)
 
+    # Filter by report status
     valid_statuses = [
         value for value, label in IssueReport.STATUS_CHOICES
     ]
@@ -1464,11 +1486,22 @@ def report_history(request):
     else:
         status_filter = ""
 
+    # Filter by Work Order existence
+    if work_order_filter == "issued":
+        reports = reports.filter(work_order__isnull=False)
+
+    elif work_order_filter == "none":
+        reports = reports.filter(work_order__isnull=True)
+
+    else:
+        work_order_filter = ""
+
     context = {
         "reports": reports,
         "search_query": search_query,
         "status_filter": status_filter,
         "status_choices": IssueReport.STATUS_CHOICES,
+        "work_order_filter": work_order_filter,
     }
 
     return render(
@@ -1480,6 +1513,7 @@ def report_history(request):
 
 @login_required
 def view_report_history_detail(request, pk):
+    from django.urls import reverse
     from django.db.models import Prefetch
     from reports.models import (
         IssueReport,
@@ -1487,9 +1521,6 @@ def view_report_history_detail(request, pk):
         InspectionValidation,
         RepairUpdate,
     )
-
-    if not request.user.is_authenticated:
-        return redirect("login")
 
     if request.user.role != "district_engineer":
         return HttpResponseForbidden(
@@ -1539,14 +1570,33 @@ def view_report_history_detail(request, pk):
             report.work_order.history_repair_updates
         )
 
+    # Determine where the user came from
+    return_pages = {
+        "validated_reports": {
+            "url": reverse("validated_reports"),
+            "label": "Back to Validated Reports",
+        },
+        "report_history": {
+            "url": reverse("report_history"),
+            "label": "Back to Report History",
+        },
+    }
+
+    return_page = request.GET.get("from", "report_history")
+    back_page = return_pages.get(
+        return_page,
+        return_pages["report_history"],
+    )
+
     return render(
         request,
         "users/district/view_report_history.html",
         {
             "report": report,
+            "back_url": back_page["url"],
+            "back_label": back_page["label"],
         },
     )
-
 
 
 def landing_page(request):
@@ -1554,80 +1604,100 @@ def landing_page(request):
 
 #important dont delete
 
+
 class CitizenRegisterAPIView(APIView):
 
     def post(self, request):
-        serializer = CitizenRegisterSerializer(
-            data=request.data
+        serializer = CitizenRegisterSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = serializer.validated_data.copy()
+        data.pop("confirm_password")
+
+        password = data.pop("password")
+
+        # Prevent duplicate pending registrations.
+        if PendingCitizenRegistration.objects.filter(
+            username=data["username"]
+        ).exists():
+            return Response(
+                {"username": ["A registration with this username is already pending verification."]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if PendingCitizenRegistration.objects.filter(
+            email=data["email"]
+        ).exists():
+            return Response(
+                {"email": ["A registration with this email is already pending verification."]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Save pending details only; do not create a User yet.
+        pending = PendingCitizenRegistration.objects.create(
+            **data,
+            password_hash=make_password(password)
         )
 
-        if serializer.is_valid():
-            user = serializer.save()
+        verification_token = signing.dumps(
+            pending.pk,
+            salt="citizen-email-verification"
+        )
 
-            # Prevent login until email verification.
-            user.is_active = False
-            user.save(update_fields=["is_active"])
-
-            # Generate a signed, time-limited verification token.
-            verification_token = signing.dumps(
-                user.pk,
-                salt="citizen-email-verification"
+        verification_url = (
+            request.build_absolute_uri(
+                reverse("verify-citizen-email")
             )
+            + "?token="
+            + verification_token
+        )
 
-            verification_url = (
-                request.build_absolute_uri(
-                    reverse("verify-citizen-email")
-                )
-                + "?token="
-                + verification_token
-            )
-
-            # Send verification email.
-            try:
-                send_mail(
-                    subject="Verify Your InfraTrack Email",
-                    message=(
-                        f"Hello {user.first_name},\n\n"
-                        "Thank you for registering with InfraTrack.\n"
-                        "Please open the link below to verify your email:\n\n"
-                        f"{verification_url}\n\n"
-                        "This link expires after 24 hours.\n\n"
-                        "If you did not create this account, "
-                        "you can ignore this email."
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                print("EMAIL SENDING ERROR:", repr(e))
-                return Response({
-                    "message": (
-                        "Your account was created, but the "
-                        "verification email could not be sent. "
-                        "Please contact support to resend it."
-                    )
-                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            return Response({
-                "message": (
-                    "Registration successful. "
-                    "Please check your email to verify your account."
+        try:
+            send_mail(
+                subject="Verify Your InfraTrack Email",
+                message=(
+                    f"Hello {pending.first_name},\n\n"
+                    "Thank you for registering with InfraTrack.\n"
+                    "Click the link below to verify your email and complete registration:\n\n"
+                    f"{verification_url}\n\n"
+                    "This link expires after 24 hours.\n\n"
+                    "If you did not register, you can ignore this email."
                 ),
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                    "role": user.role,
-                }
-            }, status=status.HTTP_201_CREATED)
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[pending.email],
+                fail_silently=False,
+            )
+
+        except Exception:
+            pending.delete()
+
+            return Response(
+                {
+                    "message": (
+                        "We could not send the verification email. "
+                        "No account was created. Please try again later."
+                    )
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
 
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "message": (
+                    "A verification email has been sent. "
+                    "Verify your email to complete registration."
+                )
+            },
+            status=status.HTTP_200_OK
         )
+
+
+
 
 class CitizenVerifyEmailAPIView(APIView):
 
@@ -1635,61 +1705,132 @@ class CitizenVerifyEmailAPIView(APIView):
         token = request.query_params.get("token")
 
         if not token:
-            return Response({
-                "message": "Verification token is missing."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return render(
+                request,
+                "users/citizen_email_error.html",
+                {"message": "The verification token is missing."},
+                status=400
+            )
 
         try:
-            user_id = signing.loads(
+            pending_id = signing.loads(
                 token,
                 salt="citizen-email-verification",
                 max_age=86400
             )
 
-            user = User.objects.get(pk=user_id)
-
         except signing.SignatureExpired:
-            return Response({
-                "message": (
-                    "Verification link expired. "
-                    "Please request a new verification email."
-                )
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        except (signing.BadSignature, User.DoesNotExist):
-            return Response({
-                "message": "Invalid verification link."
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if user.is_active:
-            return Response({
-                "message": "Your email is already verified."
-            }, status=status.HTTP_200_OK)
-
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-
-        return Response({
-            "message": (
-                "Email verified successfully. "
-                "You can now log in to InfraTrack."
+            return render(
+                request,
+                "users/citizen_email_error.html",
+                {"message": "Your verification link has expired. Please register again."},
+                status=400
             )
-        }, status=status.HTTP_200_OK)
+
+        except signing.BadSignature:
+            return render(
+                request,
+                "users/citizen_email_error.html",
+                {"message": "This verification link is invalid."},
+                status=400
+            )
+
+        try:
+            pending = PendingCitizenRegistration.objects.get(
+                pk=pending_id
+            )
+
+        except PendingCitizenRegistration.DoesNotExist:
+            return render(
+                request,
+                "users/citizen_email_error.html",
+                {"message": "This registration has already been completed or cancelled."},
+                status=400
+            )
+
+        # Check for duplicate username or email.
+        if User.objects.filter(
+            username=pending.username
+        ).exists() or User.objects.filter(
+            email=pending.email
+        ).exists():
+
+            pending.delete()
+
+            return render(
+                request,
+                "users/citizen_email_error.html",
+                {
+                    "message": (
+                        "This username or email is already registered. "
+                        "Please start registration again."
+                    )
+                },
+                status=400
+            )
+
+        try:
+            with transaction.atomic():
+
+                user = User.objects.create(
+                    username=pending.username,
+                    first_name=pending.first_name,
+                    last_name=pending.last_name,
+                    email=pending.email,
+                    password=pending.password_hash,
+                    role="citizen",
+                    is_active=True
+                )
+
+                Citizen.objects.create(
+                    user=user,
+                    contact_number=pending.contact_number,
+                    address=pending.address
+                )
+
+                pending.delete()
+
+        except IntegrityError:
+            return render(
+                request,
+                "users/citizen_email_error.html",
+                {
+                    "message": (
+                        "Registration could not be completed because "
+                        "the username or email may already be registered. "
+                        "Please try again."
+                    )
+                },
+                status=400
+            )
+
+        return render(
+            request,
+            "users/citizen_email_verified.html"
+        )
+
 
 
 class LoginAPIView(APIView):
 
     def post(self, request):
-        serializer = LoginSerializer(
-            data=request.data
-        )
+        serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
             user = serializer.validated_data["user"]
 
-            token, created = Token.objects.get_or_create(
-                user=user
-            )
+            # Block citizens who have not verified their email.
+            if user.role == "citizen" and not user.is_active:
+                return Response(
+                    {
+                        "message": (
+                            "Please verify your email before logging in."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            token, created = Token.objects.get_or_create(user=user)
 
             return Response({
                 "message": "Login successful.",
@@ -1709,6 +1850,22 @@ class LoginAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+class VerifyTokenAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        return Response({
+            "valid": True,
+            "user": {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "role": user.role,
+            }
+        }, status=status.HTTP_200_OK)
 
 class CitizenProfileAPIView(APIView):
 
@@ -2192,3 +2349,248 @@ def feedback_list(request):
     return render(request, 'users/district/feedback_list.html', {
         'feedbacks': feedbacks
     })
+
+
+@login_required
+def personnel_reports(request):
+    from datetime import datetime, time, timedelta
+    from django.utils import timezone
+    from reports.models import (
+        ReportScreening,
+        InspectionValidation,
+        RepairUpdate,
+        WorkOrder,
+    )
+    from .models import Personnel
+
+    if request.user.role != "district_engineer":
+        return HttpResponseForbidden(
+            "Only District Engineer can access Personnel Reports."
+        )
+
+    today = timezone.localdate()
+    first_day = today.replace(day=1)
+
+    # Read date filters. Default: current month.
+    start_date_text = request.GET.get(
+        "start_date", first_day.isoformat()
+    )
+    end_date_text = request.GET.get(
+        "end_date", today.isoformat()
+    )
+
+    try:
+        start_date = datetime.strptime(
+            start_date_text, "%Y-%m-%d"
+        ).date()
+        end_date = datetime.strptime(
+            end_date_text, "%Y-%m-%d"
+        ).date()
+    except ValueError:
+        start_date = first_day
+        end_date = today
+        start_date_text = start_date.isoformat()
+        end_date_text = end_date.isoformat()
+
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+        start_date_text = start_date.isoformat()
+        end_date_text = end_date.isoformat()
+
+    # Convert the selected local dates into timezone-aware datetimes.
+    # This avoids relying on MariaDB timezone tables for __date lookups.
+
+    start_datetime = timezone.make_aware(
+        datetime.combine(start_date, time.min),
+        timezone.get_current_timezone()
+    )
+
+    end_datetime = timezone.make_aware(
+        datetime.combine(end_date + timedelta(days=1), time.min),
+        timezone.get_current_timezone()
+    )
+
+    selected_role = request.GET.get("role", "").strip()
+    selected_personnel = request.GET.get("personnel", "").strip()
+
+    personnel_list = Personnel.objects.select_related(
+        "user"
+    ).filter(
+        position__in=["fru", "field_engineer", "district_engineer"]
+    ).order_by("user__last_name", "user__first_name")
+
+    events = []
+
+    def add_event(activity_date, person, role, activity, accomplishment):
+        if not activity_date:
+            return
+
+        if not (start_date <= timezone.localtime(activity_date).date() <= end_date):
+            return
+
+        if selected_role and role != selected_role:
+            return
+
+        person_id = str(person.pk) if person else ""
+
+        if selected_personnel and person_id != selected_personnel:
+            return
+
+        if person:
+            full_name = person.user.get_full_name().strip()
+            employee_name = full_name or person.user.username
+        else:
+            employee_name = "Personnel record unavailable"
+
+        role_label = {
+            "fru": "FRU Personnel",
+            "field_engineer": "Field Engineer",
+            "district_engineer": "District Engineer",
+        }.get(role, "Unknown")
+
+        events.append({
+            "date": activity_date,
+            "employee": employee_name,
+            "role": role_label,
+            "role_value": role,
+            "activity": activity,
+            "accomplishment": accomplishment,
+            "personnel_id": person_id,
+            "event_type": activity,
+        })
+
+    # 1. FRU screening activities
+    screenings = ReportScreening.objects.select_related(
+    "screened_by__user", "report"
+    ).filter(
+        screening_date__gte=start_datetime,
+        screening_date__lt=end_datetime,
+    )
+
+    for item in screenings:
+        person = item.screened_by
+        add_event(
+            item.screening_date,
+            person,
+            "fru",
+            "Report Screening",
+            f'Report #{item.report_id}: {item.screening_result}',
+        )
+
+    # 2. Field Engineer inspection activities
+    inspections = InspectionValidation.objects.select_related(
+    "inspected_by__user", "report"
+    ).filter(
+        inspection_date__gte=start_datetime,
+        inspection_date__lt=end_datetime,
+    )
+
+    for item in inspections:
+        person = item.inspected_by
+        add_event(
+            item.inspection_date,
+            person,
+            "field_engineer",
+            "Site Inspection",
+            f'Report #{item.report_id}: {item.validation_result}',
+        )
+
+    # 3. Field Engineer repair progress updates
+    repair_updates = RepairUpdate.objects.select_related(
+    "submitted_by__user", "work_order__report"
+    ).filter(
+        update_date__gte=start_datetime,
+        update_date__lt=end_datetime,
+    )
+
+    for item in repair_updates:
+        person = item.submitted_by
+        add_event(
+            item.update_date,
+            person,
+            "field_engineer",
+            "Repair Progress Update",
+            (
+                f'Work Order #{item.work_order_id}: '
+                f'{item.status_update}'
+            ),
+        )
+
+    # 4. Work orders issued by personnel
+    work_orders = WorkOrder.objects.select_related(
+        "issued_by__user",
+        "assigned_field_engineer__user",
+        "report",
+    )
+
+    issued_orders = work_orders.filter(
+        date_issued__gte=start_datetime,
+        date_issued__lt=end_datetime,
+    )
+
+    for item in issued_orders:
+        add_event(
+            item.date_issued,
+            item.issued_by,
+            "district_engineer",
+            "Work Order Issued",
+            f'Work Order #{item.pk} for Report #{item.report_id}',
+        )
+
+    # 5. Work orders completed by the assigned Field Engineer
+    completed_orders = work_orders.filter(
+        date_completed__gte=start_datetime,
+        date_completed__lt=end_datetime,
+        date_completed__isnull=False,
+    )
+
+    for item in completed_orders:
+        add_event(
+            item.date_completed,
+            item.assigned_field_engineer,
+            "field_engineer",
+            "Work Order Completed",
+            f'Work Order #{item.pk} for Report #{item.report_id}',
+        )
+
+    # Sort newest activity first
+    events.sort(key=lambda item: item["date"], reverse=True)
+
+    # Summary cards use the filtered activity records.
+    total_screenings = sum(
+        1 for e in events if e["activity"] == "Report Screening"
+    )
+    total_inspections = sum(
+        1 for e in events if e["activity"] == "Site Inspection"
+    )
+    total_work_orders = sum(
+        1 for e in events
+        if e["activity"] in [
+            "Work Order Issued",
+            "Work Order Completed",
+            "Repair Progress Update",
+        ]
+    )
+
+    personnel_ids = {
+        e["personnel_id"] for e in events if e["personnel_id"]
+    }
+
+    context = {
+        "events": events,
+        "personnel_list": personnel_list,
+        "start_date": start_date_text,
+        "end_date": end_date_text,
+        "selected_role": selected_role,
+        "selected_personnel": selected_personnel,
+        "total_screenings": total_screenings,
+        "total_inspections": total_inspections,
+        "total_work_orders": total_work_orders,
+        "total_personnel": len(personnel_ids),
+    }
+
+    return render(
+        request,
+        "users/district/personnel_reports.html",
+        context,
+    )

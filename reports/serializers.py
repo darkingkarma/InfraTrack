@@ -71,6 +71,7 @@ class RepairUpdateSerializer(serializers.ModelSerializer):
         return None
 
 
+
 class WorkOrderSerializer(serializers.ModelSerializer):
     report_title = serializers.CharField(
         source="report.title",
@@ -80,6 +81,22 @@ class WorkOrderSerializer(serializers.ModelSerializer):
         source="report.report_id",
         read_only=True,
     )
+    report_latitude = serializers.FloatField(
+        source="report.latitude",
+        read_only=True,
+        allow_null=True,
+    )
+    report_longitude = serializers.FloatField(
+        source="report.longitude",
+        read_only=True,
+        allow_null=True,
+    )
+    report_address = serializers.CharField(
+        source="report.geographic_address",
+        read_only=True,
+        allow_null=True,
+    )
+
     assigned_field_engineer_name = serializers.SerializerMethodField()
     approved_by_name = serializers.SerializerMethodField()
     repair_updates = RepairUpdateSerializer(many=True, read_only=True)
@@ -91,6 +108,9 @@ class WorkOrderSerializer(serializers.ModelSerializer):
             "report",
             "report_id",
             "report_title",
+            "report_latitude",
+            "report_longitude",
+            "report_address",
             "assigned_field_engineer",
             "assigned_field_engineer_name",
             "issued_by",
@@ -112,6 +132,17 @@ class WorkOrderSerializer(serializers.ModelSerializer):
             "status",
             "date_completed",
         ]
+
+    def get_assigned_field_engineer_name(self, obj):
+        if obj.assigned_field_engineer:
+            return obj.assigned_field_engineer.user.get_full_name()
+        return None
+
+    def get_approved_by_name(self, obj):
+        if obj.approved_by:
+            return obj.approved_by.user.get_full_name()
+        return None
+
 
     def get_assigned_field_engineer_name(self, obj):
         if obj.assigned_field_engineer:
@@ -345,6 +376,12 @@ class IssueReportSerializer(serializers.ModelSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
+    report_id = serializers.IntegerField(
+        source="report.report_id",
+        read_only=True,
+        allow_null=True,
+    )
+
     class Meta:
         model = Notification
         fields = [
@@ -353,6 +390,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "title",
             "message",
             "report",
+            "report_id",
             "is_read",
             "created_at",
         ]

@@ -1,505 +1,727 @@
+
 {% extends "users/master.html" %}
 
-{% block title %}
-Infrastructure Details
-{% endblock %}
-
-{% block page_title %}
-Infrastructure Details
-{% endblock %}
+{% block title %}Infrastructure Details{% endblock %}
+{% block page_title %}Infrastructure Details{% endblock %}
 
 {% block style %}
 <meta name="referrer" content="strict-origin-when-cross-origin">
+
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
 
 <style>
+* {
+    box-sizing: border-box;
+}
 
-    .page-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:25px;
+.details-container {
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.page-header h2 {
+    margin: 0;
+    color: #0A2E5C;
+    font-size: 23px;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 7px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-back {
+    color: #334155;
+    background: #e2e8f0;
+}
+
+.btn-edit {
+    color: white;
+    background: #0A2E5C;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Cards */
+.details-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+    min-width: 0;
+}
+
+.card-title {
+    margin: 0 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #0A2E5C;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+/* Information grid */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 30px;
+}
+
+.detail-item {
+    min-width: 0;
+}
+
+.detail-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* Type badges */
+.type-badge,
+.status-badge {
+    display: inline-block;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Infrastructure types */
+.type-road {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.type-bridge {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.type-drainage {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Statuses */
+.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-maintenance {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-closed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-default {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+/* Image gallery */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    width: 100%;
+}
+
+.image-gallery-item {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.image-gallery-item img {
+    display: block;
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+}
+
+.image-gallery-item:hover img {
+    transform: scale(1.04);
+}
+
+.image-caption {
+    padding: 9px 10px;
+    color: #64748b;
+    font-size: 12px;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+}
+
+.empty-images {
+    grid-column: 1 / -1;
+    padding: 25px 15px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    background: #f8fafc;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Map */
+#map {
+    width: 100%;
+    height: 340px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    z-index: 1;
+}
+
+.map-unavailable {
+    padding: 25px;
+    text-align: center;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.map-link {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 14px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.map-link:hover {
+    text-decoration: underline;
+}
+
+.coordinates {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Image preview modal */
+.image-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.90);
+    justify-content: center;
+    align-items: center;
+}
+
+.image-modal.active {
+    display: flex;
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.modal-image {
+    display: block;
+    max-width: 90%;
+    max-height: 85vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: white;
+    color: #0f172a;
+    font-size: 26px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: #e2e8f0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .details-container {
+        padding: 12px;
     }
 
-    .page-header h2{
-        color:#0A2E5C;
-        margin:0;
+    .details-card {
+        padding: 18px;
     }
 
-    .page-header p{
-        margin:5px 0 0;
-        color:#777;
+    .details-grid {
+        grid-template-columns: 1fr;
+        gap: 17px;
     }
 
-    .button-group{
-        display:flex;
-        gap:10px;
+    .image-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+        gap: 10px;
     }
 
-    .back-btn,
-    .edit-btn{
-        padding:10px 18px;
-        border-radius:6px;
-        text-decoration:none;
-        font-weight:bold;
+    .image-gallery-item img {
+        height: 115px;
     }
 
-    .back-btn{
-        background:#6c757d;
-        color:white;
+    #map {
+        height: 280px;
     }
 
-    .edit-btn{
-        background:#0A2E5C;
-        color:white;
+    .page-header h2 {
+        font-size: 21px;
+    }
+}
+
+@media (max-width: 480px) {
+    .details-container {
+        padding: 8px;
     }
 
-    .back-btn:hover{
-        background:#555;
+    .page-header {
+        align-items: flex-start;
     }
 
-    .edit-btn:hover{
-        background:#154A8A;
+    .header-actions {
+        width: 100%;
     }
 
-    .details-card{
-        background:white;
-        border-radius:10px;
-        padding:25px;
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        margin-bottom:20px;
+    .header-actions .btn {
+        flex: 1;
+        text-align: center;
+        padding: 10px 8px;
+        font-size: 13px;
     }
 
-    .section-title{
-        color:#0A2E5C;
-        margin-top:0;
-        margin-bottom:20px;
-        padding-bottom:10px;
-        border-bottom:1px solid #eee;
+    .details-card {
+        padding: 14px;
+        margin-bottom: 14px;
     }
 
-    .details-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:20px;
+    .card-title {
+        font-size: 16px;
+        margin-bottom: 16px;
     }
 
-    .detail-item{
-        display:flex;
-        flex-direction:column;
+    .image-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
     }
 
-    .detail-label{
-        font-size:13px;
-        color:#777;
-        margin-bottom:5px;
+    .image-gallery-item img {
+        height: 105px;
     }
 
-    .detail-value{
-        font-size:15px;
-        font-weight:bold;
-        color:#333;
+    #map {
+        height: 240px;
     }
 
-    .full-width{
-        grid-column:1 / -1;
+    .image-modal {
+        padding: 12px;
     }
 
-    .status-badge{
-        display:inline-block;
-        width:max-content;
-        padding:5px 12px;
-        border-radius:20px;
-        font-size:12px;
-        font-weight:bold;
+    .modal-image {
+        max-width: 100%;
+        max-height: 78vh;
     }
-
-    .status-active{
-        background:#e6f7ec;
-        color:#1e7e34;
-    }
-
-    .status-maintenance{
-        background:#fff4e0;
-        color:#a15c00;
-    }
-
-    .status-closed{
-        background:#fdeaea;
-        color:#c0392b;
-    }
-
-    .coordinates{
-        font-family:monospace;
-        font-weight:normal;
-    }
-
-    /* MAP */
-
-    .map-container{
-        width:100%;
-        height:400px;
-        border-radius:8px;
-        overflow:hidden;
-        margin-top:20px;
-    }
-
-    #map{
-        width:100%;
-        height:100%;
-    }
-
-    .map-note{
-        margin-top:10px;
-        font-size:13px;
-        color:#777;
-    }
-
-    @media(max-width:700px){
-
-        .page-header{
-            flex-direction:column;
-            align-items:flex-start;
-            gap:15px;
-        }
-
-        .details-grid{
-            grid-template-columns:1fr;
-        }
-
-        .full-width{
-            grid-column:auto;
-        }
-
-        .button-group{
-            width:100%;
-        }
-
-        .back-btn,
-        .edit-btn{
-            flex:1;
-            text-align:center;
-        }
-
-        .map-container{
-            height:300px;
-        }
-
-    }
-
+}
 </style>
 {% endblock %}
 
 
 {% block content %}
+<div class="details-container">
 
-<div class="page-header">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>Infrastructure Details</h2>
 
-    <div>
-        <h2>{{ infrastructure.infra_name }}</h2>
+        <div class="header-actions">
+            <a href="{% url 'infrastructure_list' %}" class="btn btn-back">
+                Back to List
+            </a>
 
-        <p>
-            Infrastructure ID:
-            {{ infrastructure.infrastructure_id }}
-        </p>
+            <a
+                href="{% url 'infrastructure-edit' infrastructure.infrastructure_id %}"
+                class="btn btn-edit"
+            >
+                Edit Infrastructure
+            </a>
+        </div>
     </div>
 
-    <div class="button-group">
 
-        <a
-            href="{% url 'infrastructure_list' %}"
-            class="back-btn">
-            ← Back
-        </a>
+    <!-- Infrastructure Information -->
+    <div class="details-card">
+        <h3 class="card-title">Infrastructure Information</h3>
 
-        <a
-            href="{% url 'infrastructure-edit' infrastructure.infrastructure_id %}"
-            class="edit-btn">
-            Edit
-        </a>
+        <div class="details-grid">
 
+            <div class="detail-item">
+                <span class="detail-label">Infrastructure ID</span>
+                <div class="detail-value">
+                    {{ infrastructure.infrastructure_id }}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Infrastructure Name</span>
+                <div class="detail-value">
+                    {{ infrastructure.infra_name|default:"Not provided" }}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Infrastructure Type</span>
+                <div class="detail-value">
+                    {% if infrastructure.infra_type == "road" %}
+                        <span class="type-badge type-road">Road</span>
+                    {% elif infrastructure.infra_type == "bridge" %}
+                        <span class="type-badge type-bridge">Bridge</span>
+                    {% elif infrastructure.infra_type == "drainage" %}
+                        <span class="type-badge type-drainage">Drainage</span>
+                    {% else %}
+                        {{ infrastructure.get_infra_type_display|default:infrastructure.infra_type|default:"Not specified" }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <div class="detail-value">
+                    {% if infrastructure.status == "active" %}
+                        <span class="status-badge status-active">Active</span>
+                    {% elif infrastructure.status == "maintenance" %}
+                        <span class="status-badge status-maintenance">Maintenance</span>
+                    {% elif infrastructure.status == "closed" %}
+                        <span class="status-badge status-closed">Closed</span>
+                    {% else %}
+                        <span class="status-badge status-default">
+                            {{ infrastructure.get_status_display|default:infrastructure.status|default:"Not specified" }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Road Classification</span>
+                <div class="detail-value">
+                    {{ infrastructure.road_classification|default:"Not applicable" }}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Managed By</span>
+                <div class="detail-value">
+                    {% if infrastructure.managed_by %}
+                        {{ infrastructure.managed_by.user.get_full_name|default:infrastructure.managed_by.user.username }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Location Description</span>
+                <div class="detail-value">
+                    {{ infrastructure.location_description|default:"Not provided" }}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Date Added</span>
+                <div class="detail-value">
+                    {{ infrastructure.date_added|date:"F d, Y"|default:"Not available" }}
+                </div>
+            </div>
+
+        </div>
     </div>
 
-</div>
 
+    <!-- Regular Images -->
+    <div class="details-card">
+        <h3 class="card-title">Infrastructure Images</h3>
 
-<!-- INFRASTRUCTURE INFORMATION -->
-
-<div class="details-card">
-
-    <h3 class="section-title">
-        Infrastructure Information
-    </h3>
-
-    <div class="details-grid">
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Infrastructure ID
-            </span>
-
-            <span class="detail-value">
-                {{ infrastructure.infrastructure_id }}
-            </span>
-
+        <div class="image-gallery">
+            {% for image in regular_images %}
+                <div class="image-gallery-item">
+                    <img
+                        src="{{ image.image.url }}"
+                        alt="Infrastructure image {{ forloop.counter }}"
+                        loading="lazy"
+                        onclick="openImageModal(this.src, this.alt)"
+                    >
+                    <div class="image-caption">
+                        Image {{ forloop.counter }}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-images">
+                    No regular images available.
+                </div>
+            {% endfor %}
         </div>
-
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Infrastructure Type
-            </span>
-
-            <span class="detail-value">
-                {{ infrastructure.get_infra_type_display }}
-            </span>
-
-        </div>
-
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Infrastructure Name
-            </span>
-
-            <span class="detail-value">
-                {{ infrastructure.infra_name }}
-            </span>
-
-        </div>
-
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Road Classification
-            </span>
-
-            <span class="detail-value">
-                {{ infrastructure.road_classification|default:"—" }}
-            </span>
-
-        </div>
-
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Status
-            </span>
-
-            <span>
-
-                {% if infrastructure.status == "active" %}
-
-                    <span class="status-badge status-active">
-                        Active
-                    </span>
-
-                {% elif infrastructure.status == "maintenance" %}
-
-                    <span class="status-badge status-maintenance">
-                        Maintenance
-                    </span>
-
-                {% elif infrastructure.status == "closed" %}
-
-                    <span class="status-badge status-closed">
-                        Closed
-                    </span>
-
-                {% endif %}
-
-            </span>
-
-        </div>
-
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Managed By
-            </span>
-
-            <span class="detail-value">
-
-                {% if infrastructure.managed_by %}
-                    {{ infrastructure.managed_by.user.get_full_name }}
-                {% else %}
-                    —
-                {% endif %}
-
-            </span>
-
-        </div>
-
     </div>
 
-</div>
 
+    <!-- Satellite Images -->
+    <div class="details-card">
+        <h3 class="card-title">Satellite Images</h3>
 
-<!-- LOCATION INFORMATION -->
-
-<div class="details-card">
-
-    <h3 class="section-title">
-        Location Information
-    </h3>
-
-    <div class="details-grid">
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Latitude
-            </span>
-
-            <span class="detail-value coordinates">
-                {{ infrastructure.latitude }}
-            </span>
-
+        <div class="image-gallery">
+            {% for image in satellite_images %}
+                <div class="image-gallery-item">
+                    <img
+                        src="{{ image.image.url }}"
+                        alt="Satellite image {{ forloop.counter }}"
+                        loading="lazy"
+                        onclick="openImageModal(this.src, this.alt)"
+                    >
+                    <div class="image-caption">
+                        Satellite Image {{ forloop.counter }}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-images">
+                    No satellite images available.
+                </div>
+            {% endfor %}
         </div>
-
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Longitude
-            </span>
-
-            <span class="detail-value coordinates">
-                {{ infrastructure.longitude }}
-            </span>
-
-        </div>
-
-
-        <div class="detail-item full-width">
-
-            <span class="detail-label">
-                Location Description
-            </span>
-
-            <span class="detail-value">
-
-                {{ infrastructure.location_description|default:"No location description provided." }}
-
-            </span>
-
-        </div>
-
     </div>
 
-</div>
 
+    <!-- Infrastructure Location -->
+    <div class="details-card">
+        <h3 class="card-title">Infrastructure Location</h3>
 
-<!-- MAP -->
+        {% if infrastructure.latitude != None and infrastructure.longitude != None %}
 
-<div class="details-card">
+            <div
+                id="map"
+                data-latitude="{{ infrastructure.latitude }}"
+                data-longitude="{{ infrastructure.longitude }}"
+                data-name="{{ infrastructure.infra_name|default:'Infrastructure Location' }}"
+            ></div>
 
-    <h3 class="section-title">
-        Infrastructure Location Map
-    </h3>
+            <a
+                class="map-link"
+                href="https://www.google.com/maps?q={{ infrastructure.latitude }},{{ infrastructure.longitude }}"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Open Location in Google Maps
+            </a>
 
-    <div class="map-container">
+            <div class="details-grid coordinates">
+                <div class="detail-item">
+                    <span class="detail-label">Latitude</span>
+                    <div class="detail-value">
+                        {{ infrastructure.latitude }}
+                    </div>
+                </div>
 
-        <div id="map"></div>
+                <div class="detail-item">
+                    <span class="detail-label">Longitude</span>
+                    <div class="detail-value">
+                        {{ infrastructure.longitude }}
+                    </div>
+                </div>
+            </div>
 
-    </div>
+        {% else %}
 
-    <p class="map-note">
-        The marker shows the official location of this infrastructure.
-    </p>
+            <div class="map-unavailable">
+                Location coordinates have not been provided for this infrastructure.
+            </div>
 
-</div>
-
-
-<!-- RECORD INFORMATION -->
-
-<div class="details-card">
-
-    <h3 class="section-title">
-        Record Information
-    </h3>
-
-    <div class="details-grid">
-
-        <div class="detail-item">
-
-            <span class="detail-label">
-                Date Added
-            </span>
-
-            <span class="detail-value">
-                {{ infrastructure.date_added|date:"F d, Y h:i A" }}
-            </span>
-
-        </div>
-
+        {% endif %}
     </div>
 
 </div>
 
 
-<!-- OPENSTREETMAP + LEAFLET -->
+<!-- Image Preview Modal -->
+<div
+    id="imageModal"
+    class="image-modal"
+    onclick="closeImageModal()"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Image preview"
+>
+    <div class="modal-content" onclick="event.stopPropagation()">
+
+        <button
+            type="button"
+            class="modal-close"
+            onclick="closeImageModal()"
+            aria-label="Close image preview"
+        >
+            &times;
+        </button>
+
+        <img
+            id="modalImage"
+            class="modal-image"
+            src=""
+            alt="Image preview"
+        >
+
+    </div>
+</div>
+
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+/* Image Preview */
+function openImageModal(src, alt) {
+    const modal = document.getElementById("imageModal");
+    const modalImage = document.getElementById("modalImage");
 
-    const latitude = Number("{{ infrastructure.latitude }}");
-    const longitude = Number("{{ infrastructure.longitude }}");
+    modalImage.src = src;
+    modalImage.alt = alt || "Image preview";
 
-    const infrastructureName =
-        "{{ infrastructure.infra_name|escapejs }}";
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
 
-    const infrastructureType =
-        "{{ infrastructure.get_infra_type_display|escapejs }}";
+function closeImageModal() {
+    const modal = document.getElementById("imageModal");
+    const modalImage = document.getElementById("modalImage");
 
+    modal.classList.remove("active");
+    modalImage.src = "";
 
-    // Create map
-    const map = L.map("map").setView(
-        [latitude, longitude],
-        16
-    );
+    document.body.style.overflow = "";
+}
 
-
-    // OpenStreetMap tiles
-    L.tileLayer(
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            maxZoom: 19,
-            attribution:
-                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            referrerPolicy: "strict-origin-when-cross-origin"
-        }
-    ).addTo(map);
-
-
-    // Infrastructure marker
-    const marker = L.marker(
-        [latitude, longitude]
-    ).addTo(map);
+/* Close modal with Escape key */
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        closeImageModal();
+    }
+});
 
 
-    // Marker popup
-    marker.bindPopup(
-        `
-        <div style="padding:5px;">
-            <strong>${infrastructureName}</strong>
-            <br>
-            <span>${infrastructureType}</span>
-        </div>
-        `
-    ).openPopup();
+/* Infrastructure Map */
+const mapElement = document.getElementById("map");
 
+if (mapElement && typeof L !== "undefined") {
+
+    const latitude = Number(mapElement.dataset.latitude);
+    const longitude = Number(mapElement.dataset.longitude);
+    const name = mapElement.dataset.name;
+
+    if (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180
+    ) {
+
+        const map = L.map("map").setView(
+            [latitude, longitude],
+            16
+        );
+
+        L.tileLayer(
+            "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap contributors"
+            }
+        ).addTo(map);
+
+        L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup(
+                document.createTextNode(name || "Infrastructure Location")
+            )
+            .openPopup();
+
+        /* Fix map sizing after the page layout is rendered */
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 200);
+
+    } else {
+
+        mapElement.innerHTML =
+            '<div class="map-unavailable">Invalid location coordinates.</div>';
+
+    }
+}
 </script>
-
-
 {% endblock %}

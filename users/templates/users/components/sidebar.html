@@ -269,13 +269,19 @@
                 <i class="fa-solid fa-clipboard-check"></i><span>Infrastructure</span>
             </a>
 
+            <a href="{% url 'personnel_reports' %}"
+                class="{% if request.resolver_match.url_name == 'personnel_reports' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Personnel Reports</span>
+            </a>
+
             <div class="sb-label">Operations</div>
+            <a href="{% url 'validated_reports' %}" class="{% if request.resolver_match.url_name == 'validated_reports' %}active{% endif %}">
+                <i class="fa-solid fa-circle-check"></i><span>Validated Reports</span>
+            </a>
             <a href="{% url 'assign_inspection' %}" class="sidebar-link {% if request.resolver_match.url_name == 'assign_inspection' %}active{% endif %}">
                 <i class="fas fa-user-check"></i>
                 <span>Assign Inspection</span>
-            </a>
-            <a href="{% url 'validated_reports' %}" class="{% if request.resolver_match.url_name == 'validated_reports' %}active{% endif %}">
-                <i class="fa-solid fa-circle-check"></i><span>Validated Reports</span>
             </a>
             <a href="{% url 'work_orders' %}" class="{% if request.resolver_match.url_name == 'work_orders' or request.resolver_match.url_name == 'create_work_order' %}active{% endif %}">
                 <i class="fa-solid fa-file-signature"></i><span>Work Orders</span>
@@ -287,6 +293,7 @@
                 <i class="fa-solid fa-clock-rotate-left"></i><span>Report History</span>
             </a>
 
+            
         {% elif request.user.role == "fru" %}
 
             <div class="sb-label">Main Menu</div>

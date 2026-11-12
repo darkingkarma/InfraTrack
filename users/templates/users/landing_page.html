@@ -5,9 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InfraTrack | DPWH Iligan City</title>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -18,6 +20,10 @@
 
         html {
             scroll-behavior: smooth;
+        }
+
+        body {
+            overflow-x: hidden;
         }
 
         /* ---------- NAVBAR ---------- */
@@ -36,7 +42,7 @@
         }
 
         .navbar.scrolled {
-            background: rgba(10, 46, 92, 0.96);
+            background: rgba(10, 46, 92, 0.97);
             padding: 14px 60px;
             box-shadow: 0 2px 12px rgba(0,0,0,.15);
         }
@@ -87,7 +93,7 @@
         .login-btn {
             background: white;
             color: #0A2E5C !important;
-            padding: 10px 26px;
+            padding: 10px 24px;
             border-radius: 30px;
             font-weight: 600 !important;
             opacity: 1 !important;
@@ -95,11 +101,12 @@
 
         .login-btn:hover {
             background: #e8f0fe;
+            transform: translateY(-2px);
         }
 
         /* ---------- HERO ---------- */
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             position: relative;
             display: flex;
             align-items: center;
@@ -110,14 +117,19 @@
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(120deg, rgba(10,46,92,.92) 0%, rgba(10,46,92,.65) 55%, rgba(10,46,92,.35) 100%);
+            background: linear-gradient(
+                120deg,
+                rgba(10,46,92,.93) 0%,
+                rgba(10,46,92,.72) 55%,
+                rgba(10,46,92,.40) 100%
+            );
         }
 
         .hero-content {
             position: relative;
             z-index: 2;
-            max-width: 640px;
-            padding: 0 60px;
+            max-width: 720px;
+            padding: 120px 60px 80px;
             color: white;
         }
 
@@ -153,6 +165,7 @@
 
         .hero-buttons {
             display: flex;
+            flex-wrap: wrap;
             gap: 16px;
         }
 
@@ -205,6 +218,8 @@
             padding: 40px 60px;
             display: flex;
             justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 24px;
             box-shadow: 0 4px 20px rgba(0,0,0,.06);
             position: relative;
             z-index: 3;
@@ -215,7 +230,7 @@
         }
 
         .stat h2 {
-            font-size: 32px;
+            font-size: 30px;
             color: #0A2E5C;
             font-weight: 800;
         }
@@ -234,7 +249,7 @@
 
         .section-heading {
             text-align: center;
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto 60px;
         }
 
@@ -365,7 +380,56 @@
             line-height: 1.6;
         }
 
-        /* ---------- CITIZEN REPORT ---------- */
+        /* ---------- ABOUT ---------- */
+        .about {
+            padding: 100px 60px;
+            background: #F4F6F9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 60px;
+        }
+
+        .about-content {
+            max-width: 650px;
+        }
+
+        .about-tag {
+            display: inline-block;
+            color: #0A2E5C;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .about-content h2 {
+            font-size: 34px;
+            color: #111827;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
+        .about-content p {
+            font-size: 15px;
+            color: #6B7280;
+            line-height: 1.8;
+            margin-bottom: 14px;
+        }
+
+        .about-image {
+            width: 220px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+
+        .about-image img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* ---------- DOWNLOAD SECTION ---------- */
         .citizen-report {
             display: flex;
             align-items: center;
@@ -377,7 +441,7 @@
         }
 
         .citizen-content {
-            max-width: 520px;
+            max-width: 620px;
         }
 
         .citizen-tag {
@@ -426,8 +490,9 @@
 
         .citizen-note {
             margin-top: 14px;
-            font-size: 12px;
-            color: #a9c0dd;
+            font-size: 12px !important;
+            color: #a9c0dd !important;
+            margin-bottom: 0 !important;
         }
 
         .citizen-image {
@@ -439,19 +504,6 @@
         .citizen-image img {
             width: 100%;
             height: auto;
-        }
-
-        @media (max-width: 900px) {
-            .citizen-report {
-                flex-direction: column;
-                text-align: center;
-                padding-left: 24px;
-                padding-right: 24px;
-            }
-
-            .citizen-image {
-                width: 160px;
-            }
         }
 
         /* ---------- CTA ---------- */
@@ -472,7 +524,7 @@
         .cta-content {
             position: relative;
             z-index: 2;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
             color: white;
         }
@@ -487,6 +539,7 @@
             color: #dbe4f0;
             margin-bottom: 28px;
             font-size: 15px;
+            line-height: 1.7;
         }
 
         /* ---------- FOOTER ---------- */
@@ -499,9 +552,11 @@
         .footer-top {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding-bottom: 30px;
             border-bottom: 1px solid rgba(255,255,255,.1);
             margin-bottom: 20px;
+            gap: 25px;
         }
 
         .footer-brand {
@@ -521,7 +576,8 @@
 
         .footer-links {
             display: flex;
-            gap: 40px;
+            flex-wrap: wrap;
+            gap: 30px;
         }
 
         .footer-links a {
@@ -540,245 +596,669 @@
             color: #6b7d96;
         }
 
+        /* ---------- RESPONSIVE ---------- */
         @media (max-width: 900px) {
-            .navbar, .hero-content, .features, .how-it-works, .cta, footer {
+            .navbar {
+                padding: 18px 24px;
+            }
+
+            .navbar.scrolled {
+                padding: 14px 24px;
+            }
+
+            .hero-content,
+            .features,
+            .how-it-works,
+            .about,
+            .citizen-report,
+            .cta,
+            footer {
                 padding-left: 24px;
                 padding-right: 24px;
             }
 
-            .nav-links { display: none; }
-            .feature-grid { grid-template-columns: 1fr; }
-            .stats-strip { flex-wrap: wrap; gap: 24px; }
-            .hero-content h1 { font-size: 34px; }
-            .footer-top { flex-direction: column; gap: 20px; }
+            .nav-links {
+                gap: 15px;
+            }
+
+            .nav-links a {
+                font-size: 12px;
+            }
+
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-content h1 {
+                font-size: 38px;
+            }
+
+            .about {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .about-image {
+                width: 160px;
+            }
+
+            .citizen-report {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .citizen-image {
+                width: 160px;
+            }
+
+            .footer-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 14px 18px;
+            }
+
+            .navbar.scrolled {
+                padding: 12px 18px;
+            }
+
+            .nav-brand {
+                gap: 8px;
+            }
+
+            .nav-brand img {
+                height: 34px;
+            }
+
+            .nav-brand h1 {
+                font-size: 15px;
+            }
+
+            .nav-brand span {
+                font-size: 9px;
+            }
+
+            .nav-links {
+                gap: 0;
+            }
+
+            .nav-links a:not(.login-btn) {
+                display: none;
+            }
+
+            .login-btn {
+                padding: 8px 13px;
+                font-size: 11px !important;
+            }
+
+            .hero {
+                min-height: 90vh;
+            }
+
+            .hero-content {
+                padding: 120px 22px 90px;
+            }
+
+            .hero-content h1 {
+                font-size: 32px;
+            }
+
+            .hero-content p {
+                font-size: 14px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-buttons a {
+                text-align: center;
+            }
+
+            .scroll-cue {
+                left: 22px;
+            }
+
+            .stats-strip {
+                padding: 35px 20px;
+            }
+
+            .stat {
+                width: 40%;
+            }
+
+            .stat h2 {
+                font-size: 23px;
+            }
+
+            .features,
+            .how-it-works,
+            .about,
+            .citizen-report {
+                padding-top: 70px;
+                padding-bottom: 70px;
+            }
+
+            .section-heading h2,
+            .about-content h2 {
+                font-size: 27px;
+            }
+
+            .section-heading p {
+                font-size: 13px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .feature-card {
+                padding: 28px 24px;
+            }
+
+            .step {
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+
+            .step-number {
+                width: 40px;
+                height: 40px;
+            }
+
+            .citizen-content h2 {
+                font-size: 27px;
+            }
+
+            .cta {
+                padding-top: 70px;
+                padding-bottom: 70px;
+            }
+
+            .cta-content h2 {
+                font-size: 25px;
+            }
+
+            footer {
+                padding: 40px 22px 20px;
+            }
+
+            .footer-links {
+                gap: 18px;
+            }
+
+            .footer-brand small {
+                font-size: 10px;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- NAVBAR -->
     <nav class="navbar" id="navbar">
+
         <div class="nav-brand">
             <img src="{% static 'users/images/dpwhlogo.png' %}" alt="DPWH Logo">
-            <h1>InfraTrack
+
+            <h1>
+                InfraTrack
                 <span>DPWH Iligan City District Office</span>
             </h1>
         </div>
 
         <div class="nav-links">
+            <a href="#">Home</a>
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
-            <a href="{% url 'login' %}" class="login-btn">Log In</a>
+            <a href="#about">About</a>
+
+            <a href="{% url 'login' %}" class="login-btn">
+                <i class="fa-solid fa-user-lock"></i>
+                Personnel Login
+            </a>
         </div>
+
     </nav>
 
     <!-- HERO -->
     <section class="hero">
+
         <div class="hero-content">
-            <span class="hero-tag">GIS-Enabled Monitoring System</span>
-            <h1>Report and Track <span>Infrastructure Issues</span> Across Iligan City</h1>
+
+            <span class="hero-tag">
+                GIS-Enabled Infrastructure Monitoring System
+            </span>
+
+            <h1>
+                Report Infrastructure Issues.
+                <span>Help Improve Iligan City.</span>
+            </h1>
+
             <p>
-                InfraTrack connects citizens, field engineers, and the DPWH District Office
-                on one platform — from the moment an issue is reported to the moment
-                it's repaired, tracked live on the map.
+                See a damaged road, bridge, or drainage system?
+                Report infrastructure problems through InfraTrack.
+                Submit photos, pin the exact location, and monitor
+                the progress of your report through the mobile application.
             </p>
+
             <div class="hero-buttons">
-                <a href="{% url 'login' %}" class="btn-primary">Get Started</a>
-                <a href="#how-it-works" class="btn-secondary">Learn More</a>
+
+                <a href="#download" class="btn-primary">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    Get InfraTrack App
+                </a>
+
+                <a href="#how-it-works" class="btn-secondary">
+                    Learn More
+                </a>
+
             </div>
+
         </div>
 
         <div class="scroll-cue">
-            <i class="fa-solid fa-chevron-down"></i> Scroll to explore
+            <i class="fa-solid fa-chevron-down"></i>
+            Scroll to explore
         </div>
+
     </section>
 
     <!-- STATS -->
     <div class="stats-strip">
+
         <div class="stat">
-            <h2>4</h2>
-            <p>User Roles Connected</p>
+            <h2>24/7</h2>
+            <p>Report Submission Access</p>
         </div>
+
+        <div class="stat">
+            <h2>GPS</h2>
+            <p>Location-Based Reporting</p>
+        </div>
+
         <div class="stat">
             <h2>Real-Time</h2>
-            <p>Repair Progress Tracking</p>
+            <p>Report Status Updates</p>
         </div>
-        <div class="stat">
-            <h2>Geo-Tagged</h2>
-            <p>Issue Reporting via Map</p>
-        </div>
+
         <div class="stat">
             <h2>DPWH</h2>
             <p>Iligan City District Office</p>
         </div>
+
     </div>
 
     <!-- FEATURES -->
     <section class="features" id="features">
+
         <div class="section-heading">
+
             <span>What InfraTrack Offers</span>
-            <h2>One System, Every Stage of the Process</h2>
-            <p>From the citizen's first report to the District Engineer's final sign-off, every step is tracked, validated, and visible.</p>
+
+            <h2>
+                A Simpler Way to Report Infrastructure Issues
+            </h2>
+
+            <p>
+                InfraTrack provides citizens with a convenient way
+                to report infrastructure problems and monitor their
+                progress through one mobile application.
+            </p>
+
         </div>
 
         <div class="feature-grid">
 
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-clipboard-check"></i></div>
-                <h3>Issue Reporting & Validation</h3>
-                <p>Citizens report infrastructure issues with photos and location; the Frontline Receiving Unit screens and validates each report.</p>
+                <div class="feature-icon">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+
+                <h3>Easy Issue Reporting</h3>
+
+                <p>
+                    Submit reports about damaged roads, bridges,
+                    and drainage systems directly through the
+                    InfraTrack mobile application.
+                </p>
             </div>
 
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-file-signature"></i></div>
-                <h3>Work Order Management</h3>
-                <p>District Engineers review validated reports and generate work orders for approved repair actions.</p>
+                <div class="feature-icon">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+
+                <h3>Photo Documentation</h3>
+
+                <p>
+                    Attach photos to provide visual documentation
+                    of infrastructure problems in your area.
+                </p>
             </div>
 
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-wrench"></i></div>
-                <h3>Repair Progress Monitoring</h3>
-                <p>Field Engineers log repair updates in real time, so progress is visible from first response to closure.</p>
+                <div class="feature-icon">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+
+                <h3>GPS-Based Location</h3>
+
+                <p>
+                    Pinpoint the location of reported infrastructure
+                    issues using GPS or manually selecting a location
+                    on the map.
+                </p>
             </div>
 
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-map-location-dot"></i></div>
-                <h3>Geo-Tagged Mapping</h3>
-                <p>Every report is pinned on an interactive map, powered by Google Maps, so issues are located at a glance.</p>
+                <div class="feature-icon">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+
+                <h3>Interactive Map</h3>
+
+                <p>
+                    View reported infrastructure issues through
+                    the map and identify their reported locations.
+                </p>
             </div>
 
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-users"></i></div>
-                <h3>Role-Based Access</h3>
-                <p>Citizen Reporters, FRU, Field Engineers, District Engineers, and Admins each get a dashboard built for their role.</p>
+                <div class="feature-icon">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+
+                <h3>Notifications and Updates</h3>
+
+                <p>
+                    Receive notifications about important changes
+                    and updates concerning your submitted reports.
+                </p>
             </div>
 
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                <h3>Full Report History</h3>
-                <p>Closed and rejected reports stay archived and searchable, keeping a full record of every resolved issue.</p>
+                <div class="feature-icon">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+
+                <h3>Report Status Tracking</h3>
+
+                <p>
+                    Monitor the status of your submitted reports
+                    from initial screening to inspection and
+                    repair completion.
+                </p>
             </div>
 
         </div>
+
     </section>
 
     <!-- HOW IT WORKS -->
     <section class="how-it-works" id="how-it-works">
+
         <div class="section-heading">
-            <span>The Process</span>
+
+            <span>Simple Reporting Process</span>
+
             <h2>How InfraTrack Works</h2>
+
+            <p>
+                Reporting infrastructure issues is simple.
+                Follow these steps using the InfraTrack mobile application.
+            </p>
+
         </div>
 
         <div class="steps">
 
             <div class="step">
+
                 <div class="step-number">1</div>
+
                 <div class="step-text">
-                    <h4>Citizen Reports an Issue</h4>
-                    <p>A resident submits a report with a photo, description, and location pin of a road, bridge, or drainage problem.</p>
+
+                    <h4>Download and Register</h4>
+
+                    <p>
+                        Download the InfraTrack mobile application,
+                        create your citizen account, and verify
+                        your email address.
+                    </p>
+
                 </div>
+
             </div>
 
             <div class="step">
+
                 <div class="step-number">2</div>
+
                 <div class="step-text">
-                    <h4>FRU Screens & Validates</h4>
-                    <p>The Frontline Receiving Unit reviews the report for completeness and forwards validated reports to the District Engineer.</p>
+
+                    <h4>Submit an Infrastructure Report</h4>
+
+                    <p>
+                        Describe the infrastructure problem,
+                        attach photos, and provide the location
+                        of the affected road, bridge, or drainage system.
+                    </p>
+
                 </div>
+
             </div>
 
             <div class="step">
+
                 <div class="step-number">3</div>
+
                 <div class="step-text">
-                    <h4>Work Order is Issued</h4>
-                    <p>The District Engineer approves the report and generates a work order, assigning it to a Field Engineer.</p>
+
+                    <h4>Report Screening and Inspection</h4>
+
+                    <p>
+                        The Frontline Receiving Unit screens
+                        submitted reports, while Field Engineers
+                        inspect validated issues.
+                    </p>
+
                 </div>
+
             </div>
 
             <div class="step">
+
                 <div class="step-number">4</div>
+
                 <div class="step-text">
-                    <h4>Repair is Tracked to Completion</h4>
-                    <p>The Field Engineer logs repair progress until the issue is resolved and the report is officially closed.</p>
+
+                    <h4>Track Report Progress</h4>
+
+                    <p>
+                        Follow the status of your report and
+                        receive updates as the reported issue
+                        moves through the repair process.
+                    </p>
+
                 </div>
+
             </div>
 
         </div>
+
     </section>
 
-    <!-- FOR CITIZENS -->
-    <section class="citizen-report">
-        <div class="citizen-content">
+    <!-- ABOUT INFRATRACK -->
+    <section class="about" id="about">
 
-            <span class="citizen-tag">For Citizens</span>
-            <h2>Spotted a Road, Bridge, or Drainage Issue?</h2>
+        <div class="about-content">
+
+            <span class="about-tag">About InfraTrack</span>
+
+            <h2>
+                Connecting Citizens and Infrastructure Monitoring
+            </h2>
+
             <p>
-                Report it directly through the InfraTrack mobile app — snap a photo,
-                pin the location, and track its status from submission to repair.
+                InfraTrack is a GIS-Enabled Infrastructure Issue
+                Reporting and Monitoring System developed for the
+                DPWH Iligan City District Office.
             </p>
 
+            <p>
+                The system aims to provide a centralized platform
+                where citizens can submit infrastructure concerns
+                and authorized personnel can screen, inspect,
+                manage, and monitor reported issues.
+            </p>
+
+            <p>
+                Through location-based reporting, photo documentation,
+                and report status monitoring, InfraTrack supports
+                a more organized process for handling infrastructure
+                concerns across Iligan City.
+            </p>
+
+        </div>
+
+        <div class="about-image">
+            <img src="{% static 'users/images/logtrans.png' %}" alt="InfraTrack Logo">
+        </div>
+
+    </section>
+
+    <!-- DOWNLOAD SECTION -->
+    <section class="citizen-report" id="download">
+
+        <div class="citizen-content">
+
+            <span class="citizen-tag">
+                For Citizens
+            </span>
+
+            <h2>
+                Help Make Iligan City Better. Start Reporting with InfraTrack.
+            </h2>
+
+            <p>
+                Be part of improving infrastructure monitoring.
+                Download the InfraTrack mobile application,
+                report infrastructure problems, and stay informed
+                about the progress of your submitted reports.
+            </p>
+
+            <!-- Replace # with your actual APK download link when ready -->
             <a href="#" class="btn-download">
                 <i class="fa-solid fa-download"></i>
-                InfraTrack
+                Download InfraTrack
             </a>
 
             <p class="citizen-note">
-                Opens the InfraTrack mobile app download
+                Mobile application download will be available here.
             </p>
 
         </div>
 
         <div class="citizen-image">
-            <img src="{% static 'users/images/logtrans.png' %}" alt="InfraTrack App">
+            <img src="{% static 'users/images/logtrans.png' %}" alt="InfraTrack Application">
         </div>
+
     </section>
 
     <!-- CTA -->
     <section class="cta">
+
         <div class="cta-content">
-            <h2>District Engineer</h2>
-            <p>Manage personnel, monitor validated reports, and oversee repair work orders across the district.</p>
-            <h2>Frontline Receiving Unit</h2>
-            <p>Screen incoming reports and route validated issues for repair monitoring.</p>
-            <h2>Citizen</h2>
-            <p>Submit infrastructure reports, track report status, and receive updates on repairs and resolutions in your area.</p>
-            <h2>Field Engineer</h2>
-            <p>Inspect reported infrastructure issues, validate field conditions, and update repair progress and work orders.</p>
+
+            <h2>
+                Better Infrastructure Monitoring Starts with Us.
+            </h2>
+
+            <p>
+                InfraTrack connects citizens and authorized
+                DPWH personnel through a centralized platform
+                for infrastructure issue reporting, inspection,
+                and repair progress monitoring.
+            </p>
+
+            <a href="#download" class="btn-primary">
+                Get Started with InfraTrack
+            </a>
+
         </div>
+
     </section>
 
     <!-- FOOTER -->
     <footer>
+
         <div class="footer-top">
+
             <div class="footer-brand">
+
                 <img src="{% static 'users/images/dpwhlogo.png' %}" alt="DPWH Logo">
+
                 <div>
                     <h4>InfraTrack</h4>
-                    <small>GIS-Enabled Infrastructure Issue Reporting and Monitoring System</small>
+
+                    <small>
+                        GIS-Enabled Infrastructure Issue Reporting
+                        and Monitoring System
+                    </small>
                 </div>
+
             </div>
 
             <div class="footer-links">
+
+                <a href="#">Home</a>
+
                 <a href="#features">Features</a>
+
                 <a href="#how-it-works">How It Works</a>
-                <a href="{% url 'login' %}">Log In</a>
+
+                <a href="#about">About</a>
+
+                <a href="{% url 'login' %}">
+                    Personnel Login
+                </a>
+
             </div>
+
         </div>
 
         <div class="footer-bottom">
-            &copy; 2026 DPWH Iligan City District Office. All rights reserved.
+
+            &copy; 2026 DPWH Iligan City District Office.
+            All rights reserved.
+
         </div>
+
     </footer>
 
+    <!-- NAVBAR SCROLL EFFECT -->
     <script>
+
         window.addEventListener('scroll', function () {
+
             const nav = document.getElementById('navbar');
+
             if (window.scrollY > 40) {
                 nav.classList.add('scrolled');
             } else {
                 nav.classList.remove('scrolled');
             }
+
         });
+
     </script>
 
 </body>

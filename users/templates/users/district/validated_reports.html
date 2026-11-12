@@ -1,4 +1,3 @@
-
 {% extends "users/master.html" %}
 
 {% block title %}
@@ -11,243 +10,343 @@ Validated Reports
 
 {% block style %}
 <style>
+    .page-header {
+        margin-bottom: 25px;
+    }
+
     .page-header h2 {
         color: #0A2E5C;
+        margin: 0;
     }
 
-    .page-header p {
-        color: #777;
-        margin: 4px 0 20px;
-    }
-
+    /* Search */
     .search-section {
         display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
     }
 
     .search-section input {
         flex: 1;
-        min-width: 220px;
-        padding: 10px 12px;
-        border: 1px solid #ddd;
+        min-width: 0;
+        padding: 11px 12px;
+        border: 1px solid #ccc;
         border-radius: 6px;
+        background: white;
         font-size: 14px;
+        outline: none;
     }
 
-    .search-section button {
-        background: #0A2E5C;
-        color: white;
-        border: none;
-        padding: 10px 18px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
+    .search-section input:focus {
+        border-color: #0A2E5C;
+        box-shadow: 0 0 0 2px rgba(10, 46, 92, .08);
     }
 
-    .search-section button:hover {
-        background: #123f78;
+    .results-info {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 12px;
     }
 
-    .search-reset {
-        display: inline-flex;
-        align-items: center;
-        padding: 10px 14px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        text-decoration: none;
-        color: #555;
-        font-size: 14px;
-    }
-
-    .table-card {
+    /* Table */
+    .table-container {
         background: white;
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-        padding: 10px 20px;
         overflow-x: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
     }
 
     table {
         width: 100%;
+        min-width: 950px;
         border-collapse: collapse;
     }
 
-    th, td {
-        text-align: left;
-        padding: 12px 10px;
-        border-bottom: 1px solid #eee;
-        font-size: 14px;
-        white-space: nowrap;
+    thead {
+        background: #0A2E5C;
+        color: white;
     }
 
     th {
-        color: #0A2E5C;
-        background: #f8fafc;
+        padding: 15px;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        color: #334155;
     }
 
     tbody tr:hover {
         background: #f8fafc;
     }
 
-    .status {
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Status */
+    .status-badge {
         display: inline-block;
-        padding: 4px 10px;
-        border-radius: 12px;
-        background: #e8f5e9;
-        color: #2e7d32;
+        padding: 5px 12px;
+        border-radius: 20px;
         font-size: 12px;
         font-weight: bold;
+        white-space: nowrap;
+        background: #e6f7ec;
+        color: #1e7e34;
     }
 
-    .view-link {
+    /* Details */
+    .view-btn {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 6px;
+        background: #e8f0fe;
         color: #0A2E5C;
+        font-size: 13px;
         font-weight: bold;
         text-decoration: none;
+        white-space: nowrap;
+        transition: .3s;
     }
 
-    .view-link:hover {
-        text-decoration: underline;
+    .view-btn:hover {
+        background: #cfe0fb;
     }
 
+    /* Empty state */
     .empty {
-        color: gray;
-        padding: 20px 10px;
         text-align: center;
+        color: gray;
+        padding: 40px;
     }
 
-    .result-count {
-        color: #666;
-        font-size: 13px;
-        margin-bottom: 12px;
-    }
-
-    @media (max-width: 600px) {
-        .search-section {
-            flex-direction: column;
+    /* Responsive */
+    @media (max-width: 700px) {
+        .page-header h2 {
+            font-size: 21px;
         }
 
-        .search-section input,
-        .search-section button,
-        .search-reset {
+        .search-section {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .search-section input {
             width: 100%;
             box-sizing: border-box;
         }
 
-        .search-section button,
-        .search-reset {
-            justify-content: center;
+        .table-container {
+            border-radius: 8px;
         }
     }
 </style>
 {% endblock %}
 
+
 {% block content %}
 
-<form method="get" class="search-section">
+<div class="page-header">
+    <h2>Validated Reports</h2>
+</div>
+
+<!-- Automatic Search -->
+<div class="search-section">
+
     <input
         type="text"
-        name="q"
+        id="reportSearch"
         placeholder="Search by report ID, title, location, or citizen..."
-        value="{{ search_query }}"
+        autocomplete="off"
         aria-label="Search validated reports"
     >
 
-    <button type="submit">Search</button>
-
-    {% if search_query %}
-        <a
-            href="{% url 'validated_reports' %}"
-            class="search-reset"
-        >
-            Reset
-        </a>
-    {% endif %}
-</form>
-
-<div class="table-card">
-    {% if reports %}
-        <p class="result-count">
-            Validated reports: {{ reports|length }}
-            <span> · Sorted by latest screening date</span>
-        </p>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Report ID</th>
-                    <th>Title</th>
-                    <th>Type</th>
-                    <th>Reported By</th>
-                    <th>Screened By</th>
-                    <th>Screened On</th>
-                    <th>Status</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for report in reports %}
-                <tr>
-                    <td>#{{ report.report_id }}</td>
-
-                    <td>{{ report.title }}</td>
-
-                    <td>
-                        {{ report.get_infrastructure_type_display }}
-                    </td>
-
-                    <td>
-                        {{ report.citizen.get_full_name|default:"-" }}
-                    </td>
-
-                    <td>
-                        {% with screening=report.screenings.all.0 %}
-                            {% if screening and screening.screened_by %}
-                                {{ screening.screened_by.user.get_full_name|default:screening.screened_by.user.username }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        {% endwith %}
-                    </td>
-
-                    <td>
-                        {% with screening=report.screenings.all.0 %}
-                            {% if screening %}
-                                {{ screening.screening_date|date:"M d, Y, g:i A" }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        {% endwith %}
-                    </td>
-
-                    <td>
-                        <span class="status">{{ report.status }}</span>
-                    </td>
-
-                    <td>
-                        <a
-                            class="view-link"
-                            href="{% url 'view_report_history_detail' report.report_id %}"
-                        >
-                            View Details
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-    {% else %}
-        <p class="empty">
-            {% if search_query %}
-                No validated reports match your search.
-            {% else %}
-                No validated reports waiting for inspection.
-            {% endif %}
-        </p>
-    {% endif %}
 </div>
+
+<!-- Results Count -->
+<div class="results-info">
+    Showing <strong id="visibleCount">0</strong> of
+    <strong id="totalCount">0</strong> validated reports
+    <span> · Sorted by latest screening date</span>
+</div>
+
+<!-- Validated Reports Table -->
+<div class="table-container">
+
+    <table id="reportsTable">
+
+        <thead>
+            <tr>
+                <th>Report ID</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Reported By</th>
+                <th>Screened By</th>
+                <th>Screened On</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="reportsTableBody">
+
+            {% for report in reports %}
+
+            <tr class="report-row">
+
+                <td class="report-id">
+                    #{{ report.report_id }}
+                </td>
+
+                <td class="report-title">
+                    {{ report.title }}
+                </td>
+
+                <td class="report-type">
+                    {{ report.get_infrastructure_type_display }}
+                </td>
+
+                <td class="report-citizen">
+                    {{ report.citizen.get_full_name|default:"-" }}
+                </td>
+
+                <td class="report-screener">
+                    {% with screening=report.screenings.all.0 %}
+                        {% if screening and screening.screened_by %}
+                            {{ screening.screened_by.user.get_full_name|default:screening.screened_by.user.username }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endwith %}
+                </td>
+
+                <td>
+                    {% with screening=report.screenings.all.0 %}
+                        {% if screening %}
+                            {{ screening.screening_date|date:"M d, Y, g:i A" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endwith %}
+                </td>
+
+                <td class="report-status">
+                    <span class="status-badge">
+                        {{ report.status }}
+                    </span>
+                </td>
+
+                <td>
+                    <a
+                        href="{% url 'view_report_history_detail' report.report_id %}?from=validated_reports"
+                        class="view-btn"
+                    >
+                        View Details
+                    </a>
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="8" class="empty">
+                    No validated reports found.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+            <!-- No matching search results -->
+            <tr id="noResultsRow" style="display:none;">
+                <td colspan="8" class="empty">
+                    No matching validated reports found.
+                </td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const searchInput = document.getElementById("reportSearch");
+
+    const rows = document.querySelectorAll(".report-row");
+
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    totalCount.textContent = rows.length;
+
+    function filterReports() {
+
+        const searchValue = searchInput.value
+            .toLowerCase()
+            .trim();
+
+        let visible = 0;
+
+        rows.forEach(function(row) {
+
+            const reportId = row.querySelector(".report-id")
+                .textContent.toLowerCase();
+
+            const title = row.querySelector(".report-title")
+                .textContent.toLowerCase();
+
+            const type = row.querySelector(".report-type")
+                .textContent.toLowerCase();
+
+            const citizen = row.querySelector(".report-citizen")
+                .textContent.toLowerCase();
+
+            const screener = row.querySelector(".report-screener")
+                .textContent.toLowerCase();
+
+            const status = row.querySelector(".report-status")
+                .textContent.toLowerCase();
+
+            const matchesSearch =
+                reportId.includes(searchValue) ||
+                title.includes(searchValue) ||
+                type.includes(searchValue) ||
+                citizen.includes(searchValue) ||
+                screener.includes(searchValue) ||
+                status.includes(searchValue);
+
+            if (matchesSearch) {
+                row.style.display = "";
+                visible++;
+            } else {
+                row.style.display = "none";
+            }
+
+        });
+
+        visibleCount.textContent = visible;
+
+        noResultsRow.style.display =
+            visible === 0 && rows.length > 0 ? "" : "none";
+    }
+
+    searchInput.addEventListener("input", filterReports);
+
+    filterReports();
+
+});
+</script>
 
 {% endblock %}

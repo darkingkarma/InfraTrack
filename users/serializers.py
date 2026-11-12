@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import User, Citizen
+from .models import User, Citizen, PendingCitizenRegistration
+from django.contrib.auth.hashers import check_password
 import re
 
 User = get_user_model()
+
 
 
 class CitizenRegisterSerializer(serializers.Serializer):
@@ -22,6 +24,16 @@ class CitizenRegisterSerializer(serializers.Serializer):
         write_only=True,
         trim_whitespace=False
     )
+
+    def validate_contact_number(self, value):
+        value = value.strip()
+
+        if not re.fullmatch(r"09\d{9}", value):
+            raise serializers.ValidationError(
+                "Contact number must start with 09 and contain exactly 11 digits."
+            )
+
+        return value
 
     def validate_password(self, value):
         errors = []
@@ -99,36 +111,81 @@ class CitizenRegisterSerializer(serializers.Serializer):
 
         return user
 
+
+
 class LoginSerializer(serializers.Serializer):
     username_or_email = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        username_or_email = data["username_or_email"]
+        username_or_email = data["username_or_email"].strip()
         password = data["password"]
 
+        # Find an existing registered user.
         user = User.objects.filter(
-            email=username_or_email
+            email__iexact=username_or_email
         ).first()
 
         if user is None:
             user = User.objects.filter(
-                username=username_or_email
+                username__iexact=username_or_email
             ).first()
 
-        if user is None or not user.check_password(password):
+        # If no User exists, check pending citizen registrations.
+        if user is None:
+            pending = PendingCitizenRegistration.objects.filter(
+                email__iexact=username_or_email
+            ).first()
+
+            if pending is None:
+                pending = PendingCitizenRegistration.objects.filter(
+                    username__iexact=username_or_email
+                ).first()
+
+            if pending is not None:
+                if check_password(password, pending.password_hash):
+                    raise serializers.ValidationError({
+                        "email_not_verified": (
+                            "Your registration is still pending email verification. "
+                            "Please check your Gmail inbox and click the verification link. "
+                            "Also check your Spam or Junk folder."
+                        )
+                    })
+
             raise serializers.ValidationError(
-                "Invalid username/email or password."
+                "Invalid username or password."
             )
 
+        # Verify the password.
+        if not user.check_password(password):
+            raise serializers.ValidationError(
+                "Invalid username or password."
+            )
+
+        # Check allowed roles.
         if user.role not in ["citizen", "field_engineer"]:
             raise serializers.ValidationError(
                 "This login is for citizens and field engineers only."
             )
 
+        # Check citizen email verification.
+        if user.role == "citizen" and not user.is_active:
+            raise serializers.ValidationError({
+                "email_not_verified": (
+                    "Please verify your email before logging in."
+                )
+            })
+
+        # Check other inactive accounts.
+        if not user.is_active:
+            raise serializers.ValidationError({
+                "account_inactive": (
+                    "This account is inactive. Please contact the administrator."
+                )
+            })
+
         data["user"] = user
         return data
-
 
 class CitizenProfileSerializer(serializers.ModelSerializer):
 

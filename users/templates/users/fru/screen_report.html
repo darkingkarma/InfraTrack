@@ -1,12 +1,8 @@
+
 {% extends "users/master.html" %}
 
-{% block title %}
-Screen Report
-{% endblock %}
-
-{% block page_title %}
-Screen Report
-{% endblock %}
+{% block title %}Screen Report{% endblock %}
+{% block page_title %}Screen Report{% endblock %}
 
 {% block style %}
 <style>
@@ -15,7 +11,7 @@ Screen Report
         --navy-hover: #154A8A;
         --text: #1f2933;
         --muted: #667085;
-        --line: #e4e7ec;
+        --line: #dbe1e8;
         --soft: #f6f8fb;
         --ok: #1e7a3c;
         --ok-bg: #e7f5ec;
@@ -26,9 +22,9 @@ Screen Report
         --warn-line: #f0d58c;
     }
 
-    /* ---------- Page header ---------- */
+    * { box-sizing: border-box; }
+
     .page-header {
-        width: 100%;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -54,17 +50,14 @@ Screen Report
         white-space: nowrap;
     }
 
-    .back-btn:hover {
-        background: var(--soft);
-    }
+    .back-btn:hover { background: var(--soft); }
 
-    /* ---------- Full-width layout ---------- */
     .screen-layout {
-        width: 100%;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
         gap: 20px;
         align-items: start;
+        width: 100%;
     }
 
     .col {
@@ -75,36 +68,24 @@ Screen Report
     }
 
     .panel {
+        width: 100%;
+        min-width: 0;
         background: #fff;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 22px;
-        box-sizing: border-box;
-        width: 100%;
     }
 
     .panel h3 {
         color: var(--navy);
         font-size: 17px;
-        margin: 0 0 14px;
+        margin: 0 0 16px;
     }
 
-    .count-pill {
-        background: var(--warn-bg);
-        color: var(--warn);
-        border: 1px solid var(--warn-line);
-        border-radius: 999px;
-        padding: 3px 10px;
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    /* ---------- Details list ---------- */
     .details {
         margin: 0;
         display: grid;
-        grid-template-columns: 170px minmax(0, 1fr);
+        grid-template-columns: 155px minmax(0, 1fr);
     }
 
     .details dt,
@@ -116,57 +97,116 @@ Screen Report
         line-height: 1.5;
     }
 
-    .details dt {
-        color: var(--muted);
-        font-weight: 600;
+    .details dt { color: var(--muted); font-weight: 600; }
+    .details dd { color: var(--text); overflow-wrap: anywhere; }
+
+    .citizen-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--navy);
+        font: inherit;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 3px;
     }
 
-    .details dd {
-        color: var(--text);
-        overflow-wrap: anywhere;
-    }
+    .citizen-link:hover { color: var(--navy-hover); }
 
     .sub-title {
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text);
         margin: 22px 0 10px;
     }
 
-    .empty-note {
-        color: var(--muted);
-        font-size: 13px;
-        margin: 0;
-    }
+    .empty-note { color: var(--muted); font-size: 13px; margin: 0; }
 
     .report-map {
         width: 100%;
-        height: 340px;
+        height: 320px;
         display: block;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 9px;
     }
+
+    /* Photo gallery */
+    .photo-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .photo-total { color: var(--muted); font-size: 12px; }
 
     .photo-gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
     }
 
-    .photo-gallery a {
+    .photo-card {
+        position: relative;
         display: block;
-        line-height: 0;
-    }
-
-    .photo-gallery img {
         width: 100%;
+        min-width: 0;
         aspect-ratio: 1 / 1;
-        object-fit: cover;
-        border-radius: 8px;
+        padding: 0;
+        overflow: hidden;
         border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #f1f5f9;
+        cursor: pointer;
     }
 
-    /* ---------- History items ---------- */
+    .photo-card img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .2s ease;
+    }
+
+    .photo-card:hover img { transform: scale(1.04); }
+
+    .photo-overlay {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 9px 4px;
+        color: #fff;
+        background: linear-gradient(transparent, rgba(0,0,0,.78));
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity .2s ease;
+    }
+
+    .photo-card:hover .photo-overlay,
+    .photo-card:focus-visible .photo-overlay { opacity: 1; }
+
+    .photo-extra { display: none; }
+    .photo-gallery.show-all .photo-extra { display: block; }
+
+    .view-all-photos {
+        width: 100%;
+        margin-top: 12px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--soft);
+        color: var(--navy);
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .view-all-photos:hover { background: #eaf0f8; }
+
+    /* History */
     .prev-item {
         border: 1px solid var(--line);
         border-left: 4px solid var(--navy);
@@ -178,27 +218,12 @@ Screen Report
         overflow-wrap: anywhere;
     }
 
-    .prev-item:first-of-type {
-        margin-top: 0;
-    }
+    .prev-item:first-of-type { margin-top: 0; }
+    .prev-item p { margin: 6px 0; line-height: 1.5; }
+    .prev-item small { display: block; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+    .prev-item .waiting { color: var(--muted); }
 
-    .prev-item p {
-        margin: 6px 0;
-        line-height: 1.5;
-    }
-
-    .prev-item small {
-        display: block;
-        color: var(--muted);
-        line-height: 1.6;
-        margin-top: 4px;
-    }
-
-    .prev-item .waiting {
-        color: var(--muted);
-    }
-
-    /* ---------- Duplicates ---------- */
+    /* Duplicate reports */
     .duplicate-list {
         max-height: 320px;
         overflow-y: auto;
@@ -216,15 +241,8 @@ Screen Report
         overflow-wrap: anywhere;
     }
 
-    .duplicate-item:first-of-type {
-        margin-top: 0;
-    }
-
-    .duplicate-item p {
-        margin: 6px 0;
-        font-size: 13px;
-        line-height: 1.5;
-    }
+    .duplicate-item:first-of-type { margin-top: 0; }
+    .duplicate-item p { margin: 6px 0; font-size: 13px; line-height: 1.5; }
 
     .duplicate-item .duplicate-item-title {
         color: var(--navy);
@@ -253,9 +271,7 @@ Screen Report
         font-size: 13px;
     }
 
-    .duplicate-link:hover {
-        text-decoration: underline;
-    }
+    .duplicate-link:hover { text-decoration: underline; }
 
     .no-duplicates {
         background: var(--ok-bg);
@@ -266,7 +282,7 @@ Screen Report
         font-weight: 600;
     }
 
-    /* ---------- Screening form (sticky on wide screens) ---------- */
+    /* Screening form */
     .form-col {
         position: sticky;
         top: 16px;
@@ -274,15 +290,8 @@ Screen Report
         overflow-y: auto;
     }
 
-    .form-step {
-        padding: 16px 0;
-        border-top: 1px solid var(--line);
-    }
-
-    .form-step:first-of-type {
-        border-top: none;
-        padding-top: 0;
-    }
+    .form-step { padding: 16px 0; border-top: 1px solid var(--line); }
+    .form-step:first-of-type { border-top: none; padding-top: 0; }
 
     .step-head {
         display: flex;
@@ -292,9 +301,7 @@ Screen Report
         margin-bottom: 10px;
     }
 
-    .step-head .step-title {
-        margin: 0;
-    }
+    .step-head .step-title { margin: 0; }
 
     .step-title {
         color: var(--navy);
@@ -303,14 +310,19 @@ Screen Report
         margin: 0 0 10px;
     }
 
-    .form-group {
-        margin-bottom: 14px;
-        min-width: 0;
+    .count-pill {
+        background: var(--warn-bg);
+        color: var(--warn);
+        border: 1px solid var(--warn-line);
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
     }
 
-    .form-group:last-child {
-        margin-bottom: 0;
-    }
+    .form-group { margin-bottom: 14px; min-width: 0; }
+    .form-group:last-child { margin-bottom: 0; }
 
     .form-group label {
         display: block;
@@ -320,10 +332,7 @@ Screen Report
         margin-bottom: 6px;
     }
 
-    .required-mark {
-        color: var(--bad);
-        display: none;
-    }
+    .required-mark { color: var(--bad); display: none; }
 
     .form-group select,
     .form-group textarea {
@@ -335,22 +344,16 @@ Screen Report
         font-family: inherit;
         background: #fff;
         color: var(--text);
-        box-sizing: border-box;
     }
 
     .form-group select:focus,
     .form-group textarea:focus {
         outline: 2px solid var(--navy-hover);
         outline-offset: 1px;
-        border-color: var(--navy-hover);
     }
 
-    .form-group textarea {
-        resize: vertical;
-        min-height: 100px;
-    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
 
-    /* Completeness */
     .overall-status {
         display: inline-block;
         padding: 5px 10px;
@@ -360,15 +363,8 @@ Screen Report
         margin-bottom: 10px;
     }
 
-    .status-complete {
-        background: var(--ok-bg);
-        color: var(--ok);
-    }
-
-    .status-incomplete {
-        background: var(--bad-bg);
-        color: var(--bad);
-    }
+    .status-complete { background: var(--ok-bg); color: var(--ok); }
+    .status-incomplete { background: var(--bad-bg); color: var(--bad); }
 
     .completeness-box {
         border: 1px solid var(--line);
@@ -385,23 +381,10 @@ Screen Report
         font-size: 13px;
     }
 
-    .completeness-item:last-child {
-        border-bottom: none;
-    }
-
-    .check-icon {
-        font-weight: 700;
-        font-size: 15px;
-        flex-shrink: 0;
-    }
-
-    .check-passed {
-        color: var(--ok);
-    }
-
-    .check-failed {
-        color: var(--bad);
-    }
+    .completeness-item:last-child { border-bottom: none; }
+    .check-icon { font-weight: 700; font-size: 15px; flex-shrink: 0; }
+    .check-passed { color: var(--ok); }
+    .check-failed { color: var(--bad); }
 
     .check-status {
         margin-left: auto;
@@ -411,7 +394,6 @@ Screen Report
         white-space: nowrap;
     }
 
-    /* Jurisdiction */
     .jurisdiction-box {
         background: var(--soft);
         border: 1px solid var(--line);
@@ -432,12 +414,7 @@ Screen Report
         margin-bottom: 8px;
     }
 
-    .jurisdiction-message {
-        font-size: 13px;
-        color: #444;
-        line-height: 1.5;
-        margin: 0;
-    }
+    .jurisdiction-message { font-size: 13px; color: #444; line-height: 1.5; margin: 0; }
 
     .infrastructure-details {
         background: #fff;
@@ -447,11 +424,7 @@ Screen Report
         margin-top: 10px;
     }
 
-    .infrastructure-details p {
-        font-size: 13px;
-        line-height: 1.5;
-        margin: 4px 0;
-    }
+    .infrastructure-details p { font-size: 13px; line-height: 1.5; margin: 4px 0; }
 
     .hint {
         font-size: 12px;
@@ -464,12 +437,7 @@ Screen Report
         display: none;
     }
 
-    /* Actions */
-    .form-actions {
-        margin-top: 16px;
-        display: flex;
-        gap: 10px;
-    }
+    .form-actions { margin-top: 16px; display: flex; gap: 10px; }
 
     .save-btn,
     .cancel-btn {
@@ -484,84 +452,214 @@ Screen Report
         font-family: inherit;
         text-decoration: none;
         text-align: center;
-        box-sizing: border-box;
     }
 
-    .save-btn {
-        background: var(--navy);
-        color: #fff;
+    .save-btn { background: var(--navy); color: #fff; }
+    .save-btn:hover { background: var(--navy-hover); }
+    .cancel-btn { background: #eef0f3; color: var(--text); }
+    .cancel-btn:hover { background: #e1e4e8; }
+
+    /* Modals */
+    .custom-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
     }
 
-    .save-btn:hover {
-        background: var(--navy-hover);
+    .custom-modal.is-open { display: flex; }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, .8);
+        backdrop-filter: blur(3px);
     }
 
-    .cancel-btn {
-        background: #eef0f3;
-        color: var(--text);
+    .modal-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 8px;
+        background: #eef2f7;
+        color: #1f2937;
+        font-size: 26px;
+        cursor: pointer;
     }
 
-    .cancel-btn:hover {
-        background: #e1e4e8;
+    .modal-close:hover { background: #dfe6ef; }
+
+    .photo-modal-content {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 1050px);
+        max-height: 94vh;
+        padding: 14px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 20px 60px rgba(0,0,0,.3);
     }
 
-    /* ---------- Responsive ---------- */
+    .modal-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .photo-viewer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .photo-viewer img {
+        display: block;
+        width: 100%;
+        max-width: 850px;
+        height: auto;
+        max-height: calc(94vh - 100px);
+        object-fit: contain;
+        border-radius: 8px;
+        background: #0f172a;
+    }
+
+    .photo-nav {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 50%;
+        background: #eef2f7;
+        color: var(--navy);
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    .photo-nav:hover { background: #dce7f5; }
+
+    .citizen-modal-content {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 480px);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 24px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+
+    .citizen-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .citizen-modal-header h3 { margin: 0 0 6px; color: var(--navy); font-size: 20px; }
+    .citizen-modal-header p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .citizen-profile {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 20px 0;
+    }
+
+    .citizen-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #e8eff9;
+        color: var(--navy);
+        font-size: 25px;
+    }
+
+    .citizen-profile strong,
+    .citizen-profile span { display: block; overflow-wrap: anywhere; }
+
+    .citizen-profile strong { color: var(--text); font-size: 16px; }
+    .citizen-profile span { margin-top: 4px; color: var(--muted); font-size: 12px; }
+
+    .citizen-information-list { border-top: 1px solid var(--line); }
+
+    .citizen-information-row {
+        display: grid;
+        grid-template-columns: 110px minmax(0, 1fr);
+        gap: 12px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+    }
+
+    .citizen-information-row span { color: var(--muted); }
+    .citizen-information-row strong { color: var(--text); overflow-wrap: anywhere; }
+
+    .privacy-note {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .citizen-modal-footer { display: flex; justify-content: flex-end; margin-top: 18px; }
+    .citizen-modal-footer .save-btn { flex: initial; min-width: 100px; }
+
+    .citizen-link:focus-visible,
+    .photo-card:focus-visible,
+    .view-all-photos:focus-visible,
+    .modal-close:focus-visible,
+    .photo-nav:focus-visible {
+        outline: 3px solid #93c5fd;
+        outline-offset: 3px;
+    }
+
+    /* Responsive */
     @media (max-width: 1100px) {
-        .screen-layout {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        .form-col {
-            position: static;
-            max-height: none;
-            overflow: visible;
-        }
+        .screen-layout { grid-template-columns: minmax(0, 1fr); }
+        .form-col { position: static; max-height: none; overflow: visible; }
     }
 
     @media (max-width: 700px) {
-        .page-header {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .panel {
-            padding: 18px;
-        }
-
-        .details {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        .details dt {
-            padding-bottom: 0;
-        }
-
-        .details dd {
-            border-top: none;
-            padding-top: 2px;
-        }
-
-        .report-map {
-            height: 260px;
-        }
+        .page-header { align-items: flex-start; flex-direction: column; }
+        .panel { padding: 18px; }
+        .details { grid-template-columns: minmax(0, 1fr); }
+        .details dt { padding-bottom: 0; }
+        .details dd { border-top: none; padding-top: 2px; }
+        .report-map { height: 260px; }
+        .photo-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .photo-modal-content { padding: 10px; }
+        .photo-viewer { gap: 5px; }
+        .photo-nav { width: 34px; height: 34px; }
+        .citizen-modal-content { padding: 18px; }
     }
 
     @media (max-width: 420px) {
-        .panel {
-            padding: 14px;
-        }
-
-        .completeness-item {
-            align-items: flex-start;
-        }
-
-        .photo-gallery {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .form-actions {
-            flex-direction: column;
-        }
+        .panel { padding: 14px; }
+        .photo-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .photo-overlay { opacity: 1; font-size: 11px; }
+        .form-actions { flex-direction: column; }
+        .completeness-item { align-items: flex-start; }
+        .citizen-information-row { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+        .custom-modal { padding: 10px; }
     }
 </style>
 {% endblock %}
@@ -570,16 +668,13 @@ Screen Report
 
 <div class="page-header">
     <h2>Screen Report #{{ report.report_id }}</h2>
-
     <a href="{% url 'pending_reports' %}" class="back-btn">&larr; Back to list</a>
 </div>
 
 <div class="screen-layout">
 
-    <!-- ============ LEFT: Report information ============ -->
+    <!-- LEFT: Report information -->
     <div class="col">
-
-        <!-- Report Details -->
         <section class="panel">
             <h3>Report details</h3>
 
@@ -594,7 +689,14 @@ Screen Report
                 <dd>{{ report.get_infrastructure_type_display|default:"Not provided" }}</dd>
 
                 <dt>Submitted by</dt>
-                <dd>{{ report.citizen.get_full_name|default:"Citizen" }}</dd>
+                <dd>
+                    <button type="button" class="citizen-link"
+                        onclick="openCitizenModal()"
+                        aria-haspopup="dialog">
+                        {{ report.citizen.get_full_name|default:report.citizen.username }}
+                        <span aria-hidden="true">↗</span>
+                    </button>
+                </dd>
 
                 <dt>Date submitted</dt>
                 <dd>{{ report.reported_date|date:"M d, Y g:i A" }}</dd>
@@ -603,17 +705,13 @@ Screen Report
                 <dd>{{ report.geographic_address|default:"Not provided" }}</dd>
 
                 <dt>Coordinates</dt>
-                <dd>
-                    {{ report.latitude|default:"Not provided" }},
-                    {{ report.longitude|default:"Not provided" }}
-                </dd>
+                <dd>{{ report.latitude|default:"Not provided" }}, {{ report.longitude|default:"Not provided" }}</dd>
 
                 <dt>Location method</dt>
                 <dd>{{ report.location_method|default:"Not provided" }}</dd>
             </dl>
 
-            <!-- Map -->
-            <div class="sub-title">Location</div>
+            <div class="sub-title">Reported location</div>
 
             {% if report.latitude != None and report.longitude != None %}
                 <iframe
@@ -627,50 +725,55 @@ Screen Report
                 <p class="empty-note">No location coordinates available.</p>
             {% endif %}
 
-            <!-- Photos -->
-            <div class="sub-title">Photos</div>
+            <div class="sub-title photo-heading">
+                <span>Report photos</span>
+                <span class="photo-total">
+                    {{ report.photos.count }} photo{{ report.photos.count|pluralize }}
+                </span>
+            </div>
 
-            <div class="photo-gallery">
+            <div class="photo-gallery" id="photoGallery">
                 {% for photo in report.photos.all %}
                     {% if photo.file_path %}
-                        <a href="{{ photo.file_path.url }}" target="_blank" rel="noopener noreferrer">
-                            <img
-                                src="{{ photo.file_path.url }}"
-                                alt="Report photo"
-                                loading="lazy"
-                            >
-                        </a>
+                        <button
+                            type="button"
+                            class="photo-card {% if forloop.counter > 4 %}photo-extra{% endif %}"
+                            data-photo-url="{{ photo.file_path.url }}"
+                            data-photo-alt="Report photo {{ forloop.counter }}"
+                            aria-label="View report photo {{ forloop.counter }}"
+                            onclick="openPhotoModal(this)">
+                            <img src="{{ photo.file_path.url }}"
+                                alt="Report photo {{ forloop.counter }}"
+                                loading="lazy">
+                            <span class="photo-overlay">View photo</span>
+                        </button>
                     {% endif %}
                 {% empty %}
                     <p class="empty-note">No photos uploaded.</p>
                 {% endfor %}
             </div>
+
+            {% if report.photos.count > 4 %}
+                <button type="button" class="view-all-photos"
+                    id="viewAllPhotosBtn" onclick="toggleAllPhotos()">
+                    View all photos
+                </button>
+            {% endif %}
         </section>
 
-        <!-- Information Requests -->
         {% if report.info_requests.all %}
         <section class="panel">
             <h3>Information requests</h3>
-
             {% for req in report.info_requests.all %}
             <div class="prev-item">
                 <p>
-                    <strong>
-                        Requested by
-                        {{ req.requested_by.user.get_full_name|default:"FRU" }}
-                    </strong>
-                    &middot;
-                    {{ req.requested_date|date:"M d, Y g:i A" }}
+                    <strong>Requested by {{ req.requested_by.user.get_full_name|default:"FRU" }}</strong>
+                    &middot; {{ req.requested_date|date:"M d, Y g:i A" }}
                 </p>
-
                 <p>{{ req.request_message }}</p>
 
                 {% if req.response_message %}
-                    <p style="margin-top:10px;">
-                        <strong>Citizen's reply</strong>
-                        &middot;
-                        {{ req.response_date|date:"M d, Y g:i A" }}
-                    </p>
+                    <p><strong>Citizen's reply</strong> &middot; {{ req.response_date|date:"M d, Y g:i A" }}</p>
                     <p>{{ req.response_message }}</p>
                 {% else %}
                     <p class="waiting">Waiting for the citizen's reply.</p>
@@ -680,32 +783,21 @@ Screen Report
         </section>
         {% endif %}
 
-        <!-- Previous Screenings -->
         {% if report.screenings.all %}
         <section class="panel">
             <h3>Previous screenings</h3>
-
             {% for s in report.screenings.all %}
             <div class="prev-item">
                 <strong>{{ s.screening_result }}</strong>
-
-                <p>
-                    Screened by
-                    {{ s.screened_by.user.get_full_name|default:"FRU" }}
-                </p>
-
+                <p>Screened by {{ s.screened_by.user.get_full_name|default:"FRU" }}</p>
                 <small>
                     Completeness: {{ s.completeness_status }}
                     &middot; Duplicate: {{ s.duplicate_status }}
                     &middot; Jurisdiction: {{ s.jurisdiction_status }}
-                    <br>
-                    {{ s.screening_date|date:"M d, Y g:i A" }}
+                    <br>{{ s.screening_date|date:"M d, Y g:i A" }}
                 </small>
-
                 {% if s.remarks %}
-                    <p style="margin-top:8px;">
-                        <strong>Remarks:</strong> {{ s.remarks }}
-                    </p>
+                    <p><strong>Remarks:</strong> {{ s.remarks }}</p>
                 {% endif %}
             </div>
             {% endfor %}
@@ -713,14 +805,12 @@ Screen Report
         {% endif %}
     </div>
 
-    <!-- ============ RIGHT: Screening flow (in order) ============ -->
+    <!-- RIGHT: Screening form -->
     <div class="col form-col">
-        <form method="post" class="panel">
+        <form method="post" class="panel" id="screeningForm">
             {% csrf_token %}
-
             <h3>Screening</h3>
 
-            <!-- STEP 1: Completeness (system-determined) -->
             <div class="form-step">
                 <div class="step-title">1. Completeness</div>
 
@@ -738,31 +828,23 @@ Screen Report
                         {% else %}
                             <span class="check-icon check-failed">&#10007;</span>
                         {% endif %}
-
                         <span>{{ check.label }}</span>
-
                         <span class="check-status {% if check.passed %}check-passed{% else %}check-failed{% endif %}">
                             {% if check.passed %}Complete{% else %}Missing{% endif %}
                         </span>
                     </div>
                     {% empty %}
-                    <p class="empty-note" style="padding:10px 0;">Unavailable.</p>
+                        <p class="empty-note" style="padding:10px 0;">Unavailable.</p>
                     {% endfor %}
                 </div>
 
-                <input
-                    type="hidden"
-                    id="completeness_status"
-                    name="completeness_status"
-                    value="{{ completeness_status }}"
-                >
+                <input type="hidden" id="completeness_status"
+                    name="completeness_status" value="{{ completeness_status }}">
             </div>
 
-            <!-- STEP 2: Possible duplicates -> then decision -->
             <div class="form-step">
                 <div class="step-head">
                     <div class="step-title">2. Duplicate check</div>
-
                     {% if possible_duplicates %}
                         <span class="count-pill">{{ possible_duplicates|length }} found</span>
                     {% endif %}
@@ -772,34 +854,12 @@ Screen Report
                     {% if possible_duplicates %}
                         {% for match in possible_duplicates %}
                         <div class="duplicate-item">
-                            <p class="duplicate-item-title">
-                                Report #{{ match.report.report_id }}
-                            </p>
-
-                            <p>
-                                <strong>Title:</strong>
-                                {{ match.report.title|default:"Untitled report" }}
-                            </p>
-
-                            <p>
-                                <strong>Description:</strong>
-                                {{ match.report.description|default:"Not provided"|truncatewords:25 }}
-                            </p>
-
-                            <p>
-                                <strong>Type:</strong>
-                                {{ match.report.get_infrastructure_type_display|default:"Not provided" }}
-                            </p>
-
-                            <p>
-                                <strong>Location:</strong>
-                                {{ match.report.geographic_address|default:"Not provided" }}
-                            </p>
-
-                            <p>
-                                <strong>Status:</strong>
-                                {{ match.report.status }}
-                            </p>
+                            <p class="duplicate-item-title">Report #{{ match.report.report_id }}</p>
+                            <p><strong>Title:</strong> {{ match.report.title|default:"Untitled report" }}</p>
+                            <p><strong>Description:</strong> {{ match.report.description|default:"Not provided"|truncatewords:25 }}</p>
+                            <p><strong>Type:</strong> {{ match.report.get_infrastructure_type_display|default:"Not provided" }}</p>
+                            <p><strong>Location:</strong> {{ match.report.geographic_address|default:"Not provided" }}</p>
+                            <p><strong>Status:</strong> {{ match.report.status }}</p>
 
                             <div class="duplicate-meta">
                                 <span><strong>Distance:</strong> {{ match.distance }} metres</span>
@@ -807,12 +867,9 @@ Screen Report
                             </div>
 
                             {% if match.report.latitude != None and match.report.longitude != None %}
-                                <a
-                                    class="duplicate-link"
+                                <a class="duplicate-link"
                                     href="https://www.google.com/maps/search/?api=1&amp;query={{ match.report.latitude }},{{ match.report.longitude }}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
+                                    target="_blank" rel="noopener noreferrer">
                                     View on Google Maps &rarr;
                                 </a>
                             {% endif %}
@@ -832,40 +889,19 @@ Screen Report
                 </div>
             </div>
 
-            <!-- STEP 3: Jurisdiction suggestion -> then decision -->
             <div class="form-step">
                 <div class="step-title">3. Jurisdiction check</div>
 
                 <div class="jurisdiction-box">
-                    <span class="jurisdiction-status">
-                        {{ jurisdiction_suggestion.status }}
-                    </span>
-
-                    <p class="jurisdiction-message">
-                        {{ jurisdiction_suggestion.message }}
-                    </p>
+                    <span class="jurisdiction-status">{{ jurisdiction_suggestion.status }}</span>
+                    <p class="jurisdiction-message">{{ jurisdiction_suggestion.message }}</p>
 
                     {% if jurisdiction_suggestion.infrastructure %}
                     <div class="infrastructure-details">
-                        <p>
-                            <strong>Infrastructure:</strong>
-                            {{ jurisdiction_suggestion.infrastructure.infra_name }}
-                        </p>
-
-                        <p>
-                            <strong>Type:</strong>
-                            {{ jurisdiction_suggestion.infrastructure.get_infra_type_display }}
-                        </p>
-
-                        <p>
-                            <strong>Location:</strong>
-                            {{ jurisdiction_suggestion.infrastructure.location_description|default:"Not provided" }}
-                        </p>
-
-                        <p>
-                            <strong>Record status:</strong>
-                            {{ jurisdiction_suggestion.infrastructure.get_status_display }}
-                        </p>
+                        <p><strong>Infrastructure:</strong> {{ jurisdiction_suggestion.infrastructure.infra_name }}</p>
+                        <p><strong>Type:</strong> {{ jurisdiction_suggestion.infrastructure.get_infra_type_display }}</p>
+                        <p><strong>Location:</strong> {{ jurisdiction_suggestion.infrastructure.location_description|default:"Not provided" }}</p>
+                        <p><strong>Record status:</strong> {{ jurisdiction_suggestion.infrastructure.get_status_display }}</p>
                     </div>
                     {% endif %}
                 </div>
@@ -879,7 +915,6 @@ Screen Report
                 </div>
             </div>
 
-            <!-- STEP 4: Result -->
             <div class="form-step">
                 <div class="step-title">4. Result</div>
 
@@ -888,7 +923,8 @@ Screen Report
                 </div>
 
                 <div class="form-group">
-                    <select name="screening_result" id="screening_result" aria-label="Screening result" required>
+                    <label for="screening_result">Screening result</label>
+                    <select name="screening_result" id="screening_result" required>
                         <option value="Validated">Validated</option>
                         <option value="Rejected">Rejected</option>
                         <option value="Needs More Info">Needs More Information</option>
@@ -899,11 +935,7 @@ Screen Report
                     <label for="screening_remarks">
                         Remarks <span class="required-mark" id="remarks_required">*</span>
                     </label>
-
-                    <textarea
-                        name="screening_remarks"
-                        id="screening_remarks"
-                    ></textarea>
+                    <textarea name="screening_remarks" id="screening_remarks"></textarea>
                 </div>
 
                 <div class="form-actions">
@@ -913,25 +945,120 @@ Screen Report
             </div>
         </form>
     </div>
+</div>
 
+<!-- Photo preview modal -->
+<div class="custom-modal" id="photoModal" role="dialog"
+    aria-modal="true" aria-label="Report photo preview" aria-hidden="true">
+    <div class="modal-backdrop" onclick="closePhotoModal()"></div>
+    <div class="photo-modal-content">
+        <div class="modal-topbar">
+            <span id="photoCounter">Photo</span>
+            <button type="button" class="modal-close"
+                onclick="closePhotoModal()" aria-label="Close photo preview">&times;</button>
+        </div>
+        <div class="photo-viewer">
+            <button type="button" class="photo-nav"
+                onclick="changePhoto(-1)" aria-label="Previous photo">&#10094;</button>
+            <img id="modalPhoto" src="" alt="Report photo preview">
+            <button type="button" class="photo-nav"
+                onclick="changePhoto(1)" aria-label="Next photo">&#10095;</button>
+        </div>
+    </div>
+</div>
+
+<!-- Citizen information modal -->
+<div class="custom-modal" id="citizenModal" role="dialog"
+    aria-modal="true" aria-labelledby="citizenModalTitle" aria-hidden="true">
+    <div class="modal-backdrop" onclick="closeCitizenModal()"></div>
+
+    <div class="citizen-modal-content">
+        <div class="citizen-modal-header">
+            <div>
+                <h3 id="citizenModalTitle">Citizen Information</h3>
+                <p>Report submitter details</p>
+            </div>
+
+            <button type="button" class="modal-close"
+                onclick="closeCitizenModal()"
+                aria-label="Close citizen information">&times;</button>
+        </div>
+
+        <div class="citizen-profile">
+            <div class="citizen-avatar" aria-hidden="true">&#128100;</div>
+            <div>
+                <strong>
+                    {{ report.citizen.get_full_name|default:report.citizen.username }}
+                </strong>
+                <span>Citizen / Report submitter</span>
+            </div>
+        </div>
+
+        <div class="citizen-information-list">
+            <div class="citizen-information-row">
+                <span>Username</span>
+                <strong>{{ report.citizen.username|default:"Not provided" }}</strong>
+            </div>
+
+            <div class="citizen-information-row">
+                <span>Account role</span>
+                <strong>
+                    {{ report.citizen.get_role_display|default:report.citizen.role|default:"Citizen" }}
+                </strong>
+            </div>
+
+            <div class="citizen-information-row">
+                <span>Email Address</span>
+                <strong>{{ report.citizen.email|default:"Not provided" }}</strong>
+            </div>
+
+            <div class="citizen-information-row">
+                <span>Contact Number</span>
+                <strong>
+                    {% if report.citizen.citizen_profile.contact_number %}
+                        {{ report.citizen.citizen_profile.contact_number }}
+                    {% else %}
+                        Not provided
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="citizen-information-row">
+                <span>Home Address</span>
+                <strong>
+                    {% if report.citizen.citizen_profile.address %}
+                        {{ report.citizen.citizen_profile.address }}
+                    {% else %}
+                        Not provided
+                    {% endif %}
+                </strong>
+            </div>
+        </div>
+
+        <div class="citizen-modal-footer">
+            <button type="button" class="save-btn"
+                onclick="closeCitizenModal()">Close</button>
+        </div>
+    </div>
 </div>
 
 <script>
 (function () {
-    var completeness = document.getElementById("completeness_status");
-    var duplicate = document.getElementById("duplicate_status");
-    var jurisdiction = document.getElementById("jurisdiction_status");
-    var result = document.getElementById("screening_result");
-    var remarks = document.getElementById("screening_remarks");
-    var hint = document.getElementById("result_hint");
-    var requiredMark = document.getElementById("remarks_required");
+    "use strict";
 
-    var validatedOption = result.querySelector(
-        'option[value="Validated"]'
-    );
+    /* Screening form validation */
+    const form = document.getElementById("screeningForm");
+    const completeness = document.getElementById("completeness_status");
+    const duplicate = document.getElementById("duplicate_status");
+    const jurisdiction = document.getElementById("jurisdiction_status");
+    const result = document.getElementById("screening_result");
+    const remarks = document.getElementById("screening_remarks");
+    const hint = document.getElementById("result_hint");
+    const requiredMark = document.getElementById("remarks_required");
+    const validatedOption = result.querySelector('option[value="Validated"]');
 
-    function update() {
-        var failed =
+    function updateScreeningForm() {
+        const failed =
             completeness.value !== "Complete" ||
             duplicate.value !== "Not Duplicate" ||
             jurisdiction.value !== "Within Jurisdiction";
@@ -943,7 +1070,7 @@ Screen Report
             result.value = "Needs More Info";
         }
 
-        var needsRemarks =
+        const needsRemarks =
             result.value === "Needs More Info" ||
             result.value === "Rejected";
 
@@ -951,11 +1078,112 @@ Screen Report
         requiredMark.style.display = needsRemarks ? "inline" : "none";
     }
 
-    duplicate.addEventListener("change", update);
-    jurisdiction.addEventListener("change", update);
-    result.addEventListener("change", update);
+    duplicate.addEventListener("change", updateScreeningForm);
+    jurisdiction.addEventListener("change", updateScreeningForm);
+    result.addEventListener("change", updateScreeningForm);
+    updateScreeningForm();
 
-    update();
+    /* Modals and gallery */
+    const photoModal = document.getElementById("photoModal");
+    const citizenModal = document.getElementById("citizenModal");
+    const modalPhoto = document.getElementById("modalPhoto");
+    const photoCounter = document.getElementById("photoCounter");
+    const photoGallery = document.getElementById("photoGallery");
+    const viewAllButton = document.getElementById("viewAllPhotosBtn");
+
+    let currentPhotoIndex = 0;
+    let lastFocusedElement = null;
+
+    function getPhotos() {
+        return Array.from(document.querySelectorAll(".photo-card"));
+    }
+
+    function showModal(modal) {
+        lastFocusedElement = document.activeElement;
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        const closeButton = modal.querySelector(".modal-close");
+        if (closeButton) closeButton.focus();
+    }
+
+    function hideModal(modal) {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+
+        if (!document.querySelector(".custom-modal.is-open")) {
+            document.body.style.overflow = "";
+        }
+
+        if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+            lastFocusedElement.focus();
+        }
+    }
+
+    function displayPhoto() {
+        const photos = getPhotos();
+        if (!photos.length) return;
+
+        currentPhotoIndex =
+            (currentPhotoIndex + photos.length) % photos.length;
+
+        const photo = photos[currentPhotoIndex];
+        modalPhoto.src = photo.dataset.photoUrl;
+        modalPhoto.alt = photo.dataset.photoAlt;
+        photoCounter.textContent =
+            "Photo " + (currentPhotoIndex + 1) + " of " + photos.length;
+    }
+
+    window.openPhotoModal = function (button) {
+        const photos = getPhotos();
+        currentPhotoIndex = photos.indexOf(button);
+        if (currentPhotoIndex < 0) return;
+        displayPhoto();
+        showModal(photoModal);
+    };
+
+    window.changePhoto = function (direction) {
+        currentPhotoIndex += direction;
+        displayPhoto();
+    };
+
+    window.closePhotoModal = function () {
+        hideModal(photoModal);
+        modalPhoto.src = "";
+    };
+
+    window.openCitizenModal = function () {
+        showModal(citizenModal);
+    };
+
+    window.closeCitizenModal = function () {
+        hideModal(citizenModal);
+    };
+
+    window.toggleAllPhotos = function () {
+        if (!photoGallery || !viewAllButton) return;
+
+        const expanded = photoGallery.classList.toggle("show-all");
+        viewAllButton.textContent = expanded
+            ? "Show fewer photos"
+            : "View all photos";
+    };
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            if (photoModal.classList.contains("is-open")) {
+                window.closePhotoModal();
+            } else if (citizenModal.classList.contains("is-open")) {
+                window.closeCitizenModal();
+            }
+        }
+
+        if (photoModal.classList.contains("is-open")) {
+            if (event.key === "ArrowRight") window.changePhoto(1);
+            if (event.key === "ArrowLeft") window.changePhoto(-1);
+        }
+    });
 })();
 </script>
 

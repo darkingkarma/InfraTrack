@@ -1,21 +1,247 @@
+
 {% extends "users/master.html" %}
 
 {% block title %}Citizen Feedback{% endblock %}
-
 {% block page_title %}Citizen Feedback{% endblock %}
 
-{% block content %}
-<div class="form-card">
-    <h2>Citizen Feedback</h2>
+{% block style %}
+<style>
+.feedback-container {
+    width: 100%;
+}
 
-    {% for feedback in feedbacks %}
-        <div style="padding: 15px; border-bottom: 1px solid #0A2E5C;">
-            <p><strong>Rating:</strong> {{ feedback.rating }}/5</p>
-            <p><strong>Comment:</strong> {{ feedback.comment }}</p>
-            <p><strong>Date:</strong> {{ feedback.date_created|date:"M d, Y" }}</p>
-        </div>
-    {% empty %}
-        <p>No feedback submitted yet.</p>
-    {% endfor %}
+/* Header */
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.feedback-header h2 {
+    margin: 0;
+    color: #0A2E5C;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.feedback-count {
+    background: #e0ecf8;
+    color: #0A2E5C;
+    padding: 7px 13px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Main card */
+.feedback-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+}
+
+.feedback-card-title {
+    color: #0A2E5C;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Individual feedback */
+.feedback-item {
+    padding: 18px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.feedback-item:first-of-type {
+    padding-top: 5px;
+}
+
+.feedback-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.feedback-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.rating-label {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.rating-stars {
+    color: #f59e0b;
+    font-size: 19px;
+    letter-spacing: 2px;
+    margin-left: 5px;
+}
+
+.rating-number {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.feedback-date {
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.feedback-comment-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.feedback-comment {
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+/* Empty state */
+.empty-feedback {
+    padding: 45px 20px;
+    text-align: center;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+}
+
+.empty-feedback h3 {
+    color: #334155;
+    font-size: 16px;
+    margin: 0 0 8px;
+}
+
+.empty-feedback p {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .feedback-container {
+        padding: 8px;
+    }
+
+    .feedback-card {
+        padding: 16px;
+    }
+
+    .feedback-header h2 {
+        font-size: 20px;
+    }
+
+    .feedback-top {
+        align-items: flex-start;
+    }
+
+    .feedback-date {
+        font-size: 11px;
+    }
+
+    .rating-stars {
+        font-size: 17px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="feedback-container">
+
+    <!-- Header -->
+    <div class="feedback-header">
+
+        <span class="feedback-count">
+            {{ feedbacks|length }} Feedback{{ feedbacks|length|pluralize }}
+        </span>
+    </div>
+
+
+    <!-- Feedback List -->
+    <div class="feedback-card">
+
+        <h3 class="feedback-card-title">
+            Submitted Feedback
+        </h3>
+
+        {% for feedback in feedbacks %}
+
+            <div class="feedback-item">
+
+                <div class="feedback-top">
+
+                    <div>
+                        <span class="rating-label">Rating</span>
+
+                        <span class="rating-stars" aria-label="{{ feedback.rating }} out of 5 stars">
+                            {% for star in "12345" %}
+                                {% if forloop.counter <= feedback.rating %}
+                                    ★
+                                {% else %}
+                                    ☆
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+
+                        <span class="rating-number">
+                            {{ feedback.rating }}/5
+                        </span>
+                    </div>
+
+                    <span class="feedback-date">
+                        {{ feedback.date_created|date:"M d, Y" }}
+                    </span>
+
+                </div>
+
+                <div class="feedback-comment-label">
+                    CITIZEN COMMENT
+                </div>
+
+                <div class="feedback-comment">
+                    {{ feedback.comment|default:"No comment provided." }}
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div class="empty-feedback">
+                <h3>No Feedback Yet</h3>
+                <p>Citizen feedback submissions will appear here.</p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
 </div>
 {% endblock %}

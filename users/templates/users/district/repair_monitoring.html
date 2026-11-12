@@ -11,107 +11,118 @@ Repair Monitoring
 
 {% block style %}
 <style>
-    .page-header h2 {
-        color: #0A2E5C;
+    * {
+        box-sizing: border-box;
     }
 
-    .page-header p {
-        color: #777;
-        margin: 4px 0 20px;
-    }
 
+
+    /* Search and Filter */
     .search-section {
         display: flex;
         gap: 15px;
-        margin-bottom: 25px;
+        margin-bottom: 15px;
+    }
+
+    .search-section input,
+    .search-section select {
+        padding: 11px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        outline: none;
     }
 
     .search-section input {
         flex: 1;
         min-width: 0;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font: inherit;
     }
 
     .search-section select {
         width: 220px;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        background: white;
-        font: inherit;
     }
 
-    .search-section button,
-    .search-reset {
-        border: none;
-        cursor: pointer;
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 14px;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
+    .search-section input:focus,
+    .search-section select:focus {
+        border-color: #0A2E5C;
+        box-shadow: 0 0 0 2px rgba(10, 46, 92, .08);
     }
 
-    .search-section button {
-        background: #0A2E5C;
-        color: white;
+    .results-info {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 12px;
     }
 
-    .search-section button:hover {
-        background: #16477f;
-    }
-
-    .search-reset {
-        background: #e8f0fe;
-        color: #0A2E5C;
-    }
-
-    .search-reset:hover {
-        background: #cfe0fb;
-    }
-
-    .table-card {
+    /* Table */
+    .table-container {
         background: white;
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-        padding: 20px;
         overflow-x: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
     }
 
     table {
         width: 100%;
+        min-width: 850px;
         border-collapse: collapse;
-        min-width: 750px;
     }
 
-    th, td {
-        text-align: left;
-        padding: 13px 10px;
-        border-bottom: 1px solid #eee;
-        font-size: 14px;
-        vertical-align: top;
+    thead {
+        background: #0A2E5C;
+        color: white;
     }
 
     th {
-        color: #0A2E5C;
+        padding: 15px;
+        text-align: left;
         white-space: nowrap;
+        font-size: 13px;
+    }
+
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        color: #334155;
+        vertical-align: middle;
     }
 
     tbody tr:hover {
         background: #f8fafc;
     }
 
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .empty {
+        text-align: center;
+        color: gray;
+        padding: 40px;
+    }
+
+    /* Report Information */
+    .report-title {
+        font-weight: bold;
+        color: #334155;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .work-order-id {
+        display: inline-block;
+        color: #888;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    /* Status */
     .status-badge {
         display: inline-block;
-        padding: 6px 12px;
-        border-radius: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
         font-size: 12px;
         font-weight: bold;
         white-space: nowrap;
@@ -137,6 +148,7 @@ Repair Monitoring
         font-size: 13px;
     }
 
+    /* Actions */
     .view-btn {
         background: #e8f0fe;
         color: #0A2E5C;
@@ -153,86 +165,70 @@ Repair Monitoring
         background: #cfe0fb;
     }
 
-    .empty {
-        color: gray;
-        padding: 30px 10px;
-        text-align: center;
-    }
-
+    /* Responsive */
     @media (max-width: 700px) {
+
         .search-section {
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 10px;
         }
 
-        .search-section input {
-            flex-basis: 100%;
-        }
-
+        .search-section input,
         .search-section select {
-            flex: 1;
-            width: auto;
-            min-width: 0;
+            width: 100%;
         }
-    }
 
-    @media (max-width: 480px) {
-        .search-section button,
-        .search-reset {
-            flex: 1;
+        .table-container {
+            border-radius: 8px;
         }
     }
 </style>
 {% endblock %}
 
+
 {% block content %}
 
-<div class="page-header">
-    <h2>Repair Monitoring</h2>
-    <p>Monitor work orders and track repair progress submitted by Field Engineers.</p>
-</div>
 
-<!-- Search and Status Filter -->
-<form method="get" class="search-section">
+
+<!-- Automatic Search and Status Filter -->
+<div class="search-section">
+
     <input
         type="text"
-        name="q"
+        id="workOrderSearch"
         placeholder="Search by report title, work order ID, or engineer..."
-        value="{{ search_query }}"
-        aria-label="Search work orders"
+        autocomplete="off"
     >
 
-    <select name="status" aria-label="Filter by work order status">
-        <option value="" {% if not status_filter %}selected{% endif %}>
-            All Statuses
-        </option>
+    <select id="statusFilter">
 
-        <option value="Issued" {% if status_filter == "Issued" %}selected{% endif %}>
-            Issued
-        </option>
+        <option value="">All Statuses</option>
 
-        <option value="In Progress" {% if status_filter == "In Progress" %}selected{% endif %}>
-            In Progress
-        </option>
+        <option value="Issued">Issued</option>
 
-        <option value="Completed" {% if status_filter == "Completed" %}selected{% endif %}>
-            Completed
-        </option>
+        <option value="In Progress">In Progress</option>
+
+        <option value="Completed">Completed</option>
+
     </select>
 
-    <button type="submit">Search</button>
+</div>
 
-    {% if search_query or status_filter %}
-        <a href="{% url 'repair_monitoring' %}" class="search-reset">
-            Reset
-        </a>
-    {% endif %}
-</form>
+
+<!-- Results Count -->
+<div class="results-info">
+
+    Showing <strong id="visibleCount">0</strong> of
+    <strong id="totalCount">0</strong> work orders
+
+</div>
+
 
 <!-- Work Orders Table -->
-<div class="table-card">
-    {% if work_orders %}
-    <table>
+<div class="table-container">
+
+    <table id="workOrderTable">
+
         <thead>
             <tr>
                 <th>No.</th>
@@ -244,26 +240,44 @@ Repair Monitoring
             </tr>
         </thead>
 
-        <tbody>
+        <tbody id="workOrderTableBody">
+
             {% for wo in work_orders %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
+
+            <tr class="work-order-row">
 
                 <td>
-                    <strong>{{ wo.report.title }}</strong>
-                    <br>
-                    <small>Work Order #{{ wo.pk }}</small>
+                    {{ forloop.counter }}
                 </td>
 
-                <td>
+                <td class="search-report">
+
+                    <div class="report-title">
+                        {{ wo.report.title }}
+                    </div>
+
+                    <span class="work-order-id">
+                        Work Order #{{ wo.pk }}
+                    </span>
+
+                </td>
+
+                <td class="search-engineer">
+
                     {% if wo.assigned_field_engineer %}
+
                         {{ wo.assigned_field_engineer.user.get_full_name|default:wo.assigned_field_engineer.user.username }}
+
                     {% else %}
+
                         Not assigned
+
                     {% endif %}
+
                 </td>
 
-                <td>
+                <td class="search-status">
+
                     <span class="status-badge
                         {% if wo.status == 'Completed' %}
                             status-completed
@@ -272,40 +286,151 @@ Repair Monitoring
                         {% else %}
                             status-issued
                         {% endif %}">
+
                         {{ wo.status }}
+
                     </span>
+
                 </td>
 
                 <td>
+
                     {% with latest=wo.latest_repair_update %}
+
                         {% if latest %}
+
                             {{ latest.update_date|date:"M d, Y g:i A" }}
+
                         {% else %}
-                            <span class="no-update">No updates yet</span>
+
+                            <span class="no-update">
+                                No updates yet
+                            </span>
+
                         {% endif %}
+
                     {% endwith %}
+
                 </td>
 
                 <td>
-                    <a href="{% url 'view_work_order' wo.pk %}"
-                       class="view-btn">
+
+                    <a
+                        href="{% url 'view_work_order' wo.pk %}"
+                        class="view-btn"
+                    >
                         View Details
                     </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="6" class="empty">
+                    No work orders found.
                 </td>
             </tr>
+
             {% endfor %}
+
+
+            <!-- No Matching Results -->
+            <tr id="noResultsRow" style="display:none;">
+
+                <td colspan="6" class="empty">
+                    No matching work orders found.
+                </td>
+
+            </tr>
+
         </tbody>
+
     </table>
 
-    {% else %}
-        <p class="empty">
-            {% if search_query or status_filter %}
-                No work orders match your search or selected status.
-            {% else %}
-                No work orders found.
-            {% endif %}
-        </p>
-    {% endif %}
 </div>
+
+
+<!-- Automatic Search Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const searchInput = document.getElementById("workOrderSearch");
+    const statusFilter = document.getElementById("statusFilter");
+
+    const rows = document.querySelectorAll(".work-order-row");
+
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    totalCount.textContent = rows.length;
+
+    function filterWorkOrders() {
+
+        const searchValue = searchInput.value
+            .toLowerCase()
+            .trim();
+
+        const selectedStatus = statusFilter.value
+            .toLowerCase()
+            .trim();
+
+        let visible = 0;
+
+        rows.forEach(function(row) {
+
+            const report = row.querySelector(".search-report")
+                .textContent.toLowerCase();
+
+            const engineer = row.querySelector(".search-engineer")
+                .textContent.toLowerCase();
+
+            const status = row.querySelector(".search-status")
+                .textContent.toLowerCase()
+                .trim();
+
+            const matchesSearch =
+                report.includes(searchValue) ||
+                engineer.includes(searchValue);
+
+            const matchesStatus =
+                selectedStatus === "" ||
+                status === selectedStatus.toLowerCase();
+
+            if (matchesSearch && matchesStatus) {
+
+                row.style.display = "";
+                visible++;
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+        visibleCount.textContent = visible;
+
+        noResultsRow.style.display =
+            visible === 0 && rows.length > 0 ? "" : "none";
+
+    }
+
+    // Search automatically while typing
+    searchInput.addEventListener("input", filterWorkOrders);
+
+    // Filter automatically when status changes
+    statusFilter.addEventListener("change", filterWorkOrders);
+
+    // Initial count
+    filterWorkOrders();
+
+});
+</script>
 
 {% endblock %}

@@ -11,89 +11,81 @@ Reports Ready for Work Order
 
 {% block style %}
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    .work-orders-container {
+        width: 100%;
+    }
+
+    /* Page Header */
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 8px;
     }
 
     .page-header h2 {
         color: #0A2E5C;
         margin: 0;
+        font-size: 23px;
     }
 
-    .page-description {
-        color: #777;
-        margin: 8px 0 20px;
-        font-size: 14px;
-    }
 
+    /* Search */
     .search-section {
         display: flex;
         gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
+        align-items: center;
+        margin-bottom: 15px;
+        width: 100%;
     }
 
     .search-section input {
         flex: 1;
-        min-width: 220px;
-        padding: 11px 13px;
+        min-width: 0;
+        padding: 12px 14px;
         border: 1px solid #ddd;
-        border-radius: 6px;
+        border-radius: 7px;
         font-size: 14px;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+        background: white;
     }
 
-    .search-btn,
-    .search-reset {
-        padding: 10px 16px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: bold;
-        text-decoration: none;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    .search-section input:focus {
+        border-color: #0A2E5C;
+        box-shadow: 0 0 0 3px rgba(10, 46, 92, .10);
     }
 
-    .search-btn {
-        background: #0A2E5C;
-        color: white;
-        border: none;
-    }
-
-    .search-btn:hover {
-        background: #154A8A;
-    }
-
-    .search-reset {
-        background: #eee;
-        color: #444;
-    }
-
-    .search-reset:hover {
-        background: #ddd;
-    }
-
+    /* Results Counter */
     .results-count {
         color: #666;
         font-size: 13px;
-        margin-bottom: 12px;
+        margin: 0 0 12px;
     }
 
+    .results-count strong {
+        color: #0A2E5C;
+    }
+
+    /* Table */
     .table-container {
         background: white;
         border-radius: 10px;
         overflow-x: auto;
         box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        width: 100%;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 750px;
+        min-width: 780px;
     }
 
     thead {
@@ -106,26 +98,40 @@ Reports Ready for Work Order
         text-align: left;
         white-space: nowrap;
         font-size: 13px;
+        font-weight: 600;
     }
 
     td {
         padding: 15px;
         border-bottom: 1px solid #eee;
         font-size: 14px;
+        vertical-align: middle;
+    }
+
+    tbody tr {
+        transition: background .2s;
     }
 
     tbody tr:hover {
         background: #f7f9fc;
     }
 
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Report Information */
     .report-id {
         color: #0A2E5C;
         font-weight: bold;
+        white-space: nowrap;
     }
 
     .report-title {
+        display: block;
         font-weight: 600;
         color: #222;
+        overflow-wrap: anywhere;
     }
 
     .report-location {
@@ -135,67 +141,115 @@ Reports Ready for Work Order
         margin-top: 5px;
         max-width: 260px;
         overflow-wrap: anywhere;
+        line-height: 1.5;
     }
 
-    .create-btn {
-        border: none;
-        cursor: pointer;
-        padding: 9px 14px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: bold;
-        text-decoration: none;
-        display: inline-block;
-        background: #0A2E5C;
-        color: white;
+    .inspection-date {
         white-space: nowrap;
+        line-height: 1.7;
     }
 
-    .create-btn:hover {
-        background: #154A8A;
+    .inspection-date small {
+        color: #777;
+        font-size: 12px;
     }
 
+    /* Status */
     .status-badge {
         display: inline-block;
         background: #e6f7ec;
         color: #1e7e34;
-        padding: 5px 10px;
+        padding: 6px 11px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: bold;
         white-space: nowrap;
     }
 
+    /* Create Work Order Button */
+    .create-btn {
+        border: none;
+        cursor: pointer;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #0A2E5C;
+        color: white;
+        white-space: nowrap;
+        transition: background .2s, transform .2s;
+    }
+
+    .create-btn:hover {
+        background: #154A8A;
+        transform: translateY(-1px);
+    }
+
+    /* Empty State */
     .empty {
         text-align: center;
         color: #777;
-        padding: 40px 20px;
+        padding: 45px 20px;
+        line-height: 1.6;
     }
 
     .empty strong {
         display: block;
         color: #444;
         margin-bottom: 8px;
+        font-size: 15px;
     }
 
-    @media (max-width: 600px) {
+    .no-results-row {
+        display: none;
+    }
+
+    /* Mobile */
+    @media (max-width: 700px) {
         .page-header h2 {
-            font-size: 20px;
+            font-size: 21px;
         }
 
         .search-section {
             flex-direction: column;
+            align-items: stretch;
         }
 
         .search-section input {
             width: 100%;
-            box-sizing: border-box;
+            flex: none;
         }
 
-        .search-btn,
-        .search-reset {
-            width: 100%;
-            box-sizing: border-box;
+
+        .table-container {
+            border-radius: 8px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h2 {
+            font-size: 19px;
+        }
+
+        .page-description {
+            font-size: 13px;
+        }
+
+        .results-count {
+            font-size: 12px;
+        }
+
+        .empty {
+            padding: 30px 15px;
         }
     }
 </style>
@@ -203,124 +257,184 @@ Reports Ready for Work Order
 
 {% block content %}
 
-<div class="page-header">
-    <h2>Reports Ready for Work Order</h2>
-</div>
+<div class="work-orders-container">
 
-<p class="page-description">
-    Review inspected infrastructure reports and create work orders for reports
-    that are ready for repair.
-</p>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>Reports Ready for Work Order</h2>
+    </div>
 
-<form method="get" class="search-section">
-    <input
-        type="text"
-        name="q"
-        placeholder="Search by report ID, title, location, or type..."
-        value="{{ search_query }}"
-        aria-label="Search inspected reports"
-    >
+    <!-- Automatic Search -->
+    <div class="search-section">
+        <input
+            type="text"
+            id="reportSearch"
+            placeholder="Search by report ID, title, location, or type..."
+            aria-label="Search inspected reports"
+            autocomplete="off"
+        >
+    </div>
 
-    <button type="submit" class="search-btn">
-        Search
-    </button>
+    <!-- Results Count -->
+    <p class="results-count" id="resultsCount">
+        Showing <strong id="visibleCount">{{ reports|length }}</strong>
+        of <strong id="totalCount">{{ reports|length }}</strong>
+        report{{ reports|length|pluralize }}
+    </p>
 
-    {% if search_query %}
-        <a href="{% url 'work_orders' %}" class="search-reset">
-            Reset
-        </a>
-    {% endif %}
-</form>
+    <!-- Reports Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Report ID</th>
+                    <th>Report Details</th>
+                    <th>Infrastructure Type</th>
+                    <th>Inspected On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
 
-<p class="results-count">
-    {{ reports|length }} report{{ reports|length|pluralize }} ready for work order
-</p>
+            <tbody id="reportsTableBody">
 
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th>Report ID</th>
-                <th>Report Details</th>
-                <th>Infrastructure Type</th>
-                <th>Inspected On</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for report in reports %}
-            <tr>
-                <td class="report-id">
-                    #{{ report.report_id }}
-                </td>
-
-                <td>
-                    <span class="report-title">
-                        {{ report.title }}
-                    </span>
-
-                    {% if report.geographic_address %}
-                        <span class="report-location">
-                            {{ report.geographic_address }}
+                {% for report in reports %}
+                <tr class="report-row">
+                    <td class="report-id">
+                        <span class="searchable-report-id">
+                            #{{ report.report_id }}
                         </span>
-                    {% endif %}
-                </td>
+                    </td>
 
-                <td>
-                    {{ report.get_infrastructure_type_display }}
-                </td>
+                    <td>
+                        <span class="report-title searchable-title">
+                            {{ report.title }}
+                        </span>
 
-                <td>
-                    {% if report.latest_inspection_date %}
-                        {{ report.latest_inspection_date|date:"M d, Y" }}
-                        <br>
-                        <small>
-                            {{ report.latest_inspection_date|date:"g:i A" }}
-                        </small>
-                    {% else %}
-                        <span style="color:#888;">Not available</span>
-                    {% endif %}
-                </td>
-
-                <td>
-                    <span class="status-badge">
-                        {{ report.status }}
-                    </span>
-                </td>
-
-                <td>
-                    <a
-                        href="{% url 'create_work_order' report.report_id %}"
-                        class="create-btn"
-                    >
-                        Create Work Order
-                    </a>
-                </td>
-            </tr>
-
-            {% empty %}
-            <tr>
-                <td colspan="6" class="empty">
-                    <strong>
-                        {% if search_query %}
-                            No matching reports found
+                        {% if report.geographic_address %}
+                            <span class="report-location searchable-location">
+                                {{ report.geographic_address }}
+                            </span>
                         {% else %}
-                            No reports awaiting a work order
+                            <span class="searchable-location" style="display:none;"></span>
                         {% endif %}
-                    </strong>
+                    </td>
 
-                    {% if search_query %}
-                        Try a different search term or reset your search.
-                    {% else %}
+                    <td class="searchable-type">
+                        {{ report.get_infrastructure_type_display }}
+                    </td>
+
+                    <td>
+                        {% if report.latest_inspection_date %}
+                            <div class="inspection-date">
+                                {{ report.latest_inspection_date|date:"M d, Y" }}
+                                <br>
+                                <small>
+                                    {{ report.latest_inspection_date|date:"g:i A" }}
+                                </small>
+                            </div>
+                        {% else %}
+                            <span style="color:#888;">Not available</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="status-badge searchable-status">
+                            {{ report.status }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <a
+                            href="{% url 'create_work_order' report.report_id %}"
+                            class="create-btn"
+                        >
+                            Create Work Order
+                        </a>
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty">
+                        <strong>No reports awaiting a work order</strong>
                         Reports will appear here after their inspection is completed.
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <!-- No Search Results -->
+                <tr class="no-results-row" id="noResultsRow">
+                    <td colspan="6" class="empty">
+                        <strong>No matching reports found</strong>
+                        Try searching with a different report ID, title, location, or infrastructure type.
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("reportSearch");
+
+    const reportRows = document.querySelectorAll(".report-row");
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    const totalReports = reportRows.length;
+
+    totalCount.textContent = totalReports;
+
+    function filterReports() {
+
+        const searchValue = searchInput.value.toLowerCase().trim();
+
+        let visibleReports = 0;
+
+        reportRows.forEach(function (row) {
+
+            const reportID = row.querySelector(".searchable-report-id")?.textContent || "";
+            const title = row.querySelector(".searchable-title")?.textContent || "";
+            const location = row.querySelector(".searchable-location")?.textContent || "";
+            const type = row.querySelector(".searchable-type")?.textContent || "";
+            const status = row.querySelector(".searchable-status")?.textContent || "";
+
+            const searchableText = (
+                reportID + " " +
+                title + " " +
+                location + " " +
+                type + " " +
+                status
+            ).toLowerCase();
+
+            const matches = searchableText.includes(searchValue);
+
+            row.style.display = matches ? "" : "none";
+
+            if (matches) {
+                visibleReports++;
+            }
+        });
+
+        visibleCount.textContent = visibleReports;
+
+        if (noResultsRow) {
+            noResultsRow.style.display =
+                visibleReports === 0 && totalReports > 0 ? "table-row" : "none";
+        }
+    }
+
+    // Search automatically while typing
+    searchInput.addEventListener("input", filterReports);
+
+
+});
+</script>
 
 {% endblock %}

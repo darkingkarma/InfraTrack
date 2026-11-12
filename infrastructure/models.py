@@ -68,3 +68,41 @@ class Infrastructure(models.Model):
 
     def __str__(self):
         return self.infra_name
+
+
+
+class InfrastructureImage(models.Model):
+
+    IMAGE_TYPE_CHOICES = [
+        ("regular", "Infrastructure Image"),
+        ("satellite", "Satellite Image"),
+    ]
+
+    image_id = models.AutoField(
+        primary_key=True
+    )
+
+    infrastructure = models.ForeignKey(
+        Infrastructure,
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+
+    image = models.ImageField(
+        upload_to="infrastructure/images/"
+    )
+
+    image_type = models.CharField(
+        max_length=20,
+        choices=IMAGE_TYPE_CHOICES
+    )
+
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.infrastructure.infra_name} - "
+            f"{self.get_image_type_display()}"
+        )
