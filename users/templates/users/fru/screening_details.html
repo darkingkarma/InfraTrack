@@ -24,17 +24,6 @@
     margin-bottom: 22px;
 }
 
-.details-header h2 {
-    color: #0A2E5C;
-    font-size: 23px;
-    margin: 0 0 6px;
-}
-
-.details-header p {
-    color: #777;
-    margin: 0;
-    font-size: 14px;
-}
 
 .back-btn {
     display: inline-flex;
@@ -393,9 +382,6 @@
         flex-direction: column;
     }
 
-    .details-header h2 {
-        font-size: 20px;
-    }
 
     .back-btn {
         width: 100%;
@@ -440,12 +426,6 @@
 
     <!-- HEADER -->
     <div class="details-header">
-        <div>
-            <h2>Screening Details</h2>
-            <p>
-                Review the recorded screening for Report #{{ report.report_id }}.
-            </p>
-        </div>
 
         <a href="{% url 'screening_history' %}" class="back-btn">
             &larr; Back to Screening History

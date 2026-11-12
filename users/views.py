@@ -29,6 +29,7 @@ from django.core import signing
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
+from rest_framework.permissions import AllowAny
 
 User = get_user_model()
 
@@ -2002,6 +2003,160 @@ class CitizenChangePasswordAPIView(APIView):
             {"message": "Password changed successfully."},
             status=status.HTTP_200_OK,
         )
+
+
+class PasswordResetRequestAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email", "").strip()
+
+        if not email:
+            return Response(
+                {"message": "Please enter your email address."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Only active mobile-app accounts can request a reset.
+        user = User.objects.filter(
+            email__iexact=email,
+            is_active=True,
+            role__in=["citizen", "field_engineer"]
+        ).first()
+
+        # Always return the same response so people cannot discover
+        # whether an email address has an account.
+        generic_response = {
+            "message": (
+                "If an active InfraTrack account uses that email, "
+                "a password reset link will be sent."
+            )
+        }
+
+        if not user:
+            return Response(generic_response, status=status.HTTP_200_OK)
+
+        # Create a signed token containing the user's ID and email.
+        reset_token = signing.dumps(
+            {
+                "user_id": user.pk,
+                "email": user.email,
+            },
+            salt="infratrack-password-reset"
+        )
+
+        reset_link = (
+            f"infratrack://reset-password?token={reset_token}"
+        )
+
+        subject = "InfraTrack Password Reset"
+
+        message = (
+            f"Hello {user.first_name or 'InfraTrack user'},\n\n"
+            "We received a request to reset your InfraTrack password.\n\n"
+            "Open the following link on your device to reset your password:\n\n"
+            f"{reset_link}\n\n"
+            "This link will expire after 30 minutes.\n\n"
+            "If you did not request this password reset, you can ignore "
+            "this email. Your password will remain unchanged.\n\n"
+            "Regards,\n"
+            "InfraTrack Support"
+        )
+
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False
+            )
+        except Exception:
+            # Do not reveal whether the email belongs to an account.
+            # Check the Django server logs if email delivery fails.
+            pass
+
+        return Response(generic_response, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get("token", "").strip()
+        new_password = request.data.get("new_password", "")
+        confirm_password = request.data.get("confirm_password", "")
+
+        if not token or not new_password or not confirm_password:
+            return Response(
+                {"message": "Please complete all required fields."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"message": "The passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate the signed token and its 30-minute expiration.
+        try:
+            token_data = signing.loads(
+                token,
+                salt="infratrack-password-reset",
+                max_age=1800
+            )
+        except signing.SignatureExpired:
+            return Response(
+                {"message": "This password reset link has expired. Please request a new one."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except signing.BadSignature:
+            return Response(
+                {"message": "This password reset link is invalid."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Find the account associated with the token.
+        user = User.objects.filter(
+            pk=token_data.get("user_id"),
+            email__iexact=token_data.get("email", ""),
+            is_active=True,
+            role__in=["citizen", "field_engineer"]
+        ).first()
+
+        if not user:
+            return Response(
+                {"message": "This password reset link is invalid or the account is unavailable."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Apply Django's configured password validators.
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as error:
+            return Response(
+                {"message": " ".join(error.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Save the new password.
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        # Invalidate existing DRF login tokens.
+        Token.objects.filter(user=user).delete()
+
+        return Response(
+            {
+                "message": (
+                    "Your password has been reset successfully. "
+                    "Please log in using your new password."
+                )
+            },
+            status=status.HTTP_200_OK
+        )
+
 
 @login_required
 def notifications_page(request):

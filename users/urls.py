@@ -47,8 +47,20 @@ urlpatterns = [
     path("api/citizen/change-password/",CitizenChangePasswordAPIView.as_view(),name="citizen_change_password"),
     path('feedback/', views.feedback_list, name='feedback_list'),
     path(
-    "api/citizen/verify-email/",
-    CitizenVerifyEmailAPIView.as_view(),
-    name="verify-citizen-email",
-),
+        "api/citizen/verify-email/",
+        CitizenVerifyEmailAPIView.as_view(),
+        name="verify-citizen-email",
+    ),
+    
+    path(
+        "api/password-reset/request/",
+        views.PasswordResetRequestAPIView.as_view(),
+        name="password_reset_request"
+    ),
+    path(
+        "api/password-reset/confirm/",
+        views.PasswordResetConfirmAPIView.as_view(),
+        name="password_reset_confirm"
+    ),
+
 ]
