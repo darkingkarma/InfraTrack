@@ -30,6 +30,13 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from rest_framework.permissions import AllowAny
+import logging
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -2006,6 +2013,7 @@ class CitizenChangePasswordAPIView(APIView):
         )
 
 
+
 class PasswordResetRequestAPIView(APIView):
     permission_classes = [AllowAny]
 
@@ -2018,15 +2026,12 @@ class PasswordResetRequestAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Only active mobile-app accounts can request a reset.
         user = User.objects.filter(
             email__iexact=email,
             is_active=True,
             role__in=["citizen", "field_engineer"]
         ).first()
 
-        # Always return the same response so people cannot discover
-        # whether an email address has an account.
         generic_response = {
             "message": (
                 "If an active InfraTrack account uses that email, "
@@ -2037,126 +2042,144 @@ class PasswordResetRequestAPIView(APIView):
         if not user:
             return Response(generic_response, status=status.HTTP_200_OK)
 
-        # Create a signed token containing the user's ID and email.
-        reset_token = signing.dumps(
-            {
-                "user_id": user.pk,
-                "email": user.email,
-            },
-            salt="infratrack-password-reset"
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        reset_url = request.build_absolute_uri(
+            reverse("password_reset_page")
         )
 
-        reset_link = (
-            f"infratrack://reset-password?token={reset_token}"
-        )
+        reset_link = f"{reset_url}?uid={uid}&token={token}"
 
         subject = "InfraTrack Password Reset"
 
-        message = (
+        plain_message = (
             f"Hello {user.first_name or 'InfraTrack user'},\n\n"
             "We received a request to reset your InfraTrack password.\n\n"
-            "Open the following link on your device to reset your password:\n\n"
+            "Open this link to create a new password:\n\n"
             f"{reset_link}\n\n"
-            "This link will expire after 30 minutes.\n\n"
-            "If you did not request this password reset, you can ignore "
-            "this email. Your password will remain unchanged.\n\n"
-            "Regards,\n"
-            "InfraTrack Support"
+            "If you did not request this, you can ignore this email.\n\n"
+            "Regards,\nInfraTrack Support"
+        )
+
+        html_message = render_to_string(
+            "users/password_reset_email.html",
+            {
+                "user": user,
+                "reset_link": reset_link,
+            }
         )
 
         try:
             send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False
+                subject=subject,
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
             )
         except Exception:
-            # Do not reveal whether the email belongs to an account.
-            # Check the Django server logs if email delivery fails.
-            pass
+            logger.exception("Password reset email failed")
 
         return Response(generic_response, status=status.HTTP_200_OK)
 
 
-class PasswordResetConfirmAPIView(APIView):
-    permission_classes = [AllowAny]
+def password_reset_page(request):
+    uid = request.GET.get("uid") or request.POST.get("uid", "")
+    token = request.GET.get("token") or request.POST.get("token", "")
 
-    def post(self, request):
-        token = request.data.get("token", "").strip()
-        new_password = request.data.get("new_password", "")
-        confirm_password = request.data.get("confirm_password", "")
+    user = None
 
-        if not token or not new_password or not confirm_password:
-            return Response(
-                {"message": "Please complete all required fields."},
-                status=status.HTTP_400_BAD_REQUEST
+    # Decode the user ID and validate the reset token.
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+
+        user = User.objects.get(
+            pk=user_id,
+            is_active=True,
+            role__in=["citizen", "field_engineer"]
+        )
+
+        if not default_token_generator.check_token(user, token):
+            user = None
+
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is None:
+        return render(
+            request,
+            "users/password_reset.html",
+            {
+                "invalid_link": True,
+                "message": (
+                    "This password reset link is invalid or has expired. "
+                    "Please request a new password reset link."
+                )
+            },
+            status=400
+        )
+
+    if request.method == "POST":
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+
+        if not new_password or not confirm_password:
+            return render(
+                request,
+                "users/password_reset.html",
+                {
+                    "uid": uid,
+                    "token": token,
+                    "error": "Please complete both password fields."
+                }
             )
 
         if new_password != confirm_password:
-            return Response(
-                {"message": "The passwords do not match."},
-                status=status.HTTP_400_BAD_REQUEST
+            return render(
+                request,
+                "users/password_reset.html",
+                {
+                    "uid": uid,
+                    "token": token,
+                    "error": "The passwords do not match."
+                }
             )
 
-        # Validate the signed token and its 30-minute expiration.
-        try:
-            token_data = signing.loads(
-                token,
-                salt="infratrack-password-reset",
-                max_age=1800
-            )
-        except signing.SignatureExpired:
-            return Response(
-                {"message": "This password reset link has expired. Please request a new one."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except signing.BadSignature:
-            return Response(
-                {"message": "This password reset link is invalid."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Find the account associated with the token.
-        user = User.objects.filter(
-            pk=token_data.get("user_id"),
-            email__iexact=token_data.get("email", ""),
-            is_active=True,
-            role__in=["citizen", "field_engineer"]
-        ).first()
-
-        if not user:
-            return Response(
-                {"message": "This password reset link is invalid or the account is unavailable."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Apply Django's configured password validators.
         try:
             validate_password(new_password, user=user)
         except DjangoValidationError as error:
-            return Response(
-                {"message": " ".join(error.messages)},
-                status=status.HTTP_400_BAD_REQUEST
+            return render(
+                request,
+                "users/password_reset.html",
+                {
+                    "uid": uid,
+                    "token": token,
+                    "error": " ".join(error.messages)
+                }
             )
 
-        # Save the new password.
         user.set_password(new_password)
         user.save(update_fields=["password"])
 
-        # Invalidate existing DRF login tokens.
+        # Invalidate existing mobile login tokens.
         Token.objects.filter(user=user).delete()
 
-        return Response(
-            {
-                "message": (
-                    "Your password has been reset successfully. "
-                    "Please log in using your new password."
-                )
-            },
-            status=status.HTTP_200_OK
+        return render(
+            request,
+            "users/password_reset.html",
+            {"success": True}
         )
+
+    return render(
+        request,
+        "users/password_reset.html",
+        {
+            "uid": uid,
+            "token": token,
+        }
+    )
 
 
 @login_required
