@@ -91,25 +91,8 @@ def add_infrastructure(request):
                 "Latitude and longitude must be valid numbers."
             )
 
-        if not Decimal("-90") <= latitude <= Decimal("90"):
-            return show_error(
-                "Invalid latitude. Enter a value between -90 and 90."
-            )
-
-        if not Decimal("-180") <= longitude <= Decimal("180"):
-            return show_error(
-                "Invalid longitude. Enter a value between -180 and 180."
-            )
-
         # Ensure values fit the model's DecimalField(max_digits=10,
         # decimal_places=7) without database errors.
-        if (
-            latitude.as_tuple().exponent < -7
-            or longitude.as_tuple().exponent < -7
-        ):
-            return show_error(
-                "Coordinates can have a maximum of 7 decimal places."
-            )
 
         if not status:
             return show_error("Status is required.")
@@ -222,24 +205,6 @@ def edit_infrastructure(request, infrastructure_id):
         except (InvalidOperation, ValueError):
             return show_error(
                 "Latitude and longitude must be valid numbers."
-            )
-
-        if not Decimal("-90") <= latitude <= Decimal("90"):
-            return show_error(
-                "Invalid latitude. Enter a value between -90 and 90."
-            )
-
-        if not Decimal("-180") <= longitude <= Decimal("180"):
-            return show_error(
-                "Invalid longitude. Enter a value between -180 and 180."
-            )
-
-        if (
-            latitude.as_tuple().exponent < -7
-            or longitude.as_tuple().exponent < -7
-        ):
-            return show_error(
-                "Coordinates can have a maximum of 7 decimal places."
             )
 
         if status not in dict(Infrastructure.STATUS_CHOICES):
