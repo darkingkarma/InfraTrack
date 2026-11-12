@@ -6,61 +6,172 @@
 
 {% block style %}
 <style>
-.form-card{background:#fff;padding:25px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.section-title{margin-bottom:15px;color:#0A2E5C}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.form-group{display:flex;flex-direction:column}
-.form-group label{margin-bottom:6px;font-weight:bold}
-.form-group input,.form-group select,.form-group textarea{padding:10px;border:1px solid #ccc;border-radius:6px;font-size:14px}
-.form-group textarea{resize:vertical;min-height:90px}
-.full-width{grid-column:1/-1}
-.help-text{font-size:12px;color:#666;margin-top:5px}
-.button-group{margin-top:25px;display:flex;justify-content:flex-end;gap:10px}
-.cancel-btn,.save-btn{padding:10px 20px;border-radius:6px;text-decoration:none}
-.cancel-btn{background:#6c757d;color:white}
-.save-btn{border:none;background:#0A2E5C;color:white;cursor:pointer;font-weight:bold}
-@media(max-width:700px){.form-grid{grid-template-columns:1fr}.full-width{grid-column:auto}}
+* {
+    box-sizing: border-box;
+}
+
+.form-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.section-title {
+    margin-bottom: 15px;
+    color: #0A2E5C;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.help-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.button-group {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancel-btn,
+.save-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.save-btn {
+    border: none;
+    background: #0A2E5C;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #842029;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+@media(max-width: 700px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    .form-card {
+        padding: 18px;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="form-card">
+
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
 
         <h3 class="section-title">Infrastructure Information</h3>
 
         <div class="form-grid">
+
             <div class="form-group">
                 <label>Infrastructure Name</label>
-                <input type="text" name="infra_name"
-                       value="{{ infrastructure.infra_name }}" required>
+                <input
+                    type="text"
+                    name="infra_name"
+                    value="{% if request.method == 'POST' %}{{ request.POST.infra_name|default:'' }}{% else %}{{ infrastructure.infra_name }}{% endif %}"
+                    required
+                >
             </div>
 
             <div class="form-group">
                 <label>Infrastructure Type</label>
+                {% with selected_type=request.POST.infra_type|default:infrastructure.infra_type %}
                 <select name="infra_type" required>
-                    <option value="road" {% if infrastructure.infra_type == "road" %}selected{% endif %}>Road</option>
-                    <option value="bridge" {% if infrastructure.infra_type == "bridge" %}selected{% endif %}>Bridge</option>
-                    <option value="drainage" {% if infrastructure.infra_type == "drainage" %}selected{% endif %}>Drainage</option>
+                    <option value="road" {% if selected_type == "road" %}selected{% endif %}>Road</option>
+                    <option value="bridge" {% if selected_type == "bridge" %}selected{% endif %}>Bridge</option>
+                    <option value="drainage" {% if selected_type == "drainage" %}selected{% endif %}>Drainage</option>
                 </select>
+                {% endwith %}
             </div>
 
             <div class="form-group">
                 <label>Road Classification</label>
-                <input type="text" name="road_classification"
-                       value="{{ infrastructure.road_classification }}"
-                       placeholder="e.g. National Road">
+                <input
+                    type="text"
+                    name="road_classification"
+                    value="{% if request.method == 'POST' %}{{ request.POST.road_classification|default:'' }}{% else %}{{ infrastructure.road_classification|default:'' }}{% endif %}"
+                    placeholder="e.g. National Road"
+                >
             </div>
 
             <div class="form-group">
                 <label>Status</label>
+                {% with selected_status=request.POST.status|default:infrastructure.status %}
                 <select name="status" required>
-                    <option value="active" {% if infrastructure.status == "active" %}selected{% endif %}>Active</option>
-                    <option value="maintenance" {% if infrastructure.status == "maintenance" %}selected{% endif %}>Maintenance</option>
-                    <option value="closed" {% if infrastructure.status == "closed" %}selected{% endif %}>Closed</option>
+                    <option value="active" {% if selected_status == "active" %}selected{% endif %}>Active</option>
+                    <option value="maintenance" {% if selected_status == "maintenance" %}selected{% endif %}>Maintenance</option>
+                    <option value="closed" {% if selected_status == "closed" %}selected{% endif %}>Closed</option>
                 </select>
+                {% endwith %}
             </div>
+
         </div>
 
         <br>
@@ -68,22 +179,34 @@
         <h3 class="section-title">Location Information</h3>
 
         <div class="form-grid">
+
             <div class="form-group">
                 <label>Latitude</label>
-                <input type="number" name="latitude" step="any"
-                       value="{{ infrastructure.latitude }}" required>
+                <input
+                    type="number"
+                    name="latitude"
+                    step="any"
+                    value="{% if request.method == 'POST' %}{{ request.POST.latitude|default:'' }}{% else %}{{ infrastructure.latitude }}{% endif %}"
+                    required
+                >
             </div>
 
             <div class="form-group">
                 <label>Longitude</label>
-                <input type="number" name="longitude" step="any"
-                       value="{{ infrastructure.longitude }}" required>
+                <input
+                    type="number"
+                    name="longitude"
+                    step="any"
+                    value="{% if request.method == 'POST' %}{{ request.POST.longitude|default:'' }}{% else %}{{ infrastructure.longitude }}{% endif %}"
+                    required
+                >
             </div>
 
             <div class="form-group full-width">
                 <label>Location Description</label>
-                <textarea name="location_description">{{ infrastructure.location_description }}</textarea>
+                <textarea name="location_description">{% if request.method == 'POST' %}{{ request.POST.location_description|default:'' }}{% else %}{{ infrastructure.location_description|default:'' }}{% endif %}</textarea>
             </div>
+
         </div>
 
         <br>
@@ -91,27 +214,43 @@
         <h3 class="section-title">Add More Infrastructure Images</h3>
 
         <p class="help-text">
-            Existing images will be kept. Only the newly selected images will be added.
+            Existing images will be kept. Only newly selected images will be added.
         </p>
 
         <div class="form-grid">
+
             <div class="form-group">
                 <label>Additional Regular Images</label>
-                <input type="file" name="regular_images"
-                       accept="image/*" multiple>
+                <input
+                    type="file"
+                    name="regular_images"
+                    accept="image/*"
+                    multiple
+                >
             </div>
 
             <div class="form-group">
                 <label>Additional Satellite Images</label>
-                <input type="file" name="satellite_images"
-                       accept="image/*" multiple>
+                <input
+                    type="file"
+                    name="satellite_images"
+                    accept="image/*"
+                    multiple
+                >
             </div>
+
         </div>
 
         <div class="button-group">
-            <a href="{% url 'infrastructure_list' %}" class="cancel-btn">Cancel</a>
-            <button type="submit" class="save-btn">Save Changes</button>
+            <a href="{% url 'infrastructure_list' %}" class="cancel-btn">
+                Cancel
+            </a>
+
+            <button type="submit" class="save-btn">
+                Save Changes
+            </button>
         </div>
+
     </form>
 </div>
 {% endblock %}
