@@ -58,9 +58,9 @@ urlpatterns = [
         name="password_reset_request"
     ),
     path(
-        "api/password-reset/confirm/",
-        views.PasswordResetConfirmAPIView.as_view(),
-        name="password_reset_confirm"
+        "reset-password/",
+        views.password_reset_page,
+        name="password_reset_page"
     ),
 
     path(
