@@ -2,343 +2,479 @@
 {% extends "users/master.html" %}
 
 {% block title %}
-FRU Dashboard
+Dashboard
 {% endblock %}
 
 {% block page_title %}
-Dashboard
+FRU Dashboard
 {% endblock %}
 
 {% block style %}
 <style>
-    .welcome-banner {
-        margin-bottom: 25px;
+
+/* ==============================
+   PAGE HEADER
+============================== */
+
+.page-header {
+    margin-bottom: 22px;
+}
+
+.page-header h2 {
+    color: #0A2E5C;
+    font-size: 23px;
+    margin: 0;
+}
+
+.page-header p {
+    color: #777;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+/* ==============================
+   STATISTICS
+============================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    border: 1px solid #eee;
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+.stat-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #0A2E5C;
+    margin-top: 7px;
+}
+
+.stat-note {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+}
+
+
+/* ==============================
+   MAIN COLUMNS
+============================== */
+
+.columns {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 20px;
+    margin-bottom: 25px;
+    align-items: start;
+}
+
+.panel {
+    background: white;
+    border-radius: 10px;
+    padding: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    min-width: 0;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.panel h3 {
+    color: #0A2E5C;
+    font-size: 16px;
+    margin: 0;
+}
+
+.view-all {
+    font-size: 12px;
+    font-weight: bold;
+    color: #2563eb;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.view-all:hover {
+    text-decoration: underline;
+}
+
+/* ==============================
+   ACTIVITY ROWS
+============================== */
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.row:last-child {
+    border-bottom: none;
+}
+
+.row-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.row-title {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.row-meta {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+.row-btn {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    background: #0A2E5C;
+    color: white;
+    text-align: center;
+}
+
+.row-btn:hover {
+    background: #154A8A;
+}
+
+/* ==============================
+   EMPTY STATES
+============================== */
+
+.all-clear {
+    text-align: center;
+    color: #16a34a;
+    padding: 35px 10px;
+    font-weight: bold;
+}
+
+.all-clear i {
+    display: block;
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.all-clear span {
+    display: block;
+    font-weight: normal;
+    color: #888;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.empty {
+    color: gray;
+    text-align: center;
+    padding: 25px 0;
+    font-size: 13px;
+}
+
+
+/* ==============================
+   TABLET RESPONSIVENESS
+============================== */
+
+@media (max-width: 1100px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .welcome-banner h2 {
-        color: #0A2E5C;
-        margin-bottom: 5px;
-    }
 
-    .welcome-banner p {
-        color: gray;
-        font-size: 14px;
+    .columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==============================
+   MOBILE RESPONSIVENESS
+============================== */
+
+@media (max-width: 600px) {
+    .page-header h2 {
+        font-size: 20px;
     }
 
     .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
     }
 
     .stat-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
-        padding: 20px;
-        display: flex;
-        align-items: center;
+        padding: 14px;
+    }
+
+    .stat-number {
+        font-size: 26px;
+    }
+
+    .columns {
+        grid-template-columns: 1fr;
         gap: 15px;
     }
 
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        color: white;
-        flex-shrink: 0;
-    }
-
-    .icon-pending {
-        background: #a15c00;
-    }
-
-    .icon-screened {
-        background: #1e7e34;
-    }
-
-    .icon-rejected {
-        background: #c62828;
-    }
-
-    .icon-info {
-        background: #5b3fa0;
-    }
-
-    .stat-info h3 {
-        font-size: 24px;
-        color: #0A2E5C;
-        margin-bottom: 4px;
-    }
-
-    .stat-info p {
-        font-size: 13px;
-        color: gray;
-        margin: 0;
-    }
-
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 20px;
-        margin-bottom: 25px;
-    }
-
     .panel {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
-        padding: 22px;
-    }
-
-    .panel h4 {
-        color: #0A2E5C;
-        margin-bottom: 8px;
-    }
-
-    .panel-description {
-        color: gray;
-        font-size: 13px;
-        margin-bottom: 18px;
-    }
-
-    .quick-link {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px;
-        border-radius: 8px;
-        background: #f5f7fa;
-        color: #0A2E5C;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 10px;
-        transition: .2s;
-    }
-
-    .quick-link:hover {
-        background: #e8f0fe;
-        transform: translateX(3px);
-    }
-
-    .quick-link i {
-        width: 20px;
-        text-align: center;
-    }
-
-    .workflow-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        margin-top: 18px;
-    }
-
-    .workflow-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .workflow-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #e8f0fe;
-        color: #0A2E5C;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        flex-shrink: 0;
-    }
-
-    .workflow-item h5 {
-        color: #0A2E5C;
-        font-size: 14px;
-        margin: 0 0 4px;
-    }
-
-    .workflow-item p {
-        color: gray;
-        font-size: 12px;
-        margin: 0;
-        line-height: 1.5;
-    }
-
-    .info-banner {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        background: #eef4fb;
-        border-left: 4px solid #0A2E5C;
-        border-radius: 8px;
         padding: 16px;
-        color: #0A2E5C;
     }
 
-    .info-banner i {
+    .row {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .row-btn {
         margin-top: 3px;
     }
 
-    .info-banner p {
-        margin: 0;
-        font-size: 13px;
-        line-height: 1.6;
+    .panel-header {
+        align-items: flex-start;
+    }
+}
+
+/* ==============================
+   SMALL PHONES
+============================== */
+
+@media (max-width: 380px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 
-    @media (max-width: 1100px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .dashboard-grid {
-            grid-template-columns: 1fr;
-        }
+    .row {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-    @media (max-width: 600px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-
-        .stat-card {
-            padding: 16px;
-        }
-
-        .panel {
-            padding: 16px;
-        }
+    .row-btn {
+        width: auto;
     }
+}
+
 </style>
 {% endblock %}
 
+
 {% block content %}
 
-<div class="welcome-banner">
+<!-- ==============================
+     WELCOME HEADER
+============================== -->
+
+<div class="page-header">
     <h2>
-        Welcome back,
-        {{ request.user.first_name|default:request.user.username }}
+        Welcome, {{ request.user.first_name|default:request.user.username }}
     </h2>
-    <p>
-        Review, screen, and validate infrastructure issue reports
-        submitted by citizens.
-    </p>
+
+    <p>Monitor and screen infrastructure reports submitted by citizens.</p>
 </div>
+
+
+<!-- ==============================
+     STATISTICS
+============================== -->
 
 <div class="stats-grid">
 
     <div class="stat-card">
-        <div class="stat-icon icon-pending">
-            <i class="fa-solid fa-inbox"></i>
-        </div>
-        <div class="stat-info">
-            <h3>{{ pending_count|default:"0" }}</h3>
-            <p>Pending Screening</p>
-        </div>
+        <div class="stat-label">Pending Reports</div>
+        <div class="stat-number">{{ pending_count }}</div>
+        <div class="stat-note">Waiting for initial screening</div>
     </div>
 
     <div class="stat-card">
-        <div class="stat-icon icon-screened">
-            <i class="fa-solid fa-clipboard-check"></i>
-        </div>
-        <div class="stat-info">
-            <h3>{{ screened_today|default:"0" }}</h3>
-            <p>Screened Today</p>
-        </div>
+        <div class="stat-label">Screened Today</div>
+        <div class="stat-number">{{ screened_today }}</div>
+        <div class="stat-note">Reports processed today</div>
     </div>
 
     <div class="stat-card">
-        <div class="stat-icon icon-rejected">
-            <i class="fa-solid fa-circle-xmark"></i>
-        </div>
-        <div class="stat-info">
-            <h3>{{ rejected_count|default:"0" }}</h3>
-            <p>Rejected Reports</p>
-        </div>
+        <div class="stat-label">Rejected Reports</div>
+        <div class="stat-number">{{ rejected_count }}</div>
+        <div class="stat-note">Reports rejected during screening</div>
     </div>
 
     <div class="stat-card">
-        <div class="stat-icon icon-info">
-            <i class="fa-solid fa-circle-question"></i>
-        </div>
-        <div class="stat-info">
-            <h3>{{ needs_info_count|default:"0" }}</h3>
-            <p>Reports Needing More Info</p>
-        </div>
+        <div class="stat-label">Needs More Information</div>
+        <div class="stat-number">{{ needs_info_count }}</div>
+        <div class="stat-note">Waiting for citizen response</div>
     </div>
 
 </div>
 
-<div class="dashboard-grid">
+
+
+
+<!-- ==============================
+     MAIN DASHBOARD COLUMNS
+============================== -->
+
+<div class="columns">
+
+    <!-- NEEDS YOUR ACTION -->
 
     <div class="panel">
-        <h4>Quick Actions</h4>
-        <p class="panel-description">
-            Access your report-screening tasks.
-        </p>
 
-        <a href="{% url 'pending_reports' %}" class="quick-link">
-            <i class="fa-solid fa-inbox"></i>
-            View Pending Screening Reports
-        </a>
+        <div class="panel-header">
+            <h3>Needs Your Action</h3>
 
-        {# Replace this link with your actual URL name if available. #}
-        <a href="{% url 'pending_reports' %}" class="quick-link">
-            <i class="fa-solid fa-list-check"></i>
-            Review Reports Awaiting Screening
-        </a>
+            <a href="{% url 'pending_reports' %}" class="view-all">
+                View All Reports
+            </a>
+        </div>
+
+        {% if pending_count %}
+
+            <div class="row">
+
+                <div class="row-main">
+                    <div class="row-title">Pending Screening Reports</div>
+
+                    <div class="row-meta">
+                        {{ pending_count }} report{{ pending_count|pluralize }}
+                        waiting for your review.
+                    </div>
+                </div>
+
+                <a href="{% url 'pending_reports' %}" class="row-btn">
+                    Review Reports
+                </a>
+
+            </div>
+
+        {% else %}
+
+            <div class="all-clear">
+                <i class="fa-solid fa-circle-check"></i>
+                All caught up
+                <span>There are no pending reports waiting for screening.</span>
+            </div>
+
+        {% endif %}
+
     </div>
 
+
+    <!-- REPORTS NEEDING MORE INFORMATION -->
+
     <div class="panel">
-        <h4>FRU Screening Workflow</h4>
-        <p class="panel-description">
-            Follow these steps when reviewing a report.
-        </p>
 
-        <div class="workflow-list">
-            <div class="workflow-item">
-                <div class="workflow-number">1</div>
-                <div>
-                    <h5>Review Report</h5>
-                    <p>Check the report details, photos, and location.</p>
-                </div>
-            </div>
-
-            <div class="workflow-item">
-                <div class="workflow-number">2</div>
-                <div>
-                    <h5>Validate Information</h5>
-                    <p>Check completeness, duplicates, and jurisdiction.</p>
-                </div>
-            </div>
-
-            <div class="workflow-item">
-                <div class="workflow-number">3</div>
-                <div>
-                    <h5>Submit Screening Result</h5>
-                    <p>Validate, request more information, or reject.</p>
-                </div>
-            </div>
+        <div class="panel-header">
+            <h3>Reports Needing More Information</h3>
         </div>
+
+        {% if needs_info_count %}
+
+            <div class="row">
+
+                <div class="row-main">
+                    <div class="row-title">Waiting for Citizen Response</div>
+
+                    <div class="row-meta">
+                        {{ needs_info_count }} report{{ needs_info_count|pluralize }}
+                        need additional information before screening can continue.
+                    </div>
+                </div>
+
+            </div>
+
+        {% else %}
+
+            <div class="all-clear">
+                <i class="fa-solid fa-circle-check"></i>
+                No follow-ups pending
+                <span>No reports are currently waiting for additional information.</span>
+            </div>
+
+        {% endif %}
+
     </div>
 
 </div>
 
-<div class="info-banner">
-    <i class="fa-solid fa-circle-info"></i>
-    <p>
-        <strong>Screening reminder:</strong>
-        Verify report completeness, check for duplicate submissions,
-        and confirm that the reported infrastructure falls within
-        the office's jurisdiction before submitting a screening result.
-    </p>
+
+<!-- ==============================
+     SCREENING GUIDELINES
+============================== -->
+
+<div class="panel">
+
+    <div class="panel-header">
+        <h3>Screening Guidelines</h3>
+    </div>
+
+    <div class="row">
+        <div class="row-main">
+            <div class="row-title">Check Report Completeness</div>
+            <div class="row-meta">
+                Make sure the report has a title, description, infrastructure type,
+                valid location, and at least one supporting photo.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="row-main">
+            <div class="row-title">Review the Location</div>
+            <div class="row-meta">
+                Verify that the reported location and infrastructure details
+                are clear and relevant.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="row-main">
+            <div class="row-title">Check for Duplicate Reports</div>
+            <div class="row-meta">
+                Review similar reports before proceeding with the screening decision.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="row-main">
+            <div class="row-title">Provide Clear Feedback</div>
+            <div class="row-meta">
+                If information is incomplete, explain what the citizen needs
+                to provide before submitting the screening result.
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}

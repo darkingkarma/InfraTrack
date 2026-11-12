@@ -11,88 +11,80 @@ Pending Screening Reports
 
 {% block style %}
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    .pending-reports-container {
+        width: 100%;
+    }
+
+    /* Page Header */
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 20px;
+        gap: 12px;
+        margin-bottom: 8px;
     }
 
     .page-header h2 {
         color: #0A2E5C;
-        margin: 0 0 5px;
-    }
-
-    .page-header p {
-        color: gray;
-        font-size: 13px;
         margin: 0;
+        font-size: 23px;
     }
 
-    .report-count {
-        background: #e8f0fe;
-        color: #0A2E5C;
-        padding: 8px 13px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-    .toolbar {
+    /* Search */
+    .search-section {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        flex-wrap: wrap;
-        background: white;
-        padding: 16px;
-        border-radius: 10px 10px 0 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .search-box {
-        display: flex;
-        align-items: center;
         gap: 10px;
-        background: #f5f7fa;
+        align-items: center;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .search-section input {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 14px;
         border: 1px solid #ddd;
         border-radius: 7px;
-        padding: 10px 12px;
-        flex: 1;
-        max-width: 380px;
-    }
-
-    .search-box i {
-        color: #777;
-    }
-
-    .search-box input {
-        width: 100%;
-        border: none;
+        font-size: 14px;
         outline: none;
-        background: transparent;
-        font-size: 13px;
-        color: #333;
+        transition: border-color .2s, box-shadow .2s;
+        background: white;
     }
 
+    .search-section input:focus {
+        border-color: #0A2E5C;
+        box-shadow: 0 0 0 3px rgba(10, 46, 92, .10);
+    }
+
+    /* Results Counter */
+    .results-count {
+        color: #666;
+        font-size: 13px;
+        margin: 0 0 12px;
+    }
+
+    .results-count strong {
+        color: #0A2E5C;
+    }
+
+    /* Table */
     .table-container {
         background: white;
         border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
-    }
-
-    .table-responsive {
-        width: 100%;
         overflow-x: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        width: 100%;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 750px;
+        min-width: 850px;
     }
 
     thead {
@@ -103,45 +95,73 @@ Pending Screening Reports
     th {
         padding: 15px;
         text-align: left;
-        font-size: 13px;
         white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
     }
 
     td {
         padding: 15px;
         border-bottom: 1px solid #eee;
-        font-size: 13px;
+        font-size: 14px;
+        vertical-align: middle;
         color: #444;
     }
 
+    tbody tr {
+        transition: background .2s;
+    }
+
     tbody tr:hover {
-        background: #f8faff;
+        background: #f7f9fc;
     }
 
     tbody tr:last-child td {
         border-bottom: none;
     }
 
-    .report-title {
+    /* Report Information */
+    .report-id {
         color: #0A2E5C;
-        font-weight: 600;
-    }
-
-    .citizen-name {
-        font-weight: 500;
-    }
-
-    .status-badge {
-        display: inline-block;
-        background: #fff3df;
-        color: #946000;
-        padding: 5px 9px;
-        border-radius: 20px;
-        font-size: 11px;
         font-weight: bold;
         white-space: nowrap;
     }
 
+    .report-title {
+        display: block;
+        font-weight: 600;
+        color: #222;
+        overflow-wrap: anywhere;
+    }
+
+    .citizen-name {
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .report-date {
+        white-space: nowrap;
+        line-height: 1.7;
+    }
+
+    .report-date small {
+        color: #777;
+        font-size: 12px;
+    }
+
+    /* Status */
+    .status-badge {
+        display: inline-block;
+        background: #fff3df;
+        color: #946000;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    /* Resubmitted Badge */
     .resubmitted-badge {
         display: inline-block;
         background: #e8f0fe;
@@ -154,50 +174,86 @@ Pending Screening Reports
         white-space: nowrap;
     }
 
+    /* Screen Button */
     .screen-btn {
         border: none;
         cursor: pointer;
-        padding: 9px 14px;
+        padding: 10px 15px;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: bold;
         text-decoration: none;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         background: #0A2E5C;
         color: white;
         white-space: nowrap;
-        transition: .2s;
+        transition: background .2s, transform .2s;
     }
 
     .screen-btn:hover {
         background: #154A8A;
+        transform: translateY(-1px);
     }
 
+    /* Empty State */
     .empty {
         text-align: center;
-        color: gray;
-        padding: 40px !important;
+        color: #777;
+        padding: 45px 20px;
+        line-height: 1.6;
     }
 
-    .no-search-results {
+    .empty strong {
+        display: block;
+        color: #444;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .no-results-row {
         display: none;
-        text-align: center;
-        color: gray;
-        padding: 35px;
-        font-size: 13px;
     }
 
-    @media (max-width: 600px) {
-        .page-header {
-            align-items: flex-start;
+    /* Mobile */
+    @media (max-width: 700px) {
+        .page-header h2 {
+            font-size: 21px;
         }
 
-        .toolbar {
+        .search-section {
+            flex-direction: column;
             align-items: stretch;
         }
 
-        .search-box {
-            max-width: none;
+        .search-section input {
+            width: 100%;
+            flex: none;
+        }
+
+        .table-container {
+            border-radius: 8px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h2 {
+            font-size: 19px;
+        }
+
+        .results-count {
+            font-size: 12px;
+        }
+
+        .empty {
+            padding: 30px 15px;
         }
     }
 </style>
@@ -205,44 +261,39 @@ Pending Screening Reports
 
 {% block content %}
 
-<div class="page-header">
-    <div>
+<div class="pending-reports-container">
+
+    <!-- Page Header -->
+    <div class="page-header">
         <h2>Pending Screening Reports</h2>
-        <p>Review citizen submissions and verify their information.</p>
     </div>
 
-    <div class="report-count">
-        <i class="fa-solid fa-inbox"></i>
-        {{ reports|length }} Report{{ reports|length|pluralize }}
-    </div>
-</div>
-
-<div class="table-container">
-
-    <div class="toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input
-                type="text"
-                id="reportSearch"
-                placeholder="Search report title or citizen..."
-                autocomplete="off"
-            >
-        </div>
-
-        <span style="font-size:12px; color:gray;">
-            <i class="fa-solid fa-circle-info"></i>
-            Select Screen to review a report.
-        </span>
+    <!-- Automatic Search -->
+    <div class="search-section">
+        <input
+            type="text"
+            id="reportSearch"
+            placeholder="Search by report ID, title, citizen, date, or status..."
+            aria-label="Search pending reports"
+            autocomplete="off"
+        >
     </div>
 
-    <div class="table-responsive">
-        <table id="reportsTable">
+    <!-- Results Counter -->
+    <p class="results-count">
+        Showing <strong id="visibleCount">{{ reports|length }}</strong>
+        of <strong id="totalCount">{{ reports|length }}</strong>
+        report{{ reports|length|pluralize }}
+    </p>
 
+    <!-- Reports Table -->
+    <div class="table-container">
+
+        <table>
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Report Title</th>
+                    <th>Report ID</th>
+                    <th>Report Details</th>
                     <th>Citizen</th>
                     <th>Date Submitted</th>
                     <th>Status</th>
@@ -253,11 +304,19 @@ Pending Screening Reports
             <tbody id="reportsTableBody">
 
                 {% for report in reports %}
-                <tr class="report-row">
-                    <td>{{ forloop.counter }}</td>
 
+                <tr class="report-row">
+
+                    <!-- Report ID -->
+                    <td class="report-id">
+                        <span class="searchable-report-id">
+                            #{{ report.report_id }}
+                        </span>
+                    </td>
+
+                    <!-- Report Details -->
                     <td>
-                        <span class="report-title">
+                        <span class="report-title searchable-title">
                             {{ report.title }}
                         </span>
 
@@ -271,20 +330,32 @@ Pending Screening Reports
                         {% endfor %}
                     </td>
 
+                    <!-- Citizen -->
                     <td class="citizen-name">
-                        {{ report.citizen.get_full_name|default:report.citizen.username }}
+                        <span class="searchable-citizen">
+                            {{ report.citizen.get_full_name|default:report.citizen.username }}
+                        </span>
                     </td>
 
+                    <!-- Date Submitted -->
                     <td>
-                        {{ report.reported_date|date:"M d, Y g:i A" }}
+                        <div class="report-date searchable-date">
+                            {{ report.reported_date|date:"M d, Y" }}
+                            <br>
+                            <small>
+                                {{ report.reported_date|date:"g:i A" }}
+                            </small>
+                        </div>
                     </td>
 
+                    <!-- Status -->
                     <td>
-                        <span class="status-badge">
+                        <span class="status-badge searchable-status">
                             {{ report.status }}
                         </span>
                     </td>
 
+                    <!-- Actions -->
                     <td>
                         <a
                             href="{% url 'screen_report' report.pk %}"
@@ -294,49 +365,104 @@ Pending Screening Reports
                             Screen
                         </a>
                     </td>
+
                 </tr>
+
                 {% empty %}
+
                 <tr>
                     <td colspan="6" class="empty">
-                        <i class="fa-solid fa-inbox" style="font-size:28px; display:block; margin-bottom:10px;"></i>
-                        No pending reports found.
+                        <strong>No pending reports found</strong>
+                        New citizen submissions will appear here when they are
+                        waiting for FRU screening.
                     </td>
                 </tr>
+
                 {% endfor %}
+
+                <!-- No Search Results -->
+                <tr class="no-results-row" id="noResultsRow">
+                    <td colspan="6" class="empty">
+                        <strong>No matching reports found</strong>
+                        Try searching with a different report ID, title, citizen name, or date.
+                    </td>
+                </tr>
 
             </tbody>
         </table>
-    </div>
 
-    <div id="noSearchResults" class="no-search-results">
-        <i class="fa-solid fa-magnifying-glass" style="font-size:24px; display:block; margin-bottom:10px;"></i>
-        No reports match your search.
     </div>
 
 </div>
 
 <script>
-    const reportSearch = document.getElementById('reportSearch');
-    const reportRows = document.querySelectorAll('.report-row');
-    const noSearchResults = document.getElementById('noSearchResults');
+document.addEventListener("DOMContentLoaded", function () {
 
-    reportSearch.addEventListener('input', function () {
-        const searchValue = this.value.toLowerCase().trim();
-        let visibleCount = 0;
+    const searchInput = document.getElementById("reportSearch");
+
+    const reportRows = document.querySelectorAll(".report-row");
+    const visibleCount = document.getElementById("visibleCount");
+    const totalCount = document.getElementById("totalCount");
+    const noResultsRow = document.getElementById("noResultsRow");
+
+    const totalReports = reportRows.length;
+
+    totalCount.textContent = totalReports;
+
+    function filterReports() {
+
+        const searchValue = searchInput.value.toLowerCase().trim();
+
+        let visibleReports = 0;
 
         reportRows.forEach(function (row) {
-            const matches = row.textContent.toLowerCase().includes(searchValue);
 
-            row.style.display = matches ? '' : 'none';
+            const reportID =
+                row.querySelector(".searchable-report-id")?.textContent || "";
+
+            const title =
+                row.querySelector(".searchable-title")?.textContent || "";
+
+            const citizen =
+                row.querySelector(".searchable-citizen")?.textContent || "";
+
+            const date =
+                row.querySelector(".searchable-date")?.textContent || "";
+
+            const status =
+                row.querySelector(".searchable-status")?.textContent || "";
+
+            const searchableText = (
+                reportID + " " +
+                title + " " +
+                citizen + " " +
+                date + " " +
+                status + " " +
+                row.textContent
+            ).toLowerCase();
+
+            const matches = searchableText.includes(searchValue);
+
+            row.style.display = matches ? "" : "none";
 
             if (matches) {
-                visibleCount++;
+                visibleReports++;
             }
         });
 
-        noSearchResults.style.display =
-            reportRows.length > 0 && visibleCount === 0 ? 'block' : 'none';
-    });
+        visibleCount.textContent = visibleReports;
+
+        if (noResultsRow) {
+            noResultsRow.style.display =
+                visibleReports === 0 && totalReports > 0
+                    ? "table-row"
+                    : "none";
+        }
+    }
+
+    searchInput.addEventListener("input", filterReports);
+
+});
 </script>
 
 {% endblock %}
