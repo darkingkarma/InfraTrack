@@ -5,6 +5,10 @@
 {% block page_title %}Screen Report{% endblock %}
 
 {% block style %}
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 <style>
     :root {
         --navy: #0A2E5C;
@@ -726,6 +730,7 @@
 <div class="page-header">
     <h2>Screen Report #{{ report.report_id }}</h2>
     <a href="{% url 'pending_reports' %}" class="back-btn">&larr; Back to list</a>
+    
 </div>
 
 <div class="screen-layout">
@@ -771,13 +776,11 @@
             <div class="sub-title">Reported location</div>
 
             {% if report.latitude != None and report.longitude != None %}
-                <iframe
+                <div id="reportMap"
                     class="report-map"
-                    title="Citizen reported location"
-                    src="https://maps.google.com/maps?q={{ report.latitude }},{{ report.longitude }}&amp;z=16&amp;output=embed"
-                    loading="lazy"
-                    allowfullscreen>
-                </iframe>
+                    data-lat="{{ report.latitude }}"
+                    data-lng="{{ report.longitude }}">
+                </div>
             {% else %}
                 <p class="empty-note">No location coordinates available.</p>
             {% endif %}
@@ -1104,8 +1107,42 @@
         </div>
     </div>
 </div>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+/* Report location map - Leaflet + OpenStreetMap */
+const reportMapElement = document.getElementById("reportMap");
+
+if (reportMapElement && typeof L !== "undefined") {
+    const latitude = parseFloat(reportMapElement.dataset.lat);
+    const longitude = parseFloat(reportMapElement.dataset.lng);
+
+    if (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= -90 && latitude <= 90 &&
+        longitude >= -180 && longitude <= 180
+    ) {
+        const map = L.map("reportMap", {
+            zoomControl: true,
+            scrollWheelZoom: false
+        }).setView([latitude, longitude], 16);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup("Citizen reported location")
+            .openPopup();
+
+        setTimeout(() => map.invalidateSize(), 200);
+    } else {
+        reportMapElement.innerHTML =
+            '<p style="padding:12px;color:#c62828;">Invalid location coordinates.</p>';
+    }
+}
 (function () {
     "use strict";
 
